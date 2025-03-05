@@ -30,7 +30,7 @@ void generateRandomString(char *buffer, int length)
     // Convert bytes to A-Z
     for (int i = 0; i < length; i++)
     {
-        unsigned char val = randomBytes[i] % 2;
+        unsigned char val = randomBytes[i] % 3;
         buffer[i] = 'A' + val;
     }
     buffer[length] = '\0';
