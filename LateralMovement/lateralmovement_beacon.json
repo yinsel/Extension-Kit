@@ -1,0 +1,18 @@
+{
+  "name": "LateralMovement",
+  "description": "BOFs for lateral movement",
+  "extensions": [
+    {
+      "type": "command",
+      "agents": ["beacon"],
+
+      "command": "psexec",
+      "name": "psexec",
+      "message": "Task: PSEXEC",
+      "description": "Perform psexec to another host",
+      "example": "psexec C:\\example.svc.exe OTHERCOMP",
+      "args": ["STRING <localPath>", "STRING <target>"],
+      "exec": "execute bof $EXT_DIR()/_bin/psexec.$ARCH().o $PACK_BOF(CSTR {localPath}, CSTR {target})"
+    }
+  ]
+}
