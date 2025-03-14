@@ -11,6 +11,10 @@ Original: https://github.com/RalfHacker/Kerbeus-BOF
 
 BOFs for lateralmovement with the specified method. Available methods: PsExec. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
 
+## Elevation-BOF
+
+BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Elevation-BOF/README.md)
+
 ## Aliases
 
 Simplification of some commands. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Aliases/README.md)

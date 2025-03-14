@@ -1,0 +1,23 @@
+{
+  "name": "Elevation-BOF",
+  "description": "BOFs for context elevation",
+  "extensions": [
+    {
+      "type": "command",
+      "agents": ["beacon"],
+
+      "command": "getsystem",
+      "description": "Elevate context to SYSTEM",
+      "subcommands":
+      [
+        {
+          "name": "token",
+          "message": "Task: Get system via token (BOF)",
+          "description": "Elevate the current agent to SYSTEM and gain the TrustedInstaller group privilege through impersonation",
+          "example": "getsystem token",
+          "exec": "execute bof $EXT_DIR()/_bin/getsystem_token.$ARCH().o"
+        }
+      ]
+    }
+  ]
+}
