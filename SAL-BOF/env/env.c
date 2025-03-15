@@ -6,7 +6,7 @@
 
 void ConvertUnicodeStringToChar(const wchar_t* src, size_t srcSize, char* dst, size_t dstSize)
 {
-    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize / sizeof(wchar_t), dst, (int)dstSize, NULL, NULL);
+    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
     dst[dstSize - 1] = '\0';
 }
 
@@ -35,12 +35,12 @@ void getEnvs() {
     while (*lpszVariable)
     {   
         SIZE_T envLength = KERNEL32$lstrlenW(lpszVariable);
-        char convertedEnv[MAX_PATH + 1];
-        ConvertUnicodeStringToChar(lpszVariable, envLength*2 + 1, convertedEnv, envLength + 1);
+        char * convertedEnv = intAlloc(envLength + 1);
+        ConvertUnicodeStringToChar(lpszVariable, envLength + 1, convertedEnv, envLength + 1);
         internal_printf("%s\n", convertedEnv);
         lpszVariable += KERNEL32$lstrlenW(lpszVariable) + 1;
+        intFree(convertedEnv);
     }
-    //KERNEL32$FreeEnvironmentStringsA(lpvEnv);
     return;
 }
 

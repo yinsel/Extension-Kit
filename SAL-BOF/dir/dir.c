@@ -110,7 +110,7 @@ void listDir(char *path, unsigned short subdirs) {
 
 void ConvertUnicodeStringToChar(const wchar_t* src, size_t srcSize, char* dst, size_t dstSize)
 {
-    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize / sizeof(wchar_t), dst, (int)dstSize, NULL, NULL);
+    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
     dst[dstSize - 1] = '\0';
 }
 
@@ -124,14 +124,10 @@ VOID go(
 	BeaconDataParse(&parser, Buffer, Length);
 	targetpath = (const wchar_t*) BeaconDataExtract(&parser, NULL);
 	SIZE_T targetpathLen = KERNEL32$lstrlenW(targetpath);
-    char path[MAX_PATH + 1];
-    ConvertUnicodeStringToChar(targetpath, targetpathLen*2 + 1, path, targetpathLen + 1);
+    char * path = intAlloc(targetpathLen + 1);
+    ConvertUnicodeStringToChar(targetpath, targetpathLen + 1, path, targetpathLen + 1);
     BeaconPrintf(CALLBACK_OUTPUT, path);
-    
-    // datap parser = {0};
-	// BeaconDataParse(&parser, Buffer, Length);
-	// char * path = BeaconDataExtract(&parser, NULL);
-	unsigned short subdirs = BeaconDataShort(&parser);
+    unsigned short subdirs = BeaconDataShort(&parser);
 
 	// Not positive how long path is, let's be safe
 	// At worst, we will append \* so give it four bytes (= 2 wchar_t)
@@ -144,6 +140,7 @@ VOID go(
 	}
 
 	listDir(realPath, subdirs);
-    intFree(realPath);
+    intFree(path);
+	intFree(realPath);
 	printoutput(TRUE);
 };

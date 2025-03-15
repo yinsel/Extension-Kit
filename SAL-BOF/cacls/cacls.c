@@ -23,7 +23,7 @@ pAR AccessRights = (pAR)1;
 
 void ConvertUnicodeStringToChar(const wchar_t* src, size_t srcSize, char* dst, size_t dstSize)
 {
-    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize / sizeof(wchar_t), dst, (int)dstSize, NULL, NULL);
+    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
     dst[dstSize - 1] = '\0';
 }
 
@@ -204,10 +204,10 @@ BuildSidString:
 
                         /* print the file name or space */
                         SIZE_T FullFileNameLen = KERNEL32$lstrlenW(FullFileName);
-                        char convertedFullFileName[MAX_PATH + 1];
-                        ConvertUnicodeStringToChar(FullFileName, FullFileNameLen*2 + 1, convertedFullFileName, FullFileNameLen + 1);
+                        char * convertedFullFileName = intAlloc(FullFileNameLen + 1);
+                        ConvertUnicodeStringToChar(FullFileName, FullFileNameLen + 1, convertedFullFileName, FullFileNameLen + 1);
                         internal_printf("%s ", convertedFullFileName);
-
+                        intFree(convertedFullFileName);      
                         /* attempt to map the SID to a user name */
                         if (AceIndex == 0)
                         {
@@ -224,12 +224,14 @@ BuildSidString:
                         {
                             SIZE_T DomainLen = KERNEL32$lstrlenW(Domain);
                             SIZE_T NameLen = KERNEL32$lstrlenW(Name);
-                            char convertedDomain[MAX_PATH + 1];
-                            char convertedName[MAX_PATH + 1];
-                            ConvertUnicodeStringToChar(Domain, DomainLen*2 + 1, convertedDomain, DomainLen + 1);
-                            ConvertUnicodeStringToChar(Name, NameLen*2 + 1, convertedName, NameLen + 1);
+                            char * convertedDomain = intAlloc(DomainLen + 1);
+                            char * convertedName = intAlloc(NameLen + 1);
+                            ConvertUnicodeStringToChar(Domain, DomainLen + 1, convertedDomain, DomainLen + 1);
+                            ConvertUnicodeStringToChar(Name, NameLen + 1, convertedName, NameLen + 1);
                             internal_printf("%s\\%s:", convertedDomain, convertedName);
                             IndentAccess = (DWORD)KERNEL32$lstrlenW(Domain) + KERNEL32$lstrlenW(Name);
+                            intFree(convertedDomain);
+                            intFree(convertedName);
                         }
                         else
                         {
@@ -237,10 +239,11 @@ BuildSidString:
                             if(DisplayString)
                             {
                                 SIZE_T DisplayStringLen = KERNEL32$lstrlenW(DisplayString);
-                                char convertedString[MAX_PATH + 1];
-                                ConvertUnicodeStringToChar(DisplayString, DisplayStringLen*2 + 1, convertedString, DisplayStringLen + 1);        
+                                char * convertedString = intAlloc(DisplayStringLen + 1);
+                                ConvertUnicodeStringToChar(DisplayString, DisplayStringLen + 1, convertedString, DisplayStringLen + 1);        
                                 internal_printf( "%s:", convertedString);
                                 IndentAccess = (DWORD)KERNEL32$lstrlenW(DisplayString);
+                                intFree(convertedString);
                             }
                         }
 
@@ -312,9 +315,10 @@ PrintSpecialAccess:
                                     if ((Ace->Mask & AccessRights[x].Access) == AccessRights[x].Access)
                                     {
                                         SIZE_T FullFileNameLen = KERNEL32$lstrlenW(FullFileName);
-                                        char convertedFullFileName[MAX_PATH + 1];
-                                        ConvertUnicodeStringToChar(FullFileName, FullFileNameLen*2 + 1, convertedFullFileName, FullFileNameLen + 1);
+                                        char * convertedFullFileName = intAlloc(FullFileNameLen + 1);
+                                        ConvertUnicodeStringToChar(FullFileName, FullFileNameLen + 1, convertedFullFileName, FullFileNameLen + 1);
                                         internal_printf("\n%s ", FullFileName);
+                                        intFree(convertedFullFileName);
                                         for (x2 = 0; x2 < IndentAccess; x2++)
                                         {
                                             internal_printf("%s", " ");
