@@ -2,8 +2,8 @@
 #define SECURITY_WIN32
 #include <security.h>
 #include <sddl.h>
-#include "bofdefs.h"
-#include "base.c"
+#include "../_include/bofdefs.h"
+#include "../_include/base.c"
 
 typedef struct
 {

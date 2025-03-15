@@ -6,16 +6,16 @@
 
 void ConvertUnicodeStringToChar(const wchar_t* src, size_t srcSize, char* dst, size_t dstSize)
 {
-    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
+    KERNEL32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
     dst[dstSize - 1] = '\0';
 }
 
 void getEnvs() {
-    LPWSTR lpszVariable; 
+    LPWSTR lpszVariable;
     LPWCH lpvEnv;
-     
- 
-    // Get a pointer to the environment block. 
+
+
+    // Get a pointer to the environment block.
     //lpvEnv = KERNEL32$GetEnvironmentStrings();
     lpvEnv = KERNEL32$GetEnvironmentStringsW();
 
@@ -27,13 +27,13 @@ void getEnvs() {
         BeaconPrintf(CALLBACK_ERROR, "GetEnvironmentStrings failed.");
         return;
     }
- 
-    // Variable strings are separated by NULL byte, and the block is 
-    // terminated by a NULL byte. 
+
+    // Variable strings are separated by NULL byte, and the block is
+    // terminated by a NULL byte.
     lpszVariable = (LPWSTR) lpvEnv;
 
     while (*lpszVariable)
-    {   
+    {
         SIZE_T envLength = KERNEL32$lstrlenW(lpszVariable);
         char * convertedEnv = intAlloc(envLength + 1);
         ConvertUnicodeStringToChar(lpszVariable, envLength + 1, convertedEnv, envLength + 1);
@@ -44,9 +44,9 @@ void getEnvs() {
     return;
 }
 
-VOID go() 
+VOID go()
 {
-	
+
     if(!bofstart())
     {
         return;
@@ -54,6 +54,6 @@ VOID go()
 
     getEnvs();
 
-	printoutput(TRUE);
-	bofstop();
+    printoutput(TRUE);
+    bofstop();
 };

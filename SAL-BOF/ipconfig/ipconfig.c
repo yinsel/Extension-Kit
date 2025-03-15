@@ -1,8 +1,7 @@
-
 #include <windows.h>
 #include <iphlpapi.h>
-#include "bofdefs.h"
-#include "base.c"
+#include "../_include/bofdefs.h"
+#include "../_include/base.c"
 
 typedef  DWORD (*getadaptinfo)(LPVOID, PULONG);
 typedef DWORD (*getnetparms)(LPVOID, PULONG);

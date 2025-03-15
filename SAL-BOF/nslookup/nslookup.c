@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <windns.h>
-#include "base.c"
+#include "../_include/base.c"
 
 typedef PCWSTR (*myInetNtopW)(
   INT        Family,

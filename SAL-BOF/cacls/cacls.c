@@ -23,7 +23,7 @@ pAR AccessRights = (pAR)1;
 
 void ConvertUnicodeStringToChar(const wchar_t* src, size_t srcSize, char* dst, size_t dstSize)
 {
-    Kernel32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
+    KERNEL32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
     dst[dstSize - 1] = '\0';
 }
 
@@ -140,7 +140,7 @@ PrintFileDacl(IN LPWSTR FilePath,
                         LPWSTR Domain = NULL;
                         LPWSTR SidString = NULL;
                         DWORD IndentAccess = 0;
-                        
+
                         DWORD AccessMask = Ace->Mask;
                         PSID Sid = (PSID)&Ace->SidStart;
 //                         /* attempt to translate the SID into a readable string */
@@ -207,7 +207,7 @@ BuildSidString:
                         char * convertedFullFileName = intAlloc(FullFileNameLen + 1);
                         ConvertUnicodeStringToChar(FullFileName, FullFileNameLen + 1, convertedFullFileName, FullFileNameLen + 1);
                         internal_printf("%s ", convertedFullFileName);
-                        intFree(convertedFullFileName);      
+                        intFree(convertedFullFileName);
                         /* attempt to map the SID to a user name */
                         if (AceIndex == 0)
                         {
@@ -240,7 +240,7 @@ BuildSidString:
                             {
                                 SIZE_T DisplayStringLen = KERNEL32$lstrlenW(DisplayString);
                                 char * convertedString = intAlloc(DisplayStringLen + 1);
-                                ConvertUnicodeStringToChar(DisplayString, DisplayStringLen + 1, convertedString, DisplayStringLen + 1);        
+                                ConvertUnicodeStringToChar(DisplayString, DisplayStringLen + 1, convertedString, DisplayStringLen + 1);
                                 internal_printf( "%s:", convertedString);
                                 IndentAccess = (DWORD)KERNEL32$lstrlenW(DisplayString);
                                 intFree(convertedString);
@@ -394,7 +394,7 @@ GetPathOfFile(LPWSTR FilePath, LPCWSTR pszFiles)
     attrs = KERNEL32$GetFileAttributesW(pszFiles);
     if(attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_DIRECTORY))
     {
-        KERNEL32$GetFullPathNameW(pszFiles, MAX_PATH, FilePath, NULL); 
+        KERNEL32$GetFullPathNameW(pszFiles, MAX_PATH, FilePath, NULL);
         return Folder;
     }
     // if we get here its probably not a folder, lets follow file logic
@@ -459,7 +459,7 @@ PrintDaclsOfFiles(LPCWSTR pszFiles)
     }
 
     //again lets see if this is a folder
-    
+
     /*
      * search for the files
      */
@@ -506,10 +506,10 @@ PrintDaclsOfFiles(LPCWSTR pszFiles)
 }
 
 
-VOID go( 
-	IN PCHAR Buffer, 
-	IN ULONG Length 
-) 
+VOID go(
+	IN PCHAR Buffer,
+	IN ULONG Length
+)
 {
 	datap parser;
 	const wchar_t * targetpath = NULL;

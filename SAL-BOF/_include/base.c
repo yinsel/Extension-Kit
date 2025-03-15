@@ -153,7 +153,7 @@ FARPROC DynamicLoad(const char * szLibrary, const char * szFunction)
 
 char* Utf16ToUtf8(const wchar_t* input)
 {
-    int ret = Kernel32$WideCharToMultiByte(
+    int ret = KERNEL32$WideCharToMultiByte(
         CP_UTF8,
         0,
         input,
@@ -166,7 +166,7 @@ char* Utf16ToUtf8(const wchar_t* input)
 
     char* newString = (char*)intAlloc(sizeof(char) * ret);
 
-    ret = Kernel32$WideCharToMultiByte(
+    ret = KERNEL32$WideCharToMultiByte(
         CP_UTF8,
         0,
         input,

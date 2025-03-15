@@ -1,6 +1,6 @@
 #include <windows.h>
-#include "bofdefs.h"
-#include "base.c"
+#include "../_include/bofdefs.h"
+#include "../_include/base.c"
 
 
 #ifdef __x86_64__

@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <windns.h>
-#include "bofdefs.h"
-#include "base.c"
+#include "../_include/bofdefs.h"
+#include "../_include/base.c"
 
 typedef struct _DNS_CACHE_ENTRY {
     struct _DNS_CACHE_ENTRY* pNext; // Pointer to next entry
