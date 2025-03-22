@@ -1,11 +1,14 @@
 # Extension-Kit
 AdaptixFramework Extension Kit
 
+
+
 ## Kerberus-BOF
 
 Includes all Kerbeus-BOF commands: `asktgs`, `asktgt`, `asreproasting`, `changepw`, `describe`, `hash`, `kerberoasting`, `klist`, `ptt`, `purge`, `renew`, `s4u`, `tgtdeleg`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Kerbeus-BOF/README.md)
 
 ![](./Kerbeus-BOF/_img/01.png)
+
 
 
 ## SAL-BOF
@@ -15,11 +18,13 @@ Situation Awareness Local BOFs: `arp`, `cacls`, `dir`, `env`, `ipconfig`, `listd
 ![](./SAL-BOF/_img/01.png)
 
 
+
 ## LateralMovement-BOF
 
-BOFs for lateral movement with the specified method. Available methods: `PsExec`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
+BOFs for lateral movement with the specified method. Available methods: `PsExec`, `token make & steal` [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
 
 ![](./LateralMovement-BOF/_img/01.png)
+
 
 
 ## Elevation-BOF
@@ -29,6 +34,9 @@ BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/
 ![](./Elevation-BOF/_img/01.png)
 
 
+
 ## Aliases
+
+![](./Aliases/_img/01.png)
 
 Simplification of some commands. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Aliases/README.md)

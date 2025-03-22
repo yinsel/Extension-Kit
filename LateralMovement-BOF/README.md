@@ -13,3 +13,26 @@ jump psexec <SvcBinary> <Computer>
 ```
 
 ![](_img/02.png)
+
+
+
+## token make
+
+Creates an impersonated token from a given credentials
+
+```
+token make <username> <password> <domain> <type>
+```
+
+![](_img/03.png)
+
+
+
+## token steal
+
+Steal access token from a process
+
+```
+token steal <pid>
+```
+

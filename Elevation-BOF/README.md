@@ -2,6 +2,10 @@
 
 BOFs for context elevation
 
+![](_img/01.png)
+
+
+
 ## getsystem token
 
 Elevate the current agent to SYSTEM and gain the TrustedInstaller group privilege through impersonation
@@ -11,6 +15,8 @@ getsystem token
 ```
 
 ![](_img/02.png)
+
+
 
 ## Credits
 
