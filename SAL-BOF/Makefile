@@ -12,4 +12,5 @@ bof:
 	@(x86_64-w64-mingw32-gcc -I _include -Os -fno-jump-tables -c nslookup/nslookup.c -o _bin/nslookup.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/nslookup.x64.o) && echo '[*] nslookup' || echo '[X] nslookup'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c routerprint/routerprint.c -o _bin/routerprint.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/routerprint.x64.o) && echo '[*] routerprint' || echo '[X] routerprint'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c uptime/uptime.c -o _bin/uptime.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/uptime.x64.o) && echo '[*] uptime' || echo '[X] uptime'
+	@(x86_64-w64-mingw32-gcc -I _include -Os -c useridletime/useridletime.c -o _bin/useridletime.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/useridletime.x64.o) && echo '[*] useridletime' || echo '[X] useridletime'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c whoami/whoami.c -o _bin/whoami.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/whoami.x64.o) && echo '[*] whoami' || echo '[X] whoami'
