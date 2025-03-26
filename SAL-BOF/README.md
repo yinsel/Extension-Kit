@@ -76,6 +76,14 @@ List system uptime
 uptime
 ```
 
+## useridletime
+
+Shows how long the user as been idle, displayed in seconds, minutes, hours and days.
+
+```
+useridletime
+```
+
 ## whoami
 
 List whoami /all
