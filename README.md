@@ -19,6 +19,14 @@ Situation Awareness Local BOFs: `arp`, `cacls`, `dir`, `env`, `ipconfig`, `listd
 
 
 
+## SAR-BOF
+
+Situation Awareness Local BOFs: `quser`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAR-BOF/README.md)
+
+![](./SAR-BOF/_img/01.png)
+
+
+
 ## LateralMovement-BOF
 
 BOFs for lateral movement with the specified method. Available methods: `PsExec`, `token make & steal` [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
@@ -32,6 +40,14 @@ BOFs for lateral movement with the specified method. Available methods: `PsExec`
 BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Elevation-BOF/README.md)
 
 ![](./Elevation-BOF/_img/01.png)
+
+
+
+## Injection-BOF
+
+Beacon Object Files for injects desired shellcode into target process: `inject-sec`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
+
+![](./Injection-BOF/_img/01.png)
 
 
 

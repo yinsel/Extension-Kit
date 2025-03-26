@@ -1,0 +1,20 @@
+{
+  "name": "Injection-BOF",
+  "description": "BOFs for process injection",
+  "extensions": [
+    {
+      "type": "command",
+      "agents": ["beacon"],
+
+      "command": "inject-sec",
+      "description": "Injects desired shellcode into target process using section mapping",
+      "message": "Task: inject shellcode (section mapping)",
+      "example": "inject-sec 808 /tmp/shellcode.bin",
+      "args": [
+        "INT <pid>",
+        "FILE <shellcode>"
+      ],
+      "exec": "execute bof $EXT_DIR()/_bin/inject_sec.$ARCH().o $PACK_BOF(INT {pid}, BYTES {shellcode})"
+    }
+  ]
+}
