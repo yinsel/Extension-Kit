@@ -1,5 +1,5 @@
 # Extension-Kit
-AdaptixFramework Extension Kit
+Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
 
 
