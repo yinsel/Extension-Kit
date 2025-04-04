@@ -3,6 +3,9 @@ all: bof
 bof:
 	@(mkdir _bin 2>/dev/null) && echo 'creating _bin directory' || echo '_bin directory exists'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c arp/arp.c -o _bin/arp.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/arp.x64.o) && echo '[*] arp' || echo '[X] arp'
+	
+	@(x86_64-w64-mingw32-gcc -I _include -I ./askcreds -Os -c askcreds/askcreds.c -o _bin/askcreds.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/askcreds.x64.o) && echo '[*] askcreds' || echo '[X] askcreds'
+	
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c cacls/cacls.c -o _bin/cacls.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/cacls.x64.o) && echo '[*] cacls' || echo '[X] cacls'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c dir/dir.c -o _bin/dir.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/dir.x64.o) && echo '[*] dir' || echo '[X] dir'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -s -c env/env.c -o _bin/env.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/env.x64.o) && echo '[*] env' || echo '[X] env'
