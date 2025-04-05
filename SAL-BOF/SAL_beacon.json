@@ -16,6 +16,19 @@
             "type": "command",
             "agents": ["beacon"],
 
+            "command": "askcreds",
+            "description": "Prompt for credentials",
+            "message": "BOF implementation: askcreds",
+            "example": "askcreds",
+            "args": [
+                "STRING <prompt>"
+            ],
+            "exec": "execute bof $EXT_DIR()/_bin/askcreds.$ARCH().o $PACK_BOF(WSTR {prompt})"
+        },
+        {
+            "type": "command",
+            "agents": ["beacon"],
+
             "command": "cacls",
             "description": "List user permissions for the specified file or directory, wildcards supported",
             "message": "BOF implementation: cacls",
