@@ -11,13 +11,6 @@ List ARP table
 ```
 arp
 ```
-## askcreds 
-
-Prompt for credentials
-
-```
-askcreds <prompt>
-```
 
 ## cacls
 

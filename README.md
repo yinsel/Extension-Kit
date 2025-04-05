@@ -1,4 +1,5 @@
 # Extension-Kit
+
 Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
 
@@ -24,6 +25,14 @@ Situation Awareness Local BOFs: `arp`, `cacls`, `dir`, `env`, `ipconfig`, `listd
 Situation Awareness Local BOFs: `quser`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAR-BOF/README.md)
 
 ![](./SAR-BOF/_img/01.png)
+
+
+
+## Creds-BOF
+
+BOF tools that can be used to harvest passwords [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Creds-BOF/README.md)
+
+![](./Creds-BOF/_img/01.png)
 
 
 

