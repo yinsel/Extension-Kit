@@ -7,6 +7,7 @@ bof:
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c dir/dir.c -o _bin/dir.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/dir.x64.o) && echo '[*] dir' || echo '[X] dir'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -s -c env/env.c -o _bin/env.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/env.x64.o) && echo '[*] env' || echo '[X] env'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c ipconfig/ipconfig.c -o _bin/ipconfig.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/ipconfig.x64.o) && echo '[*] ipconfig' || echo '[X] ipconfig'
+	@(x86_64-w64-mingw32-gcc -I _include -Os -c ldapsearch/ldapsearch.c -o _bin/ldapsearch.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/ldapsearch.x64.o) && echo '[*] ldapsearch' || echo '[X] ldapsearch'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c listdns/listdns.c -o _bin/listdns.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/listdns.x64.o) && echo '[*] listdns' || echo '[X] listdns'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c netstat/netstat.c -o _bin/netstat.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/netstat.x64.o) && echo '[*] netstat' || echo '[X] netstat'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -fno-jump-tables -c nslookup/nslookup.c -o _bin/nslookup.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/nslookup.x64.o) && echo '[*] nslookup' || echo '[X] nslookup'
