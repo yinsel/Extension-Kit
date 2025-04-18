@@ -1,11 +1,3 @@
-/*
-2  * PROJECT:     ReactOS netstat utility
-3  * LICENSE:     GPL - See COPYING in the top level directory
-4  * FILE:        base/applications/network/netstat/netstat.c
-5  * PURPOSE:     display IP stack statistics
-6  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>
-7  */
-
 #include <windows.h>
 #include <winbase.h>
 #include <iphlpapi.h>

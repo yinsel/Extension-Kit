@@ -9,7 +9,7 @@
 #include <stdint.h>
 #define DYNAMIC_LIB_COUNT 1
 //#include "../_include/bofdefs.h"
-#include "../_include/base.c"
+#include "base.c"
 #define SECURITY_WIN32
 #include <secext.h> 
 
@@ -593,7 +593,7 @@ VOID go(
     domain = BeaconDataExtract(&parser, NULL);
     if(MSVCRT$strcmp(domain, "automatic DN resolution") == 0){
         domain = NULL;
-    }    
+    }
     ldaps = BeaconDataInt(&parser);
 
     if(!bofstart())

@@ -2,6 +2,12 @@
 
 Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
+## AD-BOF
+
+A BOFs that contains common enumeration and attack methods for Windows Active Directory.
+
+![](./AD-BOF/_img/01.png)
+
 
 
 ## Kerberus-BOF
@@ -54,7 +60,7 @@ BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/
 
 ## Injection-BOF
 
-Beacon Object Files for injects desired shellcode into target process: `inject-sec`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
+Beacon Object Files for injects desired shellcode into target process: `inject-cfg`, `inject-sec`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
 
 ![](./Injection-BOF/_img/01.png)
 
