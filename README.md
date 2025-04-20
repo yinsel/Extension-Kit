@@ -4,7 +4,7 @@ Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
 ## AD-BOF
 
-A BOFs that contains common enumeration and attack methods for Windows Active Directory.
+BOFs that contains common enumeration and attack methods for Windows Active Directory.
 
 ![](./AD-BOF/_img/01.png)
 
@@ -36,7 +36,7 @@ BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/
 
 ## Execution-BOF
 
-BOFs for inline execution
+BOFs for inline execution. [More details on `execute-assembly`](https://github.com/anthemtotheego/InlineExecute-Assembly)
 
 ![](./Execution-BOF/_img/01.png)
 
@@ -66,6 +66,14 @@ BOFs for lateral movement with the specified method. Available methods: `PsExec`
 
 
 
+## PrivCheck-BOF
+
+BOFs to detect common privilege escalation paths in Windows. [More details](https://github.com/ostrichgolf/PrivCheck).
+
+![](./PrivCheck-BOF/_img/01.png)
+
+
+
 ## SAL-BOF
 
 Situation Awareness Local BOFs: `arp`, `cacls`, `dir`, `env`, `ipconfig`, `listdns`, `netstat`, `nslookup`, `routerprint`, `uptime`, `whoami`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAL-BOF/README.md)
@@ -84,8 +92,7 @@ Situation Awareness Local BOFs: `quser`. [More details](https://github.com/Adapt
 
 ## UAC-BOF
 
-BOFs for UAC bypass
+BOFs for UAC bypass. [More details](https://github.com/icyguider/UAC-BOF-Bonanza).
 
 ![](./UAC-BOF/_img/01.png)
-
 
