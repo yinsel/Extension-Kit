@@ -1,7 +1,7 @@
 all: dir bof
 
 clean:
-	@(rm -f _bin/*)
+	@(rm -f _bin/* && echo '[*] cleaned')
 
 dir:
 	@(mkdir _bin 2>/dev/null) && echo '[+] creating _bin' || echo '[*] _bin exists'
