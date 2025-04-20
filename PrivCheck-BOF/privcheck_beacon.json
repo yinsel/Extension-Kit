@@ -1,0 +1,80 @@
+{
+  "name": "Privcheck-BOF",
+  "description": "BOFs to detect common privilege escalation paths in Windows",
+  "extensions": [
+    {
+      "type": "command",
+      "agents": ["beacon"],
+      "command": "privcheck",
+      "description": "perform privcheck functions",
+      "message": "all credit to @mertdas and @ostrichgolf",
+      "subcommands":
+      [
+        {
+          "name": "alwayselevated",
+          "description": "Checks if Always Install Elevated is enabled using the registry",
+          "example": "privcheck alwayselevated",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/alwayselevated.x64.o"
+        },
+        {
+          "name": "autologon",
+          "description": "Checks the registry for autologon information",
+          "example": "privcheck autologon",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/autologon.x64.o"
+        },
+        {
+          "name": "credman",
+          "description": "Checks the current user's Windows Credential Manager for saved web passwords",
+          "example": "privcheck credman",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/credman.x64.o"
+        },
+        {
+          "name": "hijackablepath",
+          "description": "Checks the path environment variable for writable directories (FILE_ADD_FILE) that can be exploited to elevate privileges",
+          "example": "privcheck hijackablepath",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/hijackablepath.x64.o"
+        },
+        {
+          "name": "tokenpriv",
+          "description": "Lists the current token privileges and highlights known vulnerable ones",
+          "example": "privcheck tokenpriv",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/tokenpriv.x64.o"
+        },
+        {
+          "name": "unattendfiles",
+          "description": "Checks for leftover unattend files that might contain sensitive information",
+          "example": "privcheck unattendfiles",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/unattendfiles.x64.o"
+        },
+        {
+          "name": "unquotedsvc",
+          "description": "Checks for unquoted service paths",
+          "example": "privcheck unquotedsvc",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/unquotedsvc.x64.o"
+        },
+        {
+          "name": "vulndrivers",
+          "description": "Checks if any service on the system uses a known vulnerable driver (based on loldrivers.io)",
+          "example": "privcheck vulndrivers",
+          "args": [
+          ],
+          "exec": "execute bof $EXT_DIR()/_bin/vulndrivers.x64.o"
+        }
+      ]
+    } 
+  ]
+}
