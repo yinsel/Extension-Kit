@@ -89,4 +89,3 @@ BOFs for UAC bypass
 ![](./UAC-BOF/_img/01.png)
 
 
-
