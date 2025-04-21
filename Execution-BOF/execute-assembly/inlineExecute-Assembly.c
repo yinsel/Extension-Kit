@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <evntprov.h>
 
-#include "beacon.h"
+#include "../_include/beacon.h"
 #include "inlineExecute-Assembly.h"
 
 /*Make MailSlot*/

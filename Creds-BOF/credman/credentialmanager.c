@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <windows.h>
 #include <wincred.h>
-#include "beacon.h"
-#include "bofdefs.h"
+#include "../_include/beacon.h"
+#include "../_include/bofdefs.h"
 
 void go() {
     DWORD count;

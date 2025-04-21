@@ -7,7 +7,7 @@
       "agents": ["beacon"],
       "command": "execute-assembly",
       "description": "perform in process .NET assembly execution",
-      "message": "all credit to @anthemtotheego and @prac_sec for the new bypass",
+      "message": "Task: execute .NET assembly ",
       "example": "execute-assembly /opt/windows/Seatbelt.exe -group=user",
       "args": [
             "FILE <path>",

@@ -2,20 +2,18 @@
 
 BOFs for inline execution
 
-![help](./_img/01.png)
+![](./_img/01.png)
 
 ## execute-assembly
 
 Perform in process .NET assembly execution
 
 ```
-> execute-assembly /opt/windows/Seatbelt.exe Antivirus AppLocker
+execute-assembly <binary> [params]
 ```
 
-![output](./_img/02.png)
-
-## Hacks
-
+![](./_img/02.png)
+ 
 The defaults are set as follows in `execute-assembly/inlineExecute-Assembly.c` to change them, edit and recompile.
 
 ```

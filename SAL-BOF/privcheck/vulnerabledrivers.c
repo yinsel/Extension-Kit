@@ -3,7 +3,7 @@
 #include <wincrypt.h>
 
 #include "bofdefs.h"
-#include "beacon.h"
+#include "../_include/beacon.h"
 #include "vulndrivers.h"
 
 #define BUFSIZE		1024

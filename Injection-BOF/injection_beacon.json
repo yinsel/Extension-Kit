@@ -9,7 +9,7 @@
       "command": "inject-cfg",
       "description": "Inject shellcode into a target process and hijack execution via overwriting combase.dll!__guard_check_icall_fptr",
       "message": "Task: Executing DataInject-BOF by @0xLegacyy",
-      "example": "inject-sec 808 /tmp/shellcode.bin",
+      "example": "inject-cfg 808 /tmp/shellcode.bin",
       "args": [
         "INT <pid>",
         "FILE <shellcode>"

@@ -2,9 +2,11 @@
 
 Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
+
+
 ## AD-BOF
 
-BOFs that contains common enumeration and attack methods for Windows Active Directory.
+A BOFs that contains common enumeration and attack methods for Windows Active Directory.
 
 ![](./AD-BOF/_img/01.png)
 
@@ -34,9 +36,9 @@ BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/
 
 
 
-## Execution-BOF
+## Execution-BOF 
 
-BOFs for inline execution. [More details on `execute-assembly`](https://github.com/anthemtotheego/InlineExecute-Assembly)
+BOFs for inline execution. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Execution-BOF/README.md)
 
 ![](./Execution-BOF/_img/01.png)
 
@@ -44,7 +46,7 @@ BOFs for inline execution. [More details on `execute-assembly`](https://github.c
 
 ## Injection-BOF
 
-Beacon Object Files for injects desired shellcode into target process: `inject-cfg`, `inject-sec`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
+Beacon Object Files for injects desired shellcode into target process. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
 
 ![](./Injection-BOF/_img/01.png)
 
@@ -52,7 +54,7 @@ Beacon Object Files for injects desired shellcode into target process: `inject-c
 
 ## Kerberus-BOF
 
-Includes all Kerbeus-BOF commands: `asktgs`, `asktgt`, `asreproasting`, `changepw`, `describe`, `hash`, `kerberoasting`, `klist`, `ptt`, `purge`, `renew`, `s4u`, `tgtdeleg`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Kerbeus-BOF/README.md)
+Includes all Kerbeus-BOF commands. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Kerbeus-BOF/README.md)
 
 ![](./Kerbeus-BOF/_img/01.png)
 
@@ -60,23 +62,15 @@ Includes all Kerbeus-BOF commands: `asktgs`, `asktgt`, `asreproasting`, `changep
 
 ## LateralMovement-BOF
 
-BOFs for lateral movement with the specified method. Available methods: `PsExec`, `token make & steal` [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
+BOFs for lateral movement with the specified method. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
 
 ![](./LateralMovement-BOF/_img/01.png)
 
 
 
-## PrivCheck-BOF
-
-BOFs to detect common privilege escalation paths in Windows. [More details](https://github.com/ostrichgolf/PrivCheck).
-
-![](./PrivCheck-BOF/_img/01.png)
-
-
-
 ## SAL-BOF
 
-Situation Awareness Local BOFs: `arp`, `cacls`, `dir`, `env`, `ipconfig`, `listdns`, `netstat`, `nslookup`, `routerprint`, `uptime`, `whoami`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAL-BOF/README.md)
+Situation Awareness Local BOFs. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAL-BOF/README.md)
 
 ![](./SAL-BOF/_img/01.png)
 
@@ -84,15 +78,6 @@ Situation Awareness Local BOFs: `arp`, `cacls`, `dir`, `env`, `ipconfig`, `listd
 
 ## SAR-BOF
 
-Situation Awareness Local BOFs: `quser`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAR-BOF/README.md)
+Situation Awareness Local BOFs. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAR-BOF/README.md)
 
 ![](./SAR-BOF/_img/01.png)
-
-
-
-## UAC-BOF
-
-BOFs for UAC bypass. [More details](https://github.com/icyguider/UAC-BOF-Bonanza).
-
-![](./UAC-BOF/_img/01.png)
-
