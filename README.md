@@ -4,9 +4,49 @@ Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
 ## AD-BOF
 
-A BOFs that contains common enumeration and attack methods for Windows Active Directory.
+BOFs that contains common enumeration and attack methods for Windows Active Directory.
 
 ![](./AD-BOF/_img/01.png)
+
+
+
+## Aliases
+
+![](./Aliases/_img/01.png)
+
+Simplification of some commands. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Aliases/README.md)
+
+
+
+## Creds-BOF
+
+BOF tools that can be used to harvest passwords [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Creds-BOF/README.md)
+
+![](./Creds-BOF/_img/01.png)
+
+
+
+## Elevation-BOF
+
+BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Elevation-BOF/README.md)
+
+![](./Elevation-BOF/_img/01.png)
+
+
+
+## Execution-BOF
+
+BOFs for inline execution. [More details on `execute-assembly`](https://github.com/anthemtotheego/InlineExecute-Assembly)
+
+![](./Execution-BOF/_img/01.png)
+
+
+
+## Injection-BOF
+
+Beacon Object Files for injects desired shellcode into target process: `inject-cfg`, `inject-sec`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
+
+![](./Injection-BOF/_img/01.png)
 
 
 
@@ -15,6 +55,22 @@ A BOFs that contains common enumeration and attack methods for Windows Active Di
 Includes all Kerbeus-BOF commands: `asktgs`, `asktgt`, `asreproasting`, `changepw`, `describe`, `hash`, `kerberoasting`, `klist`, `ptt`, `purge`, `renew`, `s4u`, `tgtdeleg`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Kerbeus-BOF/README.md)
 
 ![](./Kerbeus-BOF/_img/01.png)
+
+
+
+## LateralMovement-BOF
+
+BOFs for lateral movement with the specified method. Available methods: `PsExec`, `token make & steal` [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
+
+![](./LateralMovement-BOF/_img/01.png)
+
+
+
+## PrivCheck-BOF
+
+BOFs to detect common privilege escalation paths in Windows. [More details](https://github.com/ostrichgolf/PrivCheck).
+
+![](./PrivCheck-BOF/_img/01.png)
 
 
 
@@ -34,40 +90,9 @@ Situation Awareness Local BOFs: `quser`. [More details](https://github.com/Adapt
 
 
 
-## Creds-BOF
+## UAC-BOF
 
-BOF tools that can be used to harvest passwords [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Creds-BOF/README.md)
+BOFs for UAC bypass. [More details](https://github.com/icyguider/UAC-BOF-Bonanza).
 
-![](./Creds-BOF/_img/01.png)
+![](./UAC-BOF/_img/01.png)
 
-
-
-## LateralMovement-BOF
-
-BOFs for lateral movement with the specified method. Available methods: `PsExec`, `token make & steal` [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/LateralMovement-BOF/README.md)
-
-![](./LateralMovement-BOF/_img/01.png)
-
-
-
-## Elevation-BOF
-
-BOFs for context elevation. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Elevation-BOF/README.md)
-
-![](./Elevation-BOF/_img/01.png)
-
-
-
-## Injection-BOF
-
-Beacon Object Files for injects desired shellcode into target process: `inject-cfg`, `inject-sec`. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
-
-![](./Injection-BOF/_img/01.png)
-
-
-
-## Aliases
-
-![](./Aliases/_img/01.png)
-
-Simplification of some commands. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Aliases/README.md)

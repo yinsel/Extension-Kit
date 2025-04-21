@@ -14,7 +14,7 @@
         "INT <pid>",
         "FILE <shellcode>"
       ],
-      "exec": "execute bof $EXT_DIR()/_bin/datainject.x64.o $PACK_BOF(INT {pid}, BYTES {shellcode})"
+      "exec": "execute bof $EXT_DIR()/_bin/inject_cfg.x64.o $PACK_BOF(INT {pid}, BYTES {shellcode})"
     },
     {
       "type": "command",
