@@ -13,7 +13,7 @@
             "FILE <path>",
             "STRING <params>"
       ],
-      "exec": "execute bof $EXT_DIR()/_bin/execute-assembly.x64.o $PACK_BOF(BYTES {path}, CSTR {params})"
+      "exec": "execute bof $EXT_DIR()/_bin/execute-assembly.$ARCH().o $PACK_BOF(BYTES {path}, CSTR {params})"
     }
   ]
 }
