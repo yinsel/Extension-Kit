@@ -1,7 +1,10 @@
 all: bof
 
+clean:
+	@(rm -f _bin/* && echo '[*] cleaned')
+
 bof:
-	@(mkdir _bin 2>/dev/null) && echo 'creating _bin directory' || echo '_bin directory exists'
+	@(mkdir _bin 2>/dev/null) && echo '[+] creating _bin' || echo '[*] _bin exists'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c arp/arp.c -o _bin/arp.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/arp.x64.o) && echo '[*] arp' || echo '[X] arp'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c cacls/cacls.c -o _bin/cacls.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/cacls.x64.o) && echo '[*] cacls' || echo '[X] cacls'
 	@(x86_64-w64-mingw32-gcc -I _include -Os -c dir/dir.c -o _bin/dir.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/dir.x64.o) && echo '[*] dir' || echo '[X] dir'
@@ -21,3 +24,6 @@ bof:
 	@(x86_64-w64-mingw32-gcc -w -Wno-incompatible-pointer-types -Os -s -c -o _bin/tokenpriv.x64.o privcheck/tokenprivileges.c && x86_64-w64-mingw32-strip --strip-unneeded _bin/tokenpriv.x64.o) && echo '[*] tokenpriv' || echo '[!] tokenpriv build failed'
 	@(x86_64-w64-mingw32-gcc -w -Wno-incompatible-pointer-types -Os -s -c -o _bin/unattendfiles.x64.o privcheck/unattendfiles.c && x86_64-w64-mingw32-strip --strip-unneeded _bin/unattendfiles.x64.o) && echo '[*] unattendfiles' || echo '[!] unattendfiles build failed'
 	@(x86_64-w64-mingw32-gcc -w -Wno-incompatible-pointer-types -Os -s -c -o _bin/unquotedsvc.x64.o privcheck/unquotedsvcpath.c && x86_64-w64-mingw32-strip --strip-unneeded _bin/unquotedsvc.x64.o) && echo '[*] unquotedsvc' || echo '[!] unquotedsvc build failed'
+	@(x86_64-w64-mingw32-gcc -masm=intel -w -Wno-incompatible-pointer-types -o _bin/findmodule.x64.o -I ./_include/ -Os -s -c findobjects/FindModule.c && x86_64-w64-mingw32-strip --strip-unneeded _bin/findmodule.x64.o) && echo '[*] findmodule' || echo '[!] findmodule build failed'
+	@(x86_64-w64-mingw32-gcc -masm=intel -w -Wno-incompatible-pointer-types -o _bin/findprochandle.x64.o -I ./_include/ -Os -s -c findobjects/FindProcHandle.c && x86_64-w64-mingw32-strip --strip-unneeded _bin/findprochandle.x64.o) && echo '[*] findprochandle' || echo '[!] findprochandle build failed'
+	@(x86_64-w64-mingw32-gcc -masm=intel -w -o _bin/winver.x64.o -I ./_include/ -Os -s -c winver/Winver.c && x86_64-w64-mingw32-strip --strip-unneeded _bin/winver.x64.o) && echo '[*] winver' || echo '[!] winver build failed'
