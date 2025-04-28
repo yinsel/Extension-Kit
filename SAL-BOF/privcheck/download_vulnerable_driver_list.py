@@ -13,7 +13,7 @@ HASH_OUTPUT_FILE = OUTPUT_PATH + "/_include/vulndrivers.h"
 '''
 
 CSV_FILE = "/tmp/drivers.csv"
-HASH_OUTPUT_FILE = "vulndrivers.h"
+HASH_OUTPUT_FILE = "./privcheck/vulndrivers.h"
 
 # Download CSV with all vulnerable hashes
 driverreq = Request("https://www.loldrivers.io/api/drivers.csv")
