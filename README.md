@@ -66,7 +66,11 @@ BOFs for lateral movement with the specified method. [More details](https://gith
 
 ![](./LateralMovement-BOF/_img/01.png)
 
+## Process-BOF
 
+BOFs that provide situational awareness of processes, modules, and services. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Process-BOF/README.md)
+
+![](./Process-BOF/_img/01.png)
 
 ## SAL-BOF
 
