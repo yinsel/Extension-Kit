@@ -36,6 +36,21 @@ List process environment variables
 env
 ```
 
+## findobj
+
+Enumerate processes for specific modules or process handles. Taken from [outflanknl/C2-Tool-Collection](https://github.com/outflanknl/C2-Tool-Collection/tree/main/BOF/FindObjects)
+
+```
+findobj <objtype> <object>
+```
+
+| Module       | Description                                                  |
+| ------------ | ------------------------------------------------------------ |
+| `module`     | Enumerate processes for specific loaded modules (eg. `winhttp.dll`, `amsi.dll` or  `clr.dll`). |
+| `prochandle` | Enumerate processes for specific process handles (eg. `lsass.exe`). |
+
+![](./_img/02.png)
+
 ## ipconfig
 
 List IPv4 address, hostname, and DNS server
@@ -60,7 +75,9 @@ Make a DNS query
 nslookup <domain> [server] [type>]
 ```
 
-# privcheck
+
+
+## privcheck
 
 BOFs to detect common privilege escalation paths in Windows. This is taken from [ostrichgolf/PrivCheck](https://github.com/ostrichgolf/PrivCheck) which was originally forked from [mertdas/PrivKit](https://github.com/mertdas/PrivKit). PrivCheck currently includes the following modules:
 
@@ -85,7 +102,7 @@ List IPv4 routes
 
 ```
 routeprint
-``` 
+```
 
 ## uptime
 
@@ -111,8 +128,17 @@ List whoami /all
 whoami
 ```
 
+## winver
+
+Display the version of Windows that is running, the build number and patch release.
+
+```
+winver
+```
+
 
 
 ## Credits
 * CS-Situational-Awareness-BOF - https://github.com/trustedsec/CS-Situational-Awareness-BOF
 * PrivCheck - https://github.com/ostrichgolf/PrivCheck
+* C2-Tool-Collection - https://github.com/outflanknl/C2-Tool-Collection/
