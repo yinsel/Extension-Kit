@@ -1,4 +1,4 @@
-# SAL-BOF
+# Process-BOF
 
 This extension increases situational awareness of processes, modules, and services by providing a set of Beacon Object File (BOF) commands.
 

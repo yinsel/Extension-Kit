@@ -1,6 +1,6 @@
 {
-    "name": "SAL-BOF",
-    "description": "Situation Awareness Local BOFs",
+    "name": "Process-BOF",
+    "description": "situational awareness of processes, modules, and services",
     "extensions": [
         {
             "type": "command",
