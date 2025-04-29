@@ -52,33 +52,6 @@
         {
             "type": "command",
             "agents": ["beacon"],
-            "command": "findobj",
-            "description": "Enumerate processes for specific objects",
-            "subcommands":
-            [
-                {
-                  "name": "module",
-                  "description": "identify processes which have a certain module loaded",
-                  "example": "findobj module clr.dll",
-                  "args": [
-                    "STRING <module>"
-                  ],
-                  "exec": "execute bof $EXT_DIR()/_bin/findmodule.$ARCH().o $PACK_BOF(WSTR {module})"
-                },
-                {
-                  "name": "prochandle",
-                  "description": "identify processes with a specific process handle in use",
-                  "example": "findobj prochandle lsass.exe",
-                  "args": [
-                    "STRING <proc>"
-                  ],
-                  "exec": "execute bof $EXT_DIR()/_bin/findprochandle.$ARCH().o $PACK_BOF(WSTR {proc})"
-                }
-            ]
-        },
-        {
-            "type": "command",
-            "agents": ["beacon"],
 
             "command": "ipconfig",
             "description": "List IPv4 address, hostname, and DNS server",
@@ -230,7 +203,8 @@
             "agents": ["beacon"],
 
             "command": "winver",
-            "description": "Disply the windows version information",
+            "description": "Display the windows version information",
+            "message": "BOF implementation: systeminfo /version",
             "example": "winver",
             "exec": "execute bof $EXT_DIR()/_bin/winver.$ARCH().o"
         }
