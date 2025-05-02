@@ -85,3 +85,11 @@ Situation Awareness Local BOFs. [More details](https://github.com/Adaptix-Framew
 Situation Awareness Local BOFs. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/SAR-BOF/README.md)
 
 ![](./SAR-BOF/_img/01.png)
+
+
+
+# CONTRIBUTING
+
+Please pushing сhanges to **test_pr** braach. Otherwise, changes will be made manually in the **test_pr** branch.
+
+The **dev** branch only works in the dev version of the AdaptixC2 Framework.
