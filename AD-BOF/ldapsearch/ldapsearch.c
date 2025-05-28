@@ -8,7 +8,7 @@
 #include <rpcdce.h>
 #include <stdint.h>
 #define DYNAMIC_LIB_COUNT 1
-//#include "../_include/bofdefs.h"
+
 #include "base.c"
 #define SECURITY_WIN32
 #include <secext.h> 
@@ -609,5 +609,3 @@ VOID go(
     }
     bofstop();
 };
-
-
