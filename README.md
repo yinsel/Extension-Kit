@@ -66,11 +66,23 @@ BOFs for lateral movement with the specified method. [More details](https://gith
 
 ![](./LateralMovement-BOF/_img/01.png)
 
+
+
 ## Process-BOF
 
 BOFs that provide situational awareness of processes, modules, and services. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Process-BOF/README.md)
 
 ![](./Process-BOF/_img/01.png)
+
+
+
+## Postex-BOF
+
+This extension allows you to customize the Beacon Object File (BOF) for future use. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Postex-BOF/README.md)
+
+![](./Postex-BOF/_img/01.png)
+
+
 
 ## SAL-BOF
 
@@ -90,6 +102,4 @@ Situation Awareness Local BOFs. [More details](https://github.com/Adaptix-Framew
 
 # CONTRIBUTING
 
-Please pushing сhanges to **test_pr** braach. Otherwise, changes will be made manually in the **test_pr** branch.
-
-The **dev** branch only works in the dev version of the AdaptixC2 Framework.
+Please pushing сhanges to **dev** branch. Otherwise, changes will be made manually in the **dev** branch.
