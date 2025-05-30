@@ -755,7 +755,6 @@ void go()
                     // This thing not works for non-english usernames, will need to find why we got -1 for it. swprintf makes Beacon die - need to debug
                     MSVCRT$wcscat_s(outputBuffer, offsetCount * 128, partBuffer);
                     bufferSize += partSize;
-                    BeaconPrintf(CALLBACK_OUTPUT, "Full: %d, Part: %d\n", bufferSize, partSize);
                 }
 
                 FreeMemory(encrypted_hash);
