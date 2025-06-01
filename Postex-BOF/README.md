@@ -4,6 +4,18 @@ This extension allows you to customize the Beacon Object File (BOF) for future u
 
 ![](_img/01.png)
 
+
+
+## firewallrule
+
+A BOF tool that can be used to add a new inbound or outbound firewall rule using COM.
+
+```
+firewallrule add <direction> <port> <rulename> [-g rulegroup] [-d description]
+```
+
+
+
 ## ScreenshotBOF
 
 An alternative screenshot capability that uses WinAPI and does not perform a fork & run:
@@ -18,5 +30,8 @@ screenshot_bof [-n note] [-p pid]
 
 The screenshot will be saved in the AdaptixC2 screenshot storage.
 
+
+
 ## Credits
 * ScreenshotBOF - https://github.com/CodeXTF2/ScreenshotBOF
+* OperatorsKit - https://github.com/REDMED-X/OperatorsKit
