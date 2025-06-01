@@ -422,10 +422,10 @@ void go(IN PCHAR buffer, IN ULONG blength)
     char* assemblyBytes = BeaconDataExtract(&parser, &assemblyByteLen);
     char* assemblyArguments = BeaconDataExtract(&parser, NULL);
 	if (assemblyArguments == NULL) {
-        // no STRING arg supplied will use empty string
-        static char emptyArgs[] = "";
-        assemblyArguments = emptyArgs;
-    }
+		// no STRING arg supplied will use empty string
+		static char emptyArgs[] = "";
+		assemblyArguments = emptyArgs;
+	}
 
 	//BeaconPrintf(CALLBACK_OUTPUT, "[+] assemblyByteLen:   %d\n", assemblyByteLen);
 	//BeaconPrintf(CALLBACK_OUTPUT, "[+] assemblyArguments: %s\n", assemblyArguments);

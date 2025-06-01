@@ -32,6 +32,8 @@ Checks the current user's Windows Credential Manager for saved web passwords and
 credman
 ```
 
+
+
 ## hashdump
 
 Gathers NTLM hashes from SAM and SYSTEM.
@@ -39,6 +41,8 @@ Gathers NTLM hashes from SAM and SYSTEM.
 ```
 hashdump
 ```
+
+
 
 ## Credits
 * C2-Tool-Collection - https://github.com/outflanknl/C2-Tool-Collection
