@@ -1,4 +1,4 @@
-# Process-BOF
+# PostEx-BOF
 
 This extension allows you to customize the Beacon Object File (BOF) for future use.
 
@@ -11,7 +11,7 @@ This extension allows you to customize the Beacon Object File (BOF) for future u
 A BOF tool that can be used to add a new inbound or outbound firewall rule using COM.
 
 ```
-firewallrule add <direction> <port> <rulename> [-g rulegroup] [-d description]
+firewallrule add <port> <rulename> [direction] [-g rulegroup] [-d description]
 ```
 
 
@@ -24,11 +24,15 @@ An alternative screenshot capability that uses WinAPI and does not perform a for
 - Removed BMP renderer (it will be missed)
 - Supports capturing of minimized windows
 
+The screenshot will be saved in the AdaptixC2 screenshot storage.
+
 ```
 screenshot_bof [-n note] [-p pid]
 ```
 
-The screenshot will be saved in the AdaptixC2 screenshot storage.
+The **Screenshot** item will be added to the **Access** menu in the Sessions Table and Graph.
+
+![](_img/02.png)
 
 
 

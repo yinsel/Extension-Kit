@@ -520,7 +520,7 @@ void ldapSearch(char * ldap_filter, char * ldap_attributes,	ULONG results_count,
     }while(stat == LDAP_SUCCESS);
 
     end: 
-    internal_printf("\nretreived %lu results total\n", totalResults);
+	internal_printf("\nretrieved %lu results total\n", totalResults);
     if(pPageHandle)
     {
         searchDone(pLdapConnection, pPageHandle);
@@ -586,11 +586,11 @@ VOID go(
     results_count = BeaconDataInt(&parser);
     scope_of_search = BeaconDataInt(&parser);
     hostname = BeaconDataExtract(&parser, NULL);
-    if(MSVCRT$strcmp(hostname, "automatic DC resolution") == 0){
+    if(hostname[0] == 0){
         hostname = NULL;
     }
     domain = BeaconDataExtract(&parser, NULL);
-    if(MSVCRT$strcmp(domain, "automatic DN resolution") == 0){
+    if(domain[0] == 0){
         domain = NULL;
     }
     ldaps = BeaconDataInt(&parser);

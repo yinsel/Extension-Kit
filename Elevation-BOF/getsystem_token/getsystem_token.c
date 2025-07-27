@@ -130,7 +130,6 @@ BOOL ElevateSystem(HANDLE *hTokenSystem)
     if(PID != 0){
         if(ImpersonateByPID(PID, hTokenSystem))
             return TRUE;
-
     }
     return FALSE;
 }
@@ -163,5 +162,5 @@ void go(char *args, int len)
     if(!ElevateTrustedInstaller(&hTokenTrustedInstaller))
       return;
 
-    BeaconOutput(CALLBACK_OUTPUT, "Impersonate to SYSTEM succeeded\nImpersonate to TrustedInstaller succeeded\n", 74);
+    BeaconOutput(CALLBACK_OUTPUT, "Impersonate to SYSTEM & TrustedInstaller succeeded", 51);
 }

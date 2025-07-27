@@ -10,8 +10,14 @@ A BOFs that contains common enumeration and attack methods for Windows Active Di
 Execute LDAP searches (NOTE: specify *,ntsecuritydescriptor as attribute parameter if you want all attributes + base64 encoded ACL of the objects, this can then be resolved using BOFHound. Could possibly break pagination, although everything seemed fine during testing.)
 
 ```
-ldapsearch <query> <-attributes attributes> <-count count> <-scope scope> <-hostname hostname> <-dn dn> <-ldaps ldaps>
+ldapsearch <query> [-a attributes] [-c count>] [-s scope] [--dc dc] [--dn dn] [--ldaps]
 ```
+
+
+
+## kerbeus
+
+Beacon Object Files for Kerberos abuse. This is an implementation of some important features of the [Rubeus](https://github.com/GhostPack/Rubeus) project, written in C. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/Kerbeus-BOF/README.md)
 
 
 

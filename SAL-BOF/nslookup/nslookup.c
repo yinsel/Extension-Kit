@@ -170,7 +170,7 @@ void query_domain(const char * domainname, unsigned short wType, const char * dn
                             if (i != 15)
                                     internal_printf(".");
                     }
-                    internal_printf("]");
+                    internal_printf("]\n");
             }else if(pdns->wType == DNS_TYPE_SRV){
 
                     internal_printf("SRV %s %s port:%d prior:%d weight:%d\n", pdns->pName, pdns->Data.SRV.pNameTarget, pdns->Data.SRV.wPort, pdns->Data.SRV.wPriority, pdns->Data.SRV.wWeight);
@@ -248,10 +248,8 @@ VOID go(
         s_type = BeaconDataExtract(&parser, NULL);
 	server = BeaconDataExtract(&parser, NULL);
         type = get_record_mapping(s_type);
-        if(MSVCRT$strcmp(server, "0") == 0)
-        {
+        if(server[0] == 0)
                 server = NULL;
-        }
 	query_domain(target, type, server);
 	printoutput(TRUE);
 }

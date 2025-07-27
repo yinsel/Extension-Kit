@@ -2,21 +2,29 @@
 
 Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
+# Installation
 
+Building modules via make
+
+```bash
+git clone https://github.com/Adaptix-Framework/Extension-Kit
+cd Extension-Kit
+make
+```
+
+Load all modules in AdaptixC2 client: **Main menu** -> **AxScript** -> **Script manager**. 
+
+![](./_img/01.png)
+
+**Context menu** -> **Load new** and select the _extension-kit.axs_ file.
+
+# Modules
 
 ## AD-BOF
 
 A BOFs that contains common enumeration and attack methods for Windows Active Directory.
 
 ![](./AD-BOF/_img/01.png)
-
-
-
-## Aliases
-
-![](./Aliases/_img/01.png)
-
-Simplification of some commands. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Aliases/README.md)
 
 
 
@@ -49,14 +57,6 @@ BOFs for inline execution. [More details](https://github.com/Adaptix-Framework/E
 Beacon Object Files for injects desired shellcode into target process. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Injection-BOF/README.md)
 
 ![](./Injection-BOF/_img/01.png)
-
-
-
-## Kerberus-BOF
-
-Includes all Kerbeus-BOF commands. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Kerbeus-BOF/README.md)
-
-![](./Kerbeus-BOF/_img/01.png)
 
 
 
