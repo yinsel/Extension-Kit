@@ -4,6 +4,13 @@ Beacon Object Files for injects desired shellcode into target process
 
 ![](_img/01.png)
 
+The **Inject** item will be added to the context menu in the Process Browser.
+
+![](_img/02.png)
+
+![](_img/03.png)
+
+
 
 ## inject-cfg
 

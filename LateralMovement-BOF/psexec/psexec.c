@@ -51,7 +51,7 @@ void go(char *args, int len)
 
     NETRESOURCEA nr = {NULL, RESOURCETYPE_DISK, NULL, NULL, NULL, remoteName, NULL, NULL};
     if (MPR$WNetAddConnection2A(&nr, NULL, NULL, 0) != NO_ERROR) {
-        BeaconPrintf(CALLBACK_ERROR, "Connection failed: %lu\n", KERNEL32$GetLastError());
+        BeaconPrintf(CALLBACK_ERROR, "Connection failed: %d\n", KERNEL32$GetLastError());
         return;
     }
 

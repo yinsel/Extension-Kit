@@ -12,10 +12,10 @@ Enumerate processes for specific modules or process handles. Taken from [outflan
 findobj <type> <name>
 ```
 
-| Type         | Description                                                  |
-|--------------| ------------------------------------------------------------ |
+| Type         | Description                                                                                    |
+|--------------|------------------------------------------------------------------------------------------------|
 | `module`     | Enumerate processes for specific loaded modules (eg. `winhttp.dll`, `amsi.dll` or  `clr.dll`). |
-| `prochandle` | Enumerate processes for specific process handles (eg. `lsass.exe`). |
+| `prochandle` | Enumerate processes for specific process handles (eg. `lsass.exe`).                            |
 
 ![](_img/02.png)
 

@@ -52,6 +52,7 @@ WINBASEAPI DWORD WINAPI KERNEL32$GetLastError(VOID);
 WINBASEAPI DWORD WINAPI KERNEL32$GetCurrentProcessId();
 WINBASEAPI HANDLE WINAPI KERNEL32$OpenProcess(DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwProcessId);
 WINBASEAPI BOOL WINAPI KERNEL32$QueryFullProcessImageNameW(HANDLE hProcess, DWORD  dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
+WINBASEAPI int WINAPI KERNEL32$WideCharToMultiByte(UINT CodePage, DWORD dwFlags, LPCWCH lpWideCharStr, int cchWideChar, LPSTR lpMultiByteStr, int cbMultiByte, LPCCH lpDefaultChar, LPBOOL lpUsedDefaultChar);
 
 //MSVCRT
 WINBASEAPI void __cdecl MSVCRT$memset(void *dest, int c, size_t count);
@@ -70,6 +71,7 @@ WINUSERAPI LONG_PTR USER32$GetWindowLongA(HWND hWnd, int  nIndex);
 
 //SECUR32
 WINBASEAPI BOOLEAN WINAPI SECUR32$GetUserNameExW(EXTENDED_NAME_FORMAT NameFormat, LPWSTR lpNameBuffer, PULONG nSize);
+DECLSPEC_IMPORT VOID WINAPI OLE32$CoTaskMemFree(LPVOID pv);
 
 //SHLWAPI
 WINBASEAPI PCWSTR WINAPI SHLWAPI$StrStrIW(PCWSTR pszFirst, PCWSTR pszSrch);

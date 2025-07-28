@@ -25,7 +25,7 @@ cacls <path>
 Lists files in a specified directory. Supports wildcards (e.g. "C:\Windows\S*"). Optionally, it can perform a recursive list with the `/s` argument
 
 ```
-dir [path] [/s]
+dir <path> [/s]
 ```
 
 ## env
@@ -109,14 +109,6 @@ List whoami /all
 
 ```
 whoami
-```
-
-## winver
-
-Display the version of Windows that is running, the build number and patch release.
-
-```
-winver
 ```
 
 
