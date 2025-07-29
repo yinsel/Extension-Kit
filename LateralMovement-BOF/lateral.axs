@@ -3,7 +3,7 @@ var metadata = {
     description: "BOFs for lateral movement"
 };
 
-var _cmd_jump_psexec = ax.create_command("psexec", "Attempt to spawn a session on a remote target via PsExec", "jump psexec /tmp/agent_svc.exe 192.168.0.1");
+var _cmd_jump_psexec = ax.create_command("psexec", "Attempt to spawn a session on a remote target via PsExec", "jump psexec 192.168.0.1 /tmp/agent_svc.exe");
 _cmd_jump_psexec.addArgString("target", true);
 _cmd_jump_psexec.addArgFile("binary", true);
 _cmd_jump_psexec.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
