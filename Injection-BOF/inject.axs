@@ -36,7 +36,7 @@ cmd_inject_sec.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 var cmd_inject_poolparty = ax.create_command("inject-poolparty", "Injects desired shellcode into target process using specified pool party technique", "inject-poolparty 999 /tmp/shellcode.bin 7");
 cmd_inject_poolparty.addArgInt("pid", true)
 cmd_inject_poolparty.addArgFile("shellcode", true);
-cmd_inject_poolparty.addArgInt("technique", false); // this is a placeholder and not really required until more pool party techniques are added
+cmd_inject_poolparty.addArgInt("technique", false);
 
 cmd_inject_poolparty.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let pid = parsed_json["pid"];

