@@ -2,10 +2,10 @@
 #include "SecondGuest.h"
 #include "ThirdGuest.h"
 #include "FourthGuest.h"
-#include "FifthGuest.h" //
+#include "FifthGuest.h"
 #include "SixthGuest.h"
 #include "SeventhGuest.h"
-#include "EighthGuest.h" //
+#include "EighthGuest.h"
 
 void go(char * args, int len) {
     datap parser;
