@@ -92,6 +92,8 @@ void freeLfList(struct LfList *list);
 void freeLiList(struct LiList *list);
 void freeLhList(struct LhList *list);
 
+DECLSPEC_IMPORT void   BeaconPrintf(int type, char * fmt, ...);
+
 LPVOID AllocateMemory(SIZE_T size)
 {
     return Kernel32$VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);

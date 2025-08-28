@@ -31,5 +31,64 @@ cmd_ldapsearch.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
 });
 
-var group_exec = ax.create_commands_group("AD-BOF", [cmd_kerbeus, cmd_ldapsearch]);
+
+
+var _cmd_ldapq_computers = ax.create_command("computers", "Get list of computers from ldap", "ldapq computers");
+_cmd_ldapq_computers.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+
+    let hook = function (task)
+    {
+        var blocks = task.text.split("--------------------");
+        var arr = [];
+
+        for (var i = 0; i < blocks.length; i++) {
+            var block = blocks[i].trim();
+            if (block.length === 0 || block.indexOf("cn:") === -1) continue;
+
+            var lines = block.split("\n");
+            var obj = {};
+            for (var j = 0; j < lines.length; j++) {
+                var line = lines[j].trim();
+                if (line.length === 0) continue;
+                var parts = line.split(":");
+                var key = parts[0].trim();
+                var value = parts.slice(1).join(":").trim();
+                if (key === "cn") obj.computer = value;
+                else if (key === "dNSHostName") obj.domain = value.split(".").slice(1).join(".");
+                else if (key === "operatingSystem") {
+                    obj.os_desc = value;
+                    if (value.toLowerCase().indexOf("windows") !== -1)    obj.os = "windows";
+                    else if (value.toLowerCase().indexOf("linux") !== -1) obj.os = "linux";
+                    else if (value.toLowerCase().indexOf("mac") !== -1)   obj.os = "macos";
+                    else obj.os = "unknown";
+                }
+                else if (key === "userAccountControl") {
+                    var uac = parseInt(value, 10);
+                    if ((uac & 2) === 0) continue;
+                }
+            }
+            obj.alive = true;
+            obj.tag = "";
+            obj.info = "collected from ldap";
+
+            arr.push(obj);
+        }
+        if(arr.length > 0)  ax.targets_add_list(arr);
+
+        return task;
+    }
+
+    let bof_params = ax.bof_pack("wstr,cstr,int,int,cstr,cstr,int", ["(objectclass=computer)", "cn,operatingSystem,userAccountControl,dNSHostName", 0, 3, "", "", 0]);
+    let bof_path = ax.script_dir() + "_bin/ldapsearch." + ax.arch(id) + ".o";
+    let message = "BOF ldapsearch: query computers";
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message, hook);
+});
+
+var cmd_ldapq = ax.create_command("ldapq", "Ldap query objects", "ldapq computers");
+cmd_ldapq.addSubCommands([_cmd_ldapq_computers]);
+
+
+
+var group_exec = ax.create_commands_group("AD-BOF", [cmd_kerbeus, cmd_ldapsearch, cmd_ldapq]);
 ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
