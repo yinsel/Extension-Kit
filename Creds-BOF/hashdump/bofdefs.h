@@ -38,7 +38,7 @@ DECLSPEC_IMPORT LSTATUS WINAPI Advapi32$RegUnLoadKeyA(HKEY hKey, LPCSTR lpSubKey
 DECLSPEC_IMPORT LONG WINAPI Advapi32$RegQueryInfoKeyW(HKEY hKey, LPWSTR lpClass, LPDWORD lpcchClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcMaxSubKeyLen, LPDWORD lpcMaxClassLen, LPDWORD lpcValues, LPDWORD lpcMaxValueNameLen, LPDWORD lpcMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime);
 DECLSPEC_IMPORT LSTATUS WINAPI Advapi32$RegOpenKeyW(HKEY hKey, LPCWSTR lpSubKey, PHKEY phkResult);
 
-DECLSPEC_IMPORT HRESULT WINAPI Shell32$SHGetFolderPathA(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPSTR pszPath);
+// DECLSPEC_IMPORT HRESULT WINAPI Shell32$SHGetFolderPathA(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPSTR pszPath);
 
 // Bcrypt
 DECLSPEC_IMPORT NTSTATUS WINAPI bcrypt$BCryptOpenAlgorithmProvider(BCRYPT_ALG_HANDLE *phAlgorithm, LPCWSTR pszAlgId, LPCWSTR pszImplementation, ULONG dwFlags);
