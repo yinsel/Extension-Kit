@@ -48,6 +48,6 @@ void Inject2(DWORD dwTargetProcessId, CHAR* shellcode, SIZE_T shellcodeSize) {
         
         RemoteTpWorkInsertion(hTarget, pShellcodeAddress);
     } else { 
-          BeaconPrintf(CALLBACK_OUTPUT, "PID %d inaccessible", dwTargetProcessId);
-        }
+        BeaconPrintf(CALLBACK_OUTPUT, "PID %d inaccessible", dwTargetProcessId);
+    }
 }

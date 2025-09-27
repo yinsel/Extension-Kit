@@ -12,6 +12,7 @@
 
 #ifndef BOF
 #include "beacon.h"
+#include "adaptix.h"
 #include "output.h"
 #include "ntdefs.h"
 #include "utils.h"

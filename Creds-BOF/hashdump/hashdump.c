@@ -229,9 +229,8 @@ void InitializeBackupPaths()
     char basePath[MAX_PATH];
     // Get AppData\Local path
     DWORD envLen = Kernel32$GetEnvironmentVariableA("LOCALAPPDATA", basePath, MAX_PATH);
-    if (envLen == 0 || envLen >= MAX_PATH) {
+    if (envLen == 0 || envLen >= MAX_PATH)
         MSVCRT$strcpy_s(basePath, MAX_PATH, "C:\\temp"); // Fallback
-    }
 
     char randPart1[9], randPart2[9];
     GenerateRandomString(randPart1, 8); // 8-character random string

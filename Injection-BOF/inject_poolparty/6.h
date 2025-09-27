@@ -54,5 +54,4 @@ void Inject6(DWORD dwTargetProcessId, CHAR* shellcode, SIZE_T shellcodeSize) {
     } else {
         BeaconPrintf(CALLBACK_OUTPUT, "PID %d inaccessible", dwTargetProcessId);
     }
-
 }
