@@ -2,7 +2,6 @@
 #include <windows.h>
 #include "bofdefs.h"
 #include "hive_parser.c"
-#include <shlobj.h>
 #include "../_include/bofdefs.h"
 #include "../_include/beacon.h"
 
@@ -229,7 +228,8 @@ void InitializeBackupPaths()
 
     char basePath[MAX_PATH];
     // Get AppData\Local path
-    if (!SUCCEEDED(Shell32$SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, basePath)))
+    DWORD envLen = Kernel32$GetEnvironmentVariableA("LOCALAPPDATA", basePath, MAX_PATH);
+    if (envLen == 0 || envLen >= MAX_PATH)
         MSVCRT$strcpy_s(basePath, MAX_PATH, "C:\\temp"); // Fallback
 
     char randPart1[9], randPart2[9];

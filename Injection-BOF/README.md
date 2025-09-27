@@ -33,7 +33,26 @@ inject-sec <pid> <shellcode file>
 ```
 
 
+## inject-poolparty
+
+A collection of process injection techniques abusing Windows Thread Pools. [**The Pool Party You Will Never Forget: New Process Injection Techniques Using Windows Thread Pools**](https://www.blackhat.com/eu-23/briefings/schedule/#the-pool-party-you-will-never-forget-new-process-injection-techniques-using-windows-thread-pools-35446)
+
+| Variant ID  | Varient Description |
+| ------------- | ----------------- |
+| 1  | Overwrite the start routine of the target worker factory       |
+| 2  | Insert TP_WORK work item to the target process's thread pool   |
+| 3  | Insert TP_WAIT work item to the target process's thread pool   |
+| 4  | Insert TP_IO work item to the target process's thread pool     |
+| 5  | Insert TP_ALPC work item to the target process's thread pool   |
+| 6  | Insert TP_JOB work item to the target process's thread pool    |
+| 7  | Insert TP_DIRECT work item to the target process's thread pool |
+| 8  | Insert TP_TIMER work item to the target process's thread pool  |
+
+```
+inject-poolparty <technique id> <pid> <shellcode file>
+```
 
 ## Credits
 * secinject - https://github.com/apokryptein/secinject
 * DataInject-BOF - https://github.com/iilegacyyii/DataInject-BOF
+* PoolParty - https://github.com/SafeBreach-Labs/PoolParty

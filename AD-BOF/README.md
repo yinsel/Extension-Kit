@@ -15,6 +15,15 @@ ldapsearch <query> [-a attributes] [-c count>] [-s scope] [--dc dc] [--dn dn] [-
 
 
 
+## ldapq computers
+
+Get a list of hosts in a domain via ldap and save them in TaskManager.
+
+```
+ldapq computers
+```
+
+
 ## kerbeus
 
 Beacon Object Files for Kerberos abuse. This is an implementation of some important features of the [Rubeus](https://github.com/GhostPack/Rubeus) project, written in C. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/Kerbeus-BOF/README.md)
