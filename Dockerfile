@@ -8,6 +8,7 @@ RUN set -eux; \
     sed -i "s@kali.download@mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list && \
     apt update -y && \
     apt install -y --no-install-recommends \
+        ca-certificates \
         make \
         mingw-w64 \
         gcc \
