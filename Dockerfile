@@ -1,3 +1,4 @@
+# docker run -it --rm -v ./:/src extension-kit-builder:latest
 FROM hub.mirrorify.net/kalilinux/kali-rolling
 
 ENV DEBIAN_FRONTEND=noninteractive
