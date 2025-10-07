@@ -1,3 +1,6 @@
 _bin
 .vscode
-SAL-BOF/vulndrivers.h
+SAL-BOF/vulndrivers.h# Ignore build outputs for portscan
+SAL-BOF/portscan/*.o
+SAL-BOF/portscan/*.x64.o
+SAL-BOF/_bin/
