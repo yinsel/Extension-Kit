@@ -689,7 +689,8 @@ int traverse_task_directory(const char* base_path, const char* current_subdir, c
                                         fpVirtualAlloc, fpVirtualFree, fpWriteFile, fpCreateDirectoryA, fpGetLastError)) {
                         task_count++;
                     }
-                    fpVirtualFree(buffer, 0, MEM_RELEASE);
+                    // Avoid double-free: Only free buffer if process_task_file does not free it.
+                    // fpVirtualFree(buffer, 0, MEM_RELEASE);
                 }
             }
         }
