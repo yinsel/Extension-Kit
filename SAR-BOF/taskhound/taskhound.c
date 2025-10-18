@@ -486,11 +486,13 @@ void cleanup_task_info(TaskInfo* task_info, pVirtualFree fpVirtualFree) {
  * Process individual task file and return whether it should be counted
  */
 BOOL process_task_file(const char* file_path, const char* file_name, char* target, 
-                      char* save_dir, BOOL show_unsaved_creds, char* buffer, DWORD file_size,
+                      char* save_dir, BOOL show_unsaved_creds, DWORD file_size,
                       pCreateFileA fpCreateFileA, pReadFile fpReadFile, pCloseHandle fpCloseHandle,
                       pVirtualAlloc fpVirtualAlloc, pVirtualFree fpVirtualFree,
                       pWriteFile fpWriteFile, pCreateDirectoryA fpCreateDirectoryA, 
                       pGetLastError fpGetLastError) {
+    
+    char* buffer = NULL;
     
     HANDLE hFile = fpCreateFileA(file_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -680,17 +682,11 @@ int traverse_task_directory(const char* base_path, const char* current_subdir, c
                 DWORD file_size = fpGetFileSize(hFile, NULL);
                 fpCloseHandle(hFile);
                 
-                // Allocate buffer for file contents
-                char* buffer = (char*)fpVirtualAlloc(NULL, file_size + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-                if (buffer) {
-                    // Process the task file
-                    if (process_task_file(full_path, findFileData.cFileName, target, save_dir, show_unsaved_creds,
-                                        buffer, file_size, fpCreateFileA, fpReadFile, fpCloseHandle,
-                                        fpVirtualAlloc, fpVirtualFree, fpWriteFile, fpCreateDirectoryA, fpGetLastError)) {
-                        task_count++;
-                    }
-                    // Avoid double-free: Only free buffer if process_task_file does not free it.
-                    // fpVirtualFree(buffer, 0, MEM_RELEASE);
+                // Process the task file (allocates its own buffer internally)
+                if (process_task_file(full_path, findFileData.cFileName, target, save_dir, show_unsaved_creds,
+                                    file_size, fpCreateFileA, fpReadFile, fpCloseHandle,
+                                    fpVirtualAlloc, fpVirtualFree, fpWriteFile, fpCreateDirectoryA, fpGetLastError)) {
+                    task_count++;
                 }
             }
         }
