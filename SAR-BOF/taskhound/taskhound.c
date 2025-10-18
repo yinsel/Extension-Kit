@@ -147,28 +147,13 @@ BOOL looks_like_domain_user(const char* runas) {
         return FALSE;
     }
     
-    // If username contains a backslash (DOMAIN\user), check for local/system principals
+    // If username contains a backslash (DOMAIN\user), treat as domain account
     if (bof_strstr(temp, "\\")) {
-        // Known local domains / authority names
-        if (bof_strstr(temp, "NT AUTHORITY") || bof_strstr(temp, "NT AUTHORITY") || 
-            bof_strstr(temp, "NT_AUTORITAT") || bof_strstr(temp, "NT_AUTORITÄT") || 
-            bof_strstr(temp, "LOCALHOST")) {
-            return FALSE;
-        }
-        
-        // Known local users / service accounts
-        if (bof_strstr(temp, "SYSTEM") || bof_strstr(temp, "NETZWERKDIENST") ||
-            bof_strstr(temp, "NETWORKSERVICE") || bof_strstr(temp, "LOCALSERVICE") ||
-            bof_strstr(temp, "LOCALSYSTEM")) {
-            return FALSE;
-        }
-        
-        // Otherwise treat as domain-like if it has a backslash
         return TRUE;
     }
     
-    // If it looks like a UPN or contains a dot, treat as domain user
-    if (bof_strstr(temp, ".")) {
+    // If it looks like a UPN (user@domain.com), treat as domain user
+    if (bof_strstr(temp, "@") || bof_strstr(temp, ".")) {
         return TRUE;
     }
     
