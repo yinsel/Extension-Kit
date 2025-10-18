@@ -695,11 +695,16 @@ int traverse_task_directory(const char* base_path, const char* current_subdir, c
                 DWORD file_size = fpGetFileSize(hFile, NULL);
                 fpCloseHandle(hFile);
                 
-                // Process the task file
-                if (process_task_file(full_path, findFileData.cFileName, target, save_dir, show_unsaved_creds,
-                                    NULL, file_size, fpCreateFileA, fpReadFile, fpCloseHandle,
-                                    fpVirtualAlloc, fpVirtualFree, fpWriteFile, fpCreateDirectoryA, fpGetLastError)) {
-                    task_count++;
+                // Allocate buffer for file contents
+                char* buffer = (char*)fpVirtualAlloc(NULL, file_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                if (buffer) {
+                    // Process the task file
+                    if (process_task_file(full_path, findFileData.cFileName, target, save_dir, show_unsaved_creds,
+                                        buffer, file_size, fpCreateFileA, fpReadFile, fpCloseHandle,
+                                        fpVirtualAlloc, fpVirtualFree, fpWriteFile, fpCreateDirectoryA, fpGetLastError)) {
+                        task_count++;
+                    }
+                    fpVirtualFree(buffer, 0, MEM_RELEASE);
                 }
             }
         }
