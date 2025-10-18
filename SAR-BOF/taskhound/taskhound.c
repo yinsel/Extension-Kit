@@ -150,7 +150,7 @@ BOOL looks_like_domain_user(const char* runas) {
     // If username contains a backslash (DOMAIN\user), check for local/system principals
     if (bof_strstr(temp, "\\")) {
         // Known local domains / authority names
-        if (bof_strstr(temp, "NT AUTHORITY") || bof_strstr(temp, "NT_AUTORITY") || 
+        if (bof_strstr(temp, "NT AUTHORITY") || bof_strstr(temp, "NT AUTHORITY") || 
             bof_strstr(temp, "NT_AUTORITAT") || bof_strstr(temp, "NT_AUTORITÄT") || 
             bof_strstr(temp, "LOCALHOST")) {
             return FALSE;
