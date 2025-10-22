@@ -1,0 +1,82 @@
+{
+  "name": "Smart Port Scanner",
+  "version": "1.0.0",
+  "description": "智能端口扫描器，支持CIDR格式和自动Target Tabs集成",
+  "author": "AdaptixC2 Team",
+  "commands": [
+    {
+      "name": "smartscan",
+      "description": "执行智能端口扫描",
+      "usage": "smartscan <target> [level]",
+      "examples": [
+        "smartscan 192.168.1.1",
+        "smartscan 192.168.1.0/24 2",
+        "smartscan 10.0.0.1/16 3"
+      ]
+    }
+  ],
+  "features": [
+    "CIDR格式支持 (192.168.1.1/24)",
+    "智能端口列表和优先级排序",
+    "自动Target Tabs集成",
+    "重复检测和冲突解决",
+    "批量处理和错误恢复",
+    "风险评估和标签自动分配"
+  ],
+  "scan_levels": {
+    "1": {
+      "name": "快速扫描",
+      "description": "只扫描高优先级端口",
+      "ports": "21,22,23,25,53,80,110,135,139,143,443,445,993,995,1433,1521,3306,3389,5432,5985,5986,6379,8080,8443,27017"
+    },
+    "2": {
+      "name": "标准扫描",
+      "description": "扫描高优先级 + 中优先级端口",
+      "ports": "所有级别1端口 + 69,111,389,636,1025,2049,3128,3268,3269,5000,5433,5900,8081,9200,9300,11211,27018"
+    },
+    "3": {
+      "name": "完整扫描",
+      "description": "扫描所有端口",
+      "ports": "所有级别1和2端口 + 7,9,13,19,37,79,113,119,1352,1434,1604,1723,2000,2001,2048,2100,5060,5061,6000,6667,8000,8888,9000,10000"
+    }
+  },
+  "risk_levels": {
+    "1": {
+      "name": "低风险",
+      "description": "开放端口较少，风险较低",
+      "color": "green"
+    },
+    "2": {
+      "name": "中等风险",
+      "description": "开放端口中等，存在一定风险",
+      "color": "yellow"
+    },
+    "3": {
+      "name": "高风险",
+      "description": "开放端口较多，风险较高",
+      "color": "orange"
+    },
+    "4": {
+      "name": "严重风险",
+      "description": "开放大量端口，风险严重",
+      "color": "red"
+    }
+  },
+  "integration": {
+    "target_tabs": {
+      "enabled": true,
+      "auto_add": true,
+      "risk_assessment": true,
+      "tag_prefix": "auto_scan"
+    },
+    "duplicate_detection": {
+      "enabled": true,
+      "method": "ip_address"
+    },
+    "batch_processing": {
+      "enabled": true,
+      "batch_size": 10,
+      "retry_attempts": 2
+    }
+  }
+}
