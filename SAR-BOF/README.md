@@ -5,13 +5,40 @@ This extension enhances situational awareness by providing a set of remote Beaco
 ![](_img/01.png)
 
 
-## quser
+## smartscan
 
-Query user sessions on a remote machine, providing session information.
+Single-threaded silent port scanner
 
 ```
-quser [host]
+smartscan <targets> [-p mode/port_list]
 ```
+
+**Modes**
+1. fast
+* Web services: 80, 443, 8080, 8443
+* Databases: 1433, 1521, 3306, 5432, 6379, 27017
+2. standart
+* Web Services: 80, 443, 8080, 8443
+* Databases: 1433, 1521, 3306, 5432, 6379, 27017
+* Windows-specific: 135, 139, 445, 3389, 5985, 5986
+* Linux-specific: 22
+* Infrastructure: 21, 25, 53, 110, 143, 993, 995
+3. full
+* Web Services: 80, 443, 8080, 8443, 8000, 8888
+* Databases: 1433, 1521, 3306, 5432, 6379, 27017, 9200, 9300
+* Windows/Domain Controllers: 135, 139, 445, 3389, 5985, 5986, 88, 389, 636, 3268, 3269
+* Linux/Unix: 22, 23
+* Infrastructure: 21, 25, 53, 69, 110, 111, 143, 993, 995
+* Other Services: 7, 9, 13, 19, 37, 79, 113, 119, 1025, 1434, 1604, 1723, 2000, 2001, 2048, 2049, 2100, 3128, 5000, 5060, 5061, 5900, 6000, 6667, 8081, 9000, 10000, 11211
+
+```
+smartscan 192.168.1.1 -p full
+
+smartscan 192.168.1.1-192.168.1.10 -p standart
+
+smartscan 192.168.1.1/24 -p 20-25,80-90,443
+```
+
 
 
 ## taskhound
@@ -22,7 +49,6 @@ Collect scheduled tasks from remote systems, with options to filter for domain a
 taskhound <target> [username] [password] [-save <directory>] [-unsaved-creds] [-grab-blobs]
 ```
 
-**Parameters:**
 - `target` (required): Remote system to collect from (IP or hostname)
 - `username` (optional): Username for authentication
 - `password` (optional): Password for authentication
@@ -30,8 +56,7 @@ taskhound <target> [username] [password] [-save <directory>] [-unsaved-creds] [-
 - `-unsaved-creds` (optional): Show tasks without stored credentials (interactive token only)
 - `-grab-blobs` (optional): Also collect credential blobs and masterkeys (requires `-save` flag)
 
-**Examples:**
-```
+```Shell
 # Basic usage with current user context
 taskhound 192.168.1.100
 
@@ -66,6 +91,18 @@ These files are saved to:
 
 The collected DPAPI files can be used with offline decryption tools to extract stored credentials from scheduled tasks.
 
+
+
+## quser
+
+Query user sessions on a remote machine, providing session information.
+
+```
+quser [host]
+```
+
+
+
 ## Credits
-* Quser-BOF - https://github.com/netero1010/Quser-BOF
 * TaskHound - https://github.com/1r0BIT/TaskHound
+* Quser-BOF - https://github.com/netero1010/Quser-BOF
