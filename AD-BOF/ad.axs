@@ -3,9 +3,33 @@ var metadata = {
     description: "Active Directory Exploitation BOFs"
 };
 
-ax.script_import(ax.script_dir() + "Kerbeus-BOF/kerbeus.axs")
 
-var cmd_ldapsearch = ax.create_command("ldapsearch", "Executes LDAP query", "ldapsearch (objectClass=*) -attributes *,ntsecuritydescriptor -count 40 -scope 2 -hostname DC1");
+/// ADWSsearch
+
+
+var cmd_adwssearch = ax.create_command("adwssearch", "Executes ADWS query", "adwssearch (objectClass=*) -attributes *,ntsecuritydescriptor --dc DC1");
+cmd_adwssearch.addArgString("query", true);
+cmd_adwssearch.addArgFlagString( "-a", "attributes", "Comma-separated attributes to retrieve (default: all attributes)", "");
+cmd_adwssearch.addArgFlagString( "--dc", "dc", "Target domain controller (e.g., 'dc01.domain.local'). If omitted, auto-discovers DC.", "");
+cmd_adwssearch.addArgFlagString( "--dn", "dn", "Custom base DN (e.g., 'DC=domain,DC=local'). If not specified, auto-derives from user context or target.", "");
+cmd_adwssearch.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let query      = parsed_json["query"];
+    let attributes = parsed_json["attributes"];
+    let dc         = parsed_json["dc"];
+    let dn         = parsed_json["dn"];
+
+    let bof_params = ax.bof_pack("cstr,cstr,cstr,cstr", [query, attributes, dc, dn]);
+    let bof_path = ax.script_dir() + "_bin/adws_search." + ax.arch(id) + ".o";
+    let message = "BOF implementation: adws search";
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+});
+
+
+/// LDAPsearch
+
+
+var cmd_ldapsearch = ax.create_command("ldapsearch", "Executes LDAP query", "ldapsearch (objectClass=*) -a *,ntsecuritydescriptor -c 40 -s 2 --dc DC1");
 cmd_ldapsearch.addArgString("query", true);
 cmd_ldapsearch.addArgFlagString( "-a", "attributes", "The attributes to retrieve", "*");
 cmd_ldapsearch.addArgFlagInt( "-c", "count", "The result max size", 0);
@@ -90,5 +114,10 @@ cmd_ldapq.addSubCommands([_cmd_ldapq_computers]);
 
 
 
-var group_exec = ax.create_commands_group("AD-BOF", [cmd_kerbeus, cmd_ldapsearch, cmd_ldapq]);
+var group_exec = ax.create_commands_group("AD-BOF", [cmd_adwssearch, cmd_ldapsearch, cmd_ldapq]);
 ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
+
+
+
+ax.script_import(ax.script_dir() + "Kerbeus-BOF/kerbeus.axs")
+ax.script_import(ax.script_dir() + "SQL-BOF/SQL.axs")
