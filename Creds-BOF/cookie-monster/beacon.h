@@ -1,4 +1,3 @@
-#include <windows.h>
 /*
  * Beacon Object Files (BOF)
  * -------------------------
@@ -20,16 +19,12 @@
  *    9/01/2023: Added BeaconGetCustomUserData API for 4.9
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-
 /* data API */
 typedef struct {
-    char * original; /* the original buffer [so we can free it] */
-    char * buffer;   /* current pointer into our buffer */
-    int    length;   /* remaining length of data */
-    int    size;     /* total size of this buffer */
+	char * original; /* the original buffer [so we can free it] */
+	char * buffer;   /* current pointer into our buffer */
+	int    length;   /* remaining length of data */
+	int    size;     /* total size of this buffer */
 } datap;
 
 DECLSPEC_IMPORT void    BeaconDataParse(datap * parser, char * buffer, int size);
@@ -41,10 +36,10 @@ DECLSPEC_IMPORT char *  BeaconDataExtract(datap * parser, int * size);
 
 /* format API */
 typedef struct {
-    char * original; /* the original buffer [so we can free it] */
-    char * buffer;   /* current pointer into our buffer */
-    int    length;   /* remaining length of data */
-    int    size;     /* total size of this buffer */
+	char * original; /* the original buffer [so we can free it] */
+	char * buffer;   /* current pointer into our buffer */
+	int    length;   /* remaining length of data */
+	int    size;     /* total size of this buffer */
 } formatp;
 
 DECLSPEC_IMPORT void    BeaconFormatAlloc(formatp * format, int maxsz);
@@ -86,8 +81,8 @@ DECLSPEC_IMPORT BOOL   toWideChar(char * src, wchar_t * dst, int max);
  *  size - the number of bytes allocated for the ptr.
  */
 typedef struct {
-    char * ptr;
-    size_t size;
+	char * ptr;
+	size_t size;
 } HEAP_RECORD;
 #define MASK_SIZE 13
 
@@ -111,14 +106,14 @@ typedef struct {
  *  mask         - the mask that beacon randomly generated to apply
  */
 typedef struct {
-    char  * sleep_mask_ptr;
-    DWORD   sleep_mask_text_size;
-    DWORD   sleep_mask_total_size;
+	char  * sleep_mask_ptr;
+	DWORD   sleep_mask_text_size;
+	DWORD   sleep_mask_total_size;
 
-    char  * beacon_ptr;
-    DWORD * sections;
-    HEAP_RECORD * heap_records;
-    char    mask[MASK_SIZE];
+	char  * beacon_ptr;
+	DWORD * sections;
+	HEAP_RECORD * heap_records;
+	char    mask[MASK_SIZE];
 } BEACON_INFO;
 
 DECLSPEC_IMPORT void   BeaconInformation(BEACON_INFO * info);
@@ -156,11 +151,11 @@ DECLSPEC_IMPORT BOOL BeaconRemoveValue(const char * key);
 #define DATA_STORE_TYPE_GENERAL_FILE 1
 
 typedef struct {
-    int type;
-    DWORD64 hash;
-    BOOL masked;
-    char* buffer;
-    size_t length;
+	int type;
+	DWORD64 hash;
+	BOOL masked;
+	char* buffer;
+	size_t length;
 } DATA_STORE_OBJECT, *PDATA_STORE_OBJECT;
 
 DECLSPEC_IMPORT PDATA_STORE_OBJECT BeaconDataStoreGetItem(size_t index);
@@ -170,7 +165,3 @@ DECLSPEC_IMPORT size_t BeaconDataStoreMaxEntries();
 
 /* Beacon User Data functions */
 DECLSPEC_IMPORT char * BeaconGetCustomUserData();
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus

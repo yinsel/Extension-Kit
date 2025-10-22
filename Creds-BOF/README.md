@@ -26,12 +26,28 @@ autologon
 
 
 
+## cookie-monster
+
+Steal browser cookies and logins data for edge, chrome and firefox through a BOF! [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Creds-BOF/cookie-monster/README.md)
+
+
+
 ## credman
 
 Checks the current user's Windows Credential Manager for saved web passwords and returns them.
 
 ```
 credman
+```
+
+
+
+### get-netntlm
+
+This is a port of Internal Monologue from https://github.com/GhostPack/Seatbelt. Like Seatbelt, this code will utilize the local SSPI to elict NetNTLM and therefore little to no network traffic will be generated. The `--no-ess` option can be utilized and if you would like the attempt to disable session security in NetNTLMv1
+
+```
+get-netntlm [--no-ess]
 ```
 
 
@@ -60,3 +76,4 @@ A flexible tool that creates a minidump of the LSASS process. [More details](htt
 * C2-Tool-Collection - https://github.com/outflanknl/C2-Tool-Collection
 * PrivCheck - https://github.com/ostrichgolf/PrivCheck
 * nanodump - https://github.com/fortra/nanodump
+* Get-NetNTLM - https://github.com/KingOfTheNOPs/Get-NetNTLM

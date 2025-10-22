@@ -4,12 +4,22 @@ BOFs kit for lateral movements
 
 ![](_img/01.png)
 
-## PsExec
+## jump psexec
 
 Attempt to spawn a session on a remote target via PsExec
 
 ```
-jump psexec <SvcBinary> <Computer>
+jump psexec [-b binary_name] [-s share] [-p svc_path] [-n svc_name] [-d svc_description] <target> <binary>
+```
+
+
+
+## invoke winrm
+
+Use WinRM to execute commands on other systems
+
+```
+invoke winrm <computer> <command>
 ```
 
 

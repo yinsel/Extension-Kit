@@ -3,6 +3,9 @@ CC_x64 := x86_64-w64-mingw32-gcc
 CC_x86 := i686-w64-mingw32-gcc
 STRIP_x64 := x86_64-w64-mingw32-strip
 STRIP_x86 := i686-w64-mingw32-strip
+OPTIONS := -masm=intel -Wimplicit-function-declaration -Wall -I include -Wl,--dynamicbase
+PPL_MEDIC_OPTIONS := -Wno-trigraphs -DPASS_PARAMS_VIA_NAMED_PIPES=1
+SSP_OPTIONS := -DPASS_PARAMS_VIA_NAMED_PIPES=1
 
 # 使用C99标准，禁用严格警告，添加兼容性标志
 CFLAGS := -std=c99 -w -Os -fno-strict-aliasing -I include

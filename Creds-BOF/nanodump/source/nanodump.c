@@ -1,5 +1,4 @@
 #include "nanodump.h"
-#include "beacon.h"
 #ifdef BOF
 #include "output.h"
 #include "utils.c"
