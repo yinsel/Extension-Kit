@@ -1,60 +1,51 @@
-/*
- * AdaptixC2 - Simple Port Scanner BOF
- * 简化版端口扫描器，专注于稳定性和兼容性
- */
-
-#include <windows.h>
 #include <winsock2.h>
-#include <ws2tcpip.h>
+#include <windows.h>
 
 #include "beacon.h"
 #include "bofdefs.h"
 
-// 扫描配置
-#define DEFAULT_TIMEOUT     2000  // 减少超时时间从3秒到2秒
-#define MAX_PORTS          200
-#define MAX_CONCURRENT     10    // 最大并发扫描数
-#define SCAN_BATCH_SIZE    8     // 增加批处理大小从5到8
-#define BATCH_DELAY_MS     30    // 减少批次间延迟从50ms到30ms
+__declspec(dllimport) unsigned long __stdcall WS2_32$inet_addr(const char *cp);
+__declspec(dllimport) unsigned short __stdcall WS2_32$htons(unsigned short hostshort);
+__declspec(dllimport) unsigned long __stdcall WS2_32$ntohl(unsigned long netlong);
+DECLSPEC_IMPORT unsigned int __stdcall WS2_32$socket(int af, int type, int protocol);
+__declspec(dllimport) int __stdcall WS2_32$ioctlsocket(SOCKET, long, u_long*);
+__declspec(dllimport) int __stdcall WS2_32$connect(SOCKET, const struct sockaddr*, int);
+__declspec(dllimport) int __stdcall WS2_32$select(int, fd_set*, fd_set*, fd_set*, const struct timeval*);
+__declspec(dllimport) int __stdcall WS2_32$closesocket(SOCKET);
+__declspec(dllimport) int __stdcall WS2_32$inet_pton(int, const char*, void*);
+__declspec(dllimport) char* __stdcall WS2_32$inet_ntoa(struct in_addr);
+__declspec(dllimport) int __stdcall WS2_32$WSAStartup(WORD, LPWSADATA);
+__declspec(dllimport) int __stdcall WS2_32$WSACleanup(void);
+__declspec(dllimport) int __stdcall WS2_32$getsockopt(SOCKET s, int level, int optname, char *optval, int *optlen);
+__declspec(dllimport) unsigned long __stdcall WS2_32$htonl(unsigned long hostlong);
 
-// 端口定义 - 重新优化分类
-// Level 1: Web和数据库端口 (快速扫描)
+#define DEFAULT_TIMEOUT    2000
+#define MAX_PORTS          200
+#define MAX_CONCURRENT     10
+#define SCAN_BATCH_SIZE    8
+#define BATCH_DELAY_MS     30
+
 int g_level1_ports[] = {
-    // Web服务
     80, 443, 8080, 8443,
-    // 数据库服务
     1433, 1521, 3306, 5432, 6379, 27017,
     0
 };
 
-// Level 2: Web、数据库、Windows/Linux区分端口 (标准扫描)
 int g_level2_ports[] = {
-    // Web服务
     80, 443, 8080, 8443,
-    // 数据库服务
     1433, 1521, 3306, 5432, 6379, 27017,
-    // Windows特有服务
     135, 139, 445, 3389, 5985, 5986,
-    // Linux特有服务
     22,
-    // 基础设施服务
     21, 25, 53, 110, 143, 993, 995,
     0
 };
 
-// Level 3: 广泛的Web、数据库、域控、Linux等端口 (完整扫描)
 int g_level3_ports[] = {
-    // Web服务
     80, 443, 8080, 8443, 8000, 8888,
-    // 数据库服务
     1433, 1521, 3306, 5432, 6379, 27017, 9200, 9300,
-    // Windows/域控服务
     135, 139, 445, 3389, 5985, 5986, 88, 389, 636, 3268, 3269,
-    // Linux/Unix服务
     22, 23,
-    // 基础设施服务
     21, 25, 53, 69, 110, 111, 143, 993, 995,
-    // 其他服务
     7, 9, 13, 19, 37, 79, 113, 119, 1025, 1434, 1604, 1723, 2000, 2001, 2048, 2049, 2100, 3128, 5000, 5060, 5061, 5900, 6000, 6667, 8081, 9000, 10000, 11211,
     0
 };
@@ -62,7 +53,6 @@ int g_level3_ports[] = {
 void bofstart() {}
 void bofstop() {}
 
-// 简单的TCP端口扫描
 int tcp_port_scan(const char* ip, int port, int timeout)
 {
     SOCKET sock = WS2_32$socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -70,20 +60,23 @@ int tcp_port_scan(const char* ip, int port, int timeout)
         return 0;
     }
 
-    // 设置非阻塞模式
     u_long mode = 1;
     WS2_32$ioctlsocket(sock, FIONBIO, &mode);
 
     struct sockaddr_in addr;
     MSVCRT$memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = WS2_32$htons(port);
-    WS2_32$inet_pton(AF_INET, ip, &addr.sin_addr);
+    addr.sin_port = WS2_32$htons((unsigned short)port);
 
-    // 连接
+    unsigned long a = WS2_32$inet_addr(ip);
+    if (a == INADDR_NONE) {
+        WS2_32$closesocket(sock);
+        return 0;
+    }
+    addr.sin_addr.s_addr = a;
+
     WS2_32$connect(sock, (struct sockaddr*)&addr, sizeof(addr));
 
-    // 等待连接结果 - 优化select调用
     fd_set write_set;
     FD_ZERO(&write_set);
     FD_SET(sock, &write_set);
@@ -92,15 +85,29 @@ int tcp_port_scan(const char* ip, int port, int timeout)
     tv.tv_sec = timeout / 1000;
     tv.tv_usec = (timeout % 1000) * 1000;
 
-    // 使用更高效的select调用，只监控写集合
-    int result = WS2_32$select(sock + 1, NULL, &write_set, NULL, &tv);
+    int result = WS2_32$select((int)(sock + 1), NULL, &write_set, NULL, &tv);
+
+    if (result > 0) {
+        int err = 0;
+        int len = sizeof(err);
+        if (WS2_32$getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*)&err, &len) == 0) {
+            WS2_32$closesocket(sock);
+            if (err == 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            WS2_32$closesocket(sock);
+            return 0;
+        }
+    }
 
     WS2_32$closesocket(sock);
-
-    return (result > 0) ? 1 : 0;
+    return 0;
 }
 
-// 获取端口服务名
+
 const char* get_service_name(int port)
 {
     switch (port) {
@@ -141,33 +148,29 @@ const char* get_service_name(int port)
     }
 }
 
-// 解析单个IP地址
 int parse_single_ip(const char* target, char* ip_str)
 {
     MSVCRT$strcpy(ip_str, target);
     return 1;
 }
 
-// 简化的CIDR解析 - 只支持/24
 int parse_cidr_simple(const char* cidr, char*** ip_list, int* count)
 {
     char base_ip[16];
     char* slash = MSVCRT$strchr(cidr, '/');
-    
+
     if (!slash) {
         return 0;
     }
 
-    // 提取基础IP
     int ip_len = slash - cidr;
     if (ip_len >= 16) {
         return 0;
     }
-    
+
     MSVCRT$memcpy(base_ip, cidr, ip_len);
     base_ip[ip_len] = '\0';
 
-    // 简化：只支持/24网段
     int mask = 0;
     const char* mask_ptr = slash + 1;
     while (*mask_ptr >= '0' && *mask_ptr <= '9') {
@@ -180,7 +183,6 @@ int parse_cidr_simple(const char* cidr, char*** ip_list, int* count)
         return 0;
     }
 
-    // 手动找到最后一个点
     char* last_dot = NULL;
     for (int i = 0; base_ip[i]; i++) {
         if (base_ip[i] == '.') {
@@ -192,21 +194,19 @@ int parse_cidr_simple(const char* cidr, char*** ip_list, int* count)
     }
 
     int network_len = last_dot - base_ip + 1;
-    
-    // 分配254个IP（1-254）
+
     *count = 254;
     *ip_list = (char**)intAlloc(*count * sizeof(char*));
     if (!*ip_list) {
         return 0;
     }
 
-    // 生成IP列表
     for (int i = 0; i < *count; i++) {
         (*ip_list)[i] = (char*)intAlloc(16 * sizeof(char));
         if (!(*ip_list)[i]) {
             break;
         }
-        
+
         MSVCRT$memcpy((*ip_list)[i], base_ip, network_len);
         MSVCRT$sprintf((*ip_list)[i] + network_len, "%d", i + 1);
     }
@@ -214,44 +214,136 @@ int parse_cidr_simple(const char* cidr, char*** ip_list, int* count)
     return 1;
 }
 
-// 解析自定义端口 - 支持逗号分隔和范围格式
+int parse_target_list_extended(const char* targets, char*** ip_list, int* count)
+{
+    if (!targets || !targets[0]) return 0;
+
+    char* copy = (char*)intAlloc(MSVCRT$strlen(targets) + 1);
+    if (!copy) return 0;
+    MSVCRT$strcpy(copy, targets);
+
+    char* token = MSVCRT$strtok(copy, ",");
+    char** result = NULL;
+    int total = 0;
+
+    while (token)
+    {
+        while (*token == ' ') token++;
+
+        char* end = token + MSVCRT$strlen(token) - 1;
+        while (end > token && (*end == ' ' || *end == '\r' || *end == '\n')) *end-- = '\0';
+
+        char** tmp_list = NULL;
+        int tmp_count = 0;
+
+        if (MSVCRT$strchr(token, '/')) {
+            if (!parse_cidr_simple(token, &tmp_list, &tmp_count)) {
+                BeaconPrintf(CALLBACK_ERROR, "Invalid CIDR: %s\n", token);
+                token = MSVCRT$strtok(NULL, ",");
+                continue;
+            }
+        }
+        else if (MSVCRT$strchr(token, '-')) {
+            char start_ip[32] = {0}, end_ip[32] = {0};
+            char* dash = MSVCRT$strchr(token, '-');
+            if (!dash) { token = MSVCRT$strtok(NULL, ","); continue; }
+
+            *dash = '\0';
+            MSVCRT$strcpy(start_ip, token);
+            MSVCRT$strcpy(end_ip, dash + 1);
+
+            unsigned long start_a = WS2_32$inet_addr(start_ip);
+            unsigned long end_a   = WS2_32$inet_addr(end_ip);
+
+            if (start_a == INADDR_NONE || end_a == INADDR_NONE) {
+                BeaconPrintf(CALLBACK_ERROR, "Invalid IP range: %s-%s\n", start_ip, end_ip);
+                token = MSVCRT$strtok(NULL, ",");
+                continue;
+            }
+
+            DWORD start = WS2_32$ntohl(start_a);
+            DWORD end   = WS2_32$ntohl(end_a);
+            if (end < start) {
+                DWORD tmp = start; start = end; end = tmp;
+            }
+
+            DWORD range_size = end - start + 1;
+            if (range_size > 1024) range_size = 1024;
+
+            tmp_list = (char**)intAlloc(range_size * sizeof(char*));
+            if (!tmp_list) break;
+
+            for (DWORD i = 0; i < range_size; i++) {
+                struct in_addr addr;
+                addr.s_addr = WS2_32$htonl(start + i);
+                tmp_list[i] = (char*)intAlloc(16);
+                char *s = WS2_32$inet_ntoa(addr);
+                if (s) {
+                    MSVCRT$strcpy(tmp_list[i], s);
+                } else {
+                    MSVCRT$strcpy(tmp_list[i], "0.0.0.0");
+                }
+            }
+            tmp_count = (int)range_size;
+        }
+        else {
+            tmp_list = (char**)intAlloc(sizeof(char*));
+            tmp_list[0] = (char*)intAlloc(16);
+            MSVCRT$strcpy(tmp_list[0], token);
+            tmp_count = 1;
+        }
+
+        char** new_result = (char**)intAlloc((total + tmp_count) * sizeof(char*));
+        if (result) {
+            for (int i = 0; i < total; i++) new_result[i] = result[i];
+            intFree(result);
+        }
+        for (int j = 0; j < tmp_count; j++) new_result[total + j] = tmp_list[j];
+        intFree(tmp_list);
+
+        total += tmp_count;
+        result = new_result;
+
+        token = MSVCRT$strtok(NULL, ",");
+    }
+
+    intFree(copy);
+    *ip_list = result;
+    *count = total;
+
+    return (total > 0);
+}
+
+
 int* parse_custom_ports(const char* port_spec, int* count)
 {
     if (!port_spec || !port_spec[0]) {
         return NULL;
     }
 
-    // 复制字符串用于解析
     char* spec_copy = (char*)intAlloc(MSVCRT$strlen(port_spec) + 1);
     if (!spec_copy) {
         return NULL;
     }
     MSVCRT$strcpy(spec_copy, port_spec);
 
-    // 预处理：统计端口数量
     *count = 0;
     char* token = MSVCRT$strtok(spec_copy, ",");
     while (token) {
-        // 跳过空格
         while (*token == ' ') token++;
 
-        // 检查是否为范围格式
         char* dash = MSVCRT$strchr(token, '-');
         if (dash) {
-            // 解析范围
             int start_port = 0, end_port = 0;
 
-            // 解析起始端口
             char* ptr = token;
             while (*ptr >= '0' && *ptr <= '9') {
                 start_port = start_port * 10 + (*ptr - '0');
                 ptr++;
             }
 
-            // 跳过 '-'
             ptr = dash + 1;
 
-            // 解析结束端口
             while (*ptr >= '0' && *ptr <= '9') {
                 end_port = end_port * 10 + (*ptr - '0');
                 ptr++;
@@ -259,13 +351,12 @@ int* parse_custom_ports(const char* port_spec, int* count)
 
             if (start_port > 0 && end_port > 0 && start_port <= end_port && end_port <= 65535) {
                 int range_count = end_port - start_port + 1;
-                if (range_count > 1000) { // 限制最大范围
+                if (range_count > 1000) {
                     range_count = 1000;
                 }
                 *count += range_count;
             }
         } else {
-            // 单个端口
             int port = 0;
             char* ptr = token;
             while (*ptr >= '0' && *ptr <= '9') {
@@ -286,39 +377,31 @@ int* parse_custom_ports(const char* port_spec, int* count)
         return NULL;
     }
 
-    // 分配端口数组
     int* ports = (int*)intAlloc(*count * sizeof(int));
     if (!ports) {
         intFree(spec_copy);
         return NULL;
     }
 
-    // 重新解析并填充端口数组
     MSVCRT$strcpy(spec_copy, port_spec);
     int port_index = 0;
 
     token = MSVCRT$strtok(spec_copy, ",");
     while (token && port_index < *count) {
-        // 跳过空格
         while (*token == ' ') token++;
 
-        // 检查是否为范围格式
         char* dash = MSVCRT$strchr(token, '-');
         if (dash) {
-            // 解析范围
             int start_port = 0, end_port = 0;
 
-            // 解析起始端口
             char* ptr = token;
             while (*ptr >= '0' && *ptr <= '9') {
                 start_port = start_port * 10 + (*ptr - '0');
                 ptr++;
             }
 
-            // 跳过 '-'
             ptr = dash + 1;
 
-            // 解析结束端口
             while (*ptr >= '0' && *ptr <= '9') {
                 end_port = end_port * 10 + (*ptr - '0');
                 ptr++;
@@ -336,7 +419,6 @@ int* parse_custom_ports(const char* port_spec, int* count)
                 }
             }
         } else {
-            // 单个端口
             int port = 0;
             char* ptr = token;
             while (*ptr >= '0' && *ptr <= '9') {
@@ -356,36 +438,31 @@ int* parse_custom_ports(const char* port_spec, int* count)
     return ports;
 }
 
-// 主扫描函数
 void simple_port_scan(const char* target, int scan_level, const char* custom_ports)
 {
     char** ip_list = NULL;
     int ip_count = 0;
     int* ports = NULL;
     int port_count = 0;
-    int free_ports = 0; // 标记是否需要释放端口数组
+    int free_ports = 0;
+    int need_cleanup_wsa = 0;
 
     BeaconPrintf(CALLBACK_OUTPUT, "[*] Starting port scan for: %s\n", target);
 
-    // 解析目标
-    if (MSVCRT$strchr(target, '/')) {
-        // CIDR格式
-        if (!parse_cidr_simple(target, &ip_list, &ip_count)) {
-            BeaconPrintf(CALLBACK_ERROR, "Failed to parse CIDR: %s\n", target);
-            return;
-        }
-        BeaconPrintf(CALLBACK_OUTPUT, "[*] Scanning %d hosts\n", ip_count);
-    } else {
-        // 单个IP
-        ip_list = (char**)intAlloc(1 * sizeof(char*));
-        ip_list[0] = (char*)intAlloc(16 * sizeof(char));
-        MSVCRT$strcpy(ip_list[0], target);
-        ip_count = 1;
+    WSADATA wsa;
+    if (WS2_32$WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
+        BeaconPrintf(CALLBACK_ERROR, "WSAStartup failed\n");
+        return;
     }
+    need_cleanup_wsa = 1;
 
-    // 选择端口
+    if (!parse_target_list_extended(target, &ip_list, &ip_count)) {
+        BeaconPrintf(CALLBACK_ERROR, "Failed to parse targets: %s\n", target);
+        goto cleanup;
+    }
+    BeaconPrintf(CALLBACK_OUTPUT, "[*] Scanning %d hosts\n", ip_count);
+
     if (scan_level == 0 && custom_ports && custom_ports[0]) {
-        // 自定义端口
         ports = parse_custom_ports(custom_ports, &port_count);
         if (ports) {
             BeaconPrintf(CALLBACK_OUTPUT, "[*] Using custom ports: %s (%d ports)\n", custom_ports, port_count);
@@ -423,21 +500,18 @@ void simple_port_scan(const char* target, int scan_level, const char* custom_por
 
     BeaconPrintf(CALLBACK_OUTPUT, "[*] Scanning %d ports\n", port_count);
 
-    // 并发扫描主机
     int total_open_ports = 0;
     for (int i = 0; i < ip_count; i++) {
         BeaconPrintf(CALLBACK_OUTPUT, "[*] Scanning %s...\n", ip_list[i]);
 
         int host_open_ports = 0;
 
-        // 分批并发扫描端口
         for (int batch_start = 0; batch_start < port_count; batch_start += SCAN_BATCH_SIZE) {
             int batch_end = batch_start + SCAN_BATCH_SIZE;
             if (batch_end > port_count) {
                 batch_end = port_count;
             }
 
-            // 并发扫描当前批次的端口
             for (int j = batch_start; j < batch_end; j++) {
                 int port = ports[j];
                 int state = tcp_port_scan(ip_list[i], port, DEFAULT_TIMEOUT);
@@ -450,9 +524,8 @@ void simple_port_scan(const char* target, int scan_level, const char* custom_por
                 }
             }
 
-            // 小延迟避免过快扫描
             if (batch_end < port_count) {
-                KERNEL32$Sleep(BATCH_DELAY_MS); // 优化延迟时间
+                KERNEL32$Sleep(BATCH_DELAY_MS);
             }
         }
 
@@ -461,7 +534,6 @@ void simple_port_scan(const char* target, int scan_level, const char* custom_por
                        ip_list[i], host_open_ports);
         }
 
-        // 进度报告
         if (ip_count > 10 && (i + 1) % 10 == 0) {
             BeaconPrintf(CALLBACK_OUTPUT, "[*] Progress: %d/%d hosts scanned\n", i + 1, ip_count);
         }
@@ -469,11 +541,7 @@ void simple_port_scan(const char* target, int scan_level, const char* custom_por
 
     BeaconPrintf(CALLBACK_OUTPUT, "[+] Scan completed. Found %d open ports total.\n", total_open_ports);
 
-    // 注意：Targets表集成需要在客户端实现
-    // BOF输出结构化结果，客户端解析后添加到Targets表
-    // 格式将在客户端代码中实现
-
-    // 清理内存
+cleanup:
     if (ip_list) {
         for (int i = 0; i < ip_count; i++) {
             if (ip_list[i]) {
@@ -481,42 +549,41 @@ void simple_port_scan(const char* target, int scan_level, const char* custom_por
             }
         }
         intFree(ip_list);
+        ip_list = NULL;
     }
-    
-    // 清理自定义端口数组
+
     if (free_ports && ports) {
         intFree(ports);
+        ports = NULL;
+    }
+
+    if (need_cleanup_wsa) {
+        WS2_32$WSACleanup();
     }
 }
 
-// 主函数
+
 int go(char* args, int len)
 {
     char target[256] = {0};
     int scan_level = 2;
     char custom_ports[512] = {0};
 
-    // 解析参数
     datap parser;
     BeaconDataParse(&parser, args, len);
 
-    // 获取目标参数
     int target_size = 0;
     char* target_ptr = BeaconDataExtract(&parser, &target_size);
     if (target_ptr && target_size > 0) {
         MSVCRT$memcpy(target, target_ptr, target_size);
         target[target_size] = '\0';
     } else {
-        BeaconPrintf(CALLBACK_ERROR, "Usage: smartscan <target> [ports]\n");
-        BeaconPrintf(CALLBACK_ERROR, "  target: IP address or CIDR (e.g., 192.168.1.1/24)\n");
-        BeaconPrintf(CALLBACK_ERROR, "  ports:  1=fast, 2=normal (default), 3=full\n");
+        BeaconPrintf(CALLBACK_ERROR, "Parameters are not supported\n");
         return 0;
     }
 
-    // 获取扫描级别参数（第二个参数）
     scan_level = BeaconDataInt(&parser);
 
-    // 获取自定义端口参数（第三个参数）
     int ports_size = 0;
     char* ports_ptr = BeaconDataExtract(&parser, &ports_size);
     if (ports_ptr && ports_size > 0) {
@@ -524,8 +591,6 @@ int go(char* args, int len)
         custom_ports[ports_size] = '\0';
     }
 
-
-    // 执行扫描
     simple_port_scan(target, scan_level, custom_ports);
 
     return 0;
