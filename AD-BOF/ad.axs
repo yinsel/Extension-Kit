@@ -27,7 +27,7 @@ cmd_adwssearch.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var cmd_badtakeover = ax.create_command("adwssearch", "Executes ADWS query", "adwssearch (objectClass=*) -attributes *,ntsecuritydescriptor --dc DC1");
+var cmd_badtakeover = ax.create_command("badtakeover", "BOF for performing account takeover using the BadSuccessor technique", "badtakeover \"OU=TestOU,DC=domain,DC=dom\" attacker_dmsa S-1-5-21-....-1104 \"CN=domainadmin,CN=Users,DC=domain,DC=dom\" domain.dom");
 cmd_badtakeover.addArgString("ou",      true, "Target OU to write the malicious dMSA");
 cmd_badtakeover.addArgString("account", true, "The name of the new dMSA to create");
 cmd_badtakeover.addArgString("sid",     true, "The Security ID (SID) of your current context");
