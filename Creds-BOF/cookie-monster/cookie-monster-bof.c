@@ -6,9 +6,6 @@
 #include "cookie-monster-bof.h"
 #include "adaptix.h"
 
-typedef HRESULT (WINAPI *PFN_SHGetFolderPathA)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPSTR pszPath);
-typedef BOOL (WINAPI *PFN_PathAppendA)(LPSTR pszPath, LPCSTR pszMore);
-
 // Function declarations
 BOOL download_file(IN LPCSTR fileName, IN char fileData[], IN ULONG32 fileLength);
 BOOL GetBrowserFile(DWORD PID, CHAR *browserFile, CHAR *downloadFileName, CHAR * folderPath);
