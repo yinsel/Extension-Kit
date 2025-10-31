@@ -50,7 +50,7 @@ cmd_sauroneye.addArgFlagInt("-m", "maxfilesize", "Max file size to search conten
 cmd_sauroneye.addArgBool("-s", "Search in system directories (Windows and AppData)");
 cmd_sauroneye.addArgFlagString("-b", "beforedate", "Filter files last modified before this date (format: dd.MM.yyyy)", "");
 cmd_sauroneye.addArgFlagString("-a", "afterdate", "Filter files last modified after this date (format: dd.MM.yyyy)", "");
-cmd_sauroneye.addArgBool("-v", "Check if Office 2003 files (*.doc and *.xls) contain a VBA macro (not yet implemented)");
+cmd_sauroneye.addArgBool("-v", "Check if Office files contain VBA macros using OOXML detection (no OLE, stealthier)");
 cmd_sauroneye.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let directories = (parsed_json["directories"] !== undefined && parsed_json["directories"] !== null) ? String(parsed_json["directories"]) : "";
     let filetypes = (parsed_json["filetypes"] !== undefined && parsed_json["filetypes"] !== null) ? String(parsed_json["filetypes"]) : "";
@@ -62,8 +62,9 @@ cmd_sauroneye.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let after_date = (parsed_json["afterdate"] !== undefined && parsed_json["afterdate"] !== null) ? String(parsed_json["afterdate"]) : "";
     let check_macro = (parsed_json["-v"]) ? 1 : 0;
 
-    let bof_params = ax.bof_pack("cstr,cstr,cstr,int,int,int,cstr,cstr,int", 
-        [directories, filetypes, keywords, search_contents, max_filesize, system_dirs, before_date, after_date, check_macro]);
+    // Pack raw cmdline as first param for in-BOF validation of unknown flags
+    let bof_params = ax.bof_pack("cstr,cstr,cstr,cstr,int,int,int,cstr,cstr,int", 
+        [cmdline, directories, filetypes, keywords, search_contents, max_filesize, system_dirs, before_date, after_date, check_macro]);
     let bof_path = ax.script_dir() + "_bin/sauroneye." + ax.arch(id) + ".o";
 
     let cmd = "execute bof";
