@@ -34,6 +34,127 @@ DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateFileA(LPCSTR lpFileName, DWORD dwDe
 DECLSPEC_IMPORT DWORD WINAPI KERNEL32$GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh);
 DECLSPEC_IMPORT BOOL WINAPI KERNEL32$ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
 DECLSPEC_IMPORT BOOL WINAPI KERNEL32$CloseHandle(HANDLE hObject);
+DECLSPEC_IMPORT int WINAPI KERNEL32$MultiByteToWideChar(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar);
+DECLSPEC_IMPORT HMODULE WINAPI KERNEL32$GetModuleHandleA(LPCSTR lpModuleName);
+DECLSPEC_IMPORT FARPROC WINAPI KERNEL32$GetProcAddress(HMODULE hModule, LPCSTR lpProcName);
+
+// NT native API (stealthier file IO)
+typedef long NTSTATUS;
+typedef struct _IO_STATUS_BLOCK {
+    union {
+        NTSTATUS Status;
+        void*    Pointer;
+    } DUMMYUNIONNAME;
+    unsigned long long Information;
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+typedef enum _FILE_INFORMATION_CLASS {
+    FileDirectoryInformation = 1,
+    FileFullDirectoryInformation,
+    FileBothDirectoryInformation,
+    FileBasicInformation,
+    FileStandardInformation = 5,
+} FILE_INFORMATION_CLASS;
+
+typedef struct _FILE_STANDARD_INFORMATION {
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    unsigned long NumberOfLinks;
+    unsigned char DeletePending;
+    unsigned char Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+DECLSPEC_IMPORT NTSTATUS WINAPI NTDLL$NtQueryInformationFile(HANDLE FileHandle, PIO_STATUS_BLOCK IoStatusBlock, PVOID FileInformation, ULONG Length, FILE_INFORMATION_CLASS FileInformationClass);
+DECLSPEC_IMPORT NTSTATUS WINAPI NTDLL$NtReadFile(HANDLE FileHandle, HANDLE Event, PVOID ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length, PLARGE_INTEGER ByteOffset, PULONG Key);
+
+#ifndef S_OK
+#define S_OK 0x00000000
+#endif
+
+#ifndef STGM_READ
+#define STGM_READ 0x00000000L
+#endif
+#ifndef STGM_SHARE_DENY_WRITE
+#define STGM_SHARE_DENY_WRITE 0x00000020L
+#endif
+
+#define OOXML_SCAN_WINDOW (256 * 1024) // 256KB head/tail scan
+
+// Dynamic OLE32 function pointers
+typedef HRESULT (WINAPI *PFN_StgIsStorageFile)(LPCWSTR);
+typedef HRESULT (WINAPI *PFN_StgOpenStorage)(LPCWSTR, void*, DWORD, void*, DWORD, void**);
+
+static PFN_StgIsStorageFile pStgIsStorageFile = NULL;
+static PFN_StgOpenStorage   pStgOpenStorage   = NULL;
+
+static void ensure_ole32_resolved() {
+    if (pStgIsStorageFile && pStgOpenStorage) return;
+    HMODULE hOle = KERNEL32$GetModuleHandleA("ole32.dll");
+    if (!hOle) return; // do not load explicitly to avoid new DLL loads
+    pStgIsStorageFile = (PFN_StgIsStorageFile) KERNEL32$GetProcAddress(hOle, "StgIsStorageFile");
+    pStgOpenStorage   = (PFN_StgOpenStorage)   KERNEL32$GetProcAddress(hOle, "StgOpenStorage");
+}
+
+// Binary-safe search for pattern in buffer
+static BOOL buffer_contains(const char* buf, DWORD len, const char* pat) {
+    if (!buf || !pat) return FALSE;
+    size_t plen = MSVCRT$strlen(pat);
+    if (plen == 0 || len < (DWORD)plen) return FALSE;
+    for (DWORD i = 0; i + plen <= len; i++) {
+        if (buf[i] == pat[0]) {
+            DWORD j = 1;
+            for (; j < plen; j++) {
+                if ((unsigned char)buf[i + j] != (unsigned char)pat[j]) break;
+            }
+            if (j == plen) return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Strict VBA macro check (OOXML-only here). OLE path is disabled for stability
+BOOL CheckForVBAMacrosStrict(const char* filepath, BOOL use_ole) {
+    (void)use_ole; // OLE disabled by default; only OOXML detection is used
+    if (!filepath) return FALSE;
+
+    HANDLE h = KERNEL32$CreateFileA(filepath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return FALSE;
+
+    FILE_STANDARD_INFORMATION finfo = {0};
+    IO_STATUS_BLOCK ios = {0};
+    NTSTATUS st = NTDLL$NtQueryInformationFile(h, &ios, &finfo, sizeof(finfo), FileStandardInformation);
+    if (st != 0 || finfo.EndOfFile.QuadPart == 0) { KERNEL32$CloseHandle(h); return FALSE; }
+
+    ULONGLONG total = (ULONGLONG)finfo.EndOfFile.QuadPart;
+    DWORD win = (DWORD)((total > OOXML_SCAN_WINDOW) ? OOXML_SCAN_WINDOW : total);
+
+    char* buf = (char*)MSVCRT$malloc(win);
+    if (!buf) { KERNEL32$CloseHandle(h); return FALSE; }
+
+    // Read head via NtReadFile at offset 0
+    LARGE_INTEGER off; off.QuadPart = 0;
+    ios.Status = 0; ios.Information = 0;
+    st = NTDLL$NtReadFile(h, NULL, NULL, NULL, &ios, buf, win, &off, NULL);
+    if (st != 0 || ios.Information < 4) { MSVCRT$free(buf); KERNEL32$CloseHandle(h); return FALSE; }
+
+    BOOL isZip = (buf[0] == 'P' && buf[1] == 'K');
+    BOOL anyHit = buffer_contains(buf, (DWORD)ios.Information, "vbaProject.bin");
+
+    if (!anyHit && total > win) {
+        // Read tail via offset
+        off.QuadPart = (LONGLONG)(total - win);
+        ios.Status = 0; ios.Information = 0;
+        st = NTDLL$NtReadFile(h, NULL, NULL, NULL, &ios, buf, win, &off, NULL);
+        if (st == 0 && ios.Information >= 4) {
+            if (!isZip) isZip = (buf[0] == 'P' && buf[1] == 'K');
+            anyHit = buffer_contains(buf, (DWORD)ios.Information, "vbaProject.bin");
+        }
+    }
+
+    MSVCRT$free(buf);
+    KERNEL32$CloseHandle(h);
+    return (isZip && anyHit);
+}
 
 typedef struct {
     char** directories;
@@ -47,20 +168,23 @@ typedef struct {
     ULONGLONG max_file_size_kb;
     SYSTEMTIME before_date;
     SYSTEMTIME after_date;
-    BOOL check_for_macro;
+    BOOL check_for_macro;  // -v: OOXML macro detection
     BOOL has_date_filter;
     int result_count;
 } SearchOptions;
 
 #define MAX_RESULTS 1000
 #define MAX_PATH_LENGTH 260
-#define MAX_CONTENT_BUFFER_SIZE (10 * 1024 * 1024) // 10MB max buffer for content search
-#define CONTEXT_BUFFER_SIZE 50 // Characters before and after match
+#define MAX_CONTENT_BUFFER_SIZE (10 * 1024 * 1024)
+#define CONTEXT_BUFFER_SIZE 50
 
-// Windows error codes
-#define ERROR_FILE_NOT_FOUND 2
-#define ERROR_PATH_NOT_FOUND 3
-#define ERROR_ACCESS_DENIED 5
+// Forward declarations for helpers
+BOOL MatchesFiletype(const char* filepath, SearchOptions* opts);
+BOOL MatchesKeyword(const char* filename, SearchOptions* opts);
+BOOL MatchesDateFilter(const FILETIME* filetime, SearchOptions* opts);
+BOOL SearchFileContents(const char* filepath, SearchOptions* opts);
+BOOL IsFolderValid(const char* path, SearchOptions* opts);
+void NormalizePath(char* path);
 
 // Simple wildcard matching function (supports * and ?)
 BOOL MatchWildcard(const char* pattern, const char* str) {
@@ -68,85 +192,48 @@ BOOL MatchWildcard(const char* pattern, const char* str) {
     const char* p = pattern;
     const char* star = NULL;
     const char* ss = NULL;
-
     while (*s) {
-        if (*p == '?' || MSVCRT$tolower(*p) == MSVCRT$tolower(*s)) {
-            s++;
-            p++;
-            continue;
-        }
-        if (*p == '*') {
-            star = p++;
-            ss = s;
-            continue;
-        }
-        if (star) {
-            p = star + 1;
-            s = ++ss;
-            continue;
-        }
+        if (*p == '?' || MSVCRT$tolower(*p) == MSVCRT$tolower(*s)) { s++; p++; continue; }
+        if (*p == '*') { star = p++; ss = s; continue; }
+        if (star) { p = star + 1; s = ++ss; continue; }
         return FALSE;
     }
-
     while (*p == '*') p++;
     return !*p;
 }
 
-// Check if filename matches any keyword pattern
 BOOL MatchesKeyword(const char* filename, SearchOptions* opts) {
-    if (opts->keyword_count == 0) {
-        return TRUE; // No keywords, match everything
-    }
-
+    if (opts->keyword_count == 0) return TRUE;
     for (int i = 0; i < opts->keyword_count; i++) {
-        if (MatchWildcard(opts->keywords[i], filename)) {
-            return TRUE;
-        }
-        // Also do simple case-insensitive substring match
-        char* lower_filename = (char*)MSVCRT$malloc(MSVCRT$strlen(filename) + 1);
-        char* lower_keyword = (char*)MSVCRT$malloc(MSVCRT$strlen(opts->keywords[i]) + 1);
-        
-        if (lower_filename && lower_keyword) {
-            for (int j = 0; filename[j]; j++) {
-                lower_filename[j] = MSVCRT$tolower(filename[j]);
-            }
-            lower_filename[MSVCRT$strlen(filename)] = '\0';
-            
-            for (int j = 0; opts->keywords[i][j]; j++) {
-                lower_keyword[j] = MSVCRT$tolower(opts->keywords[i][j]);
-            }
-            lower_keyword[MSVCRT$strlen(opts->keywords[i])] = '\0';
-            
-            if (MSVCRT$strstr(lower_filename, lower_keyword)) {
-                MSVCRT$free(lower_filename);
-                MSVCRT$free(lower_keyword);
-                return TRUE;
-            }
-        }
-        
-        if (lower_filename) MSVCRT$free(lower_filename);
-        if (lower_keyword) MSVCRT$free(lower_keyword);
+        const char* kw = opts->keywords[i];
+        if (!kw) continue;
+        if (MatchWildcard(kw, filename)) return TRUE;
+        // fallback: case-insensitive substring
+        size_t flen = MSVCRT$strlen(filename);
+        size_t klen = MSVCRT$strlen(kw);
+        char* lf = (char*)MSVCRT$malloc(flen + 1);
+        char* lk = (char*)MSVCRT$malloc(klen + 1);
+        if (lf && lk) {
+            for (size_t j = 0; j < flen; j++) lf[j] = (char)MSVCRT$tolower((unsigned char)filename[j]);
+            lf[flen] = '\0';
+            for (size_t j = 0; j < klen; j++) lk[j] = (char)MSVCRT$tolower((unsigned char)kw[j]);
+            lk[klen] = '\0';
+            BOOL hit = (MSVCRT$strstr(lf, lk) != NULL);
+            MSVCRT$free(lf); MSVCRT$free(lk);
+            if (hit) return TRUE;
+        } else { if (lf) MSVCRT$free(lf); if (lk) MSVCRT$free(lk); }
     }
-
     return FALSE;
 }
 
-// Check if file extension matches any filetype
 BOOL MatchesFiletype(const char* filepath, SearchOptions* opts) {
     const char* ext = MSVCRT$strrchr(filepath, '.');
     if (!ext) return FALSE;
-
     for (int i = 0; i < opts->filetype_count; i++) {
-        if (MSVCRT$_stricmp(ext, opts->filetypes[i]) == 0) {
-            return TRUE;
-        }
+        if (opts->filetypes[i] && MSVCRT$_stricmp(ext, opts->filetypes[i]) == 0) return TRUE;
     }
-
     return FALSE;
 }
-
-// Forward declaration
-void NormalizePath(char* path);
 
 // Check if directory should be excluded
 BOOL IsFolderValid(const char* path, SearchOptions* opts) {
@@ -348,7 +435,7 @@ void SearchDirectory(const char* dir_path, SearchOptions* opts) {
     hFind = KERNEL32$FindFirstFileA(search_path, &findData);
     if (hFind == INVALID_HANDLE_VALUE) {
         DWORD error = KERNEL32$GetLastError();
-        // Only report errors that are not "access denied" or "file not found" to avoid spam
+        // Only report errors that are not common noise
         if (error != ERROR_ACCESS_DENIED && error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND) {
             BeaconPrintf(CALLBACK_ERROR, "[-] Cannot access directory %s (Error: %lu)\n", dir_path, error);
         }
@@ -402,6 +489,13 @@ void SearchDirectory(const char* dir_path, SearchOptions* opts) {
         // Check if filename matches keyword
         // If no keywords specified, match all files by name
         BOOL nameMatch = (opts->keyword_count == 0) ? TRUE : MatchesKeyword(findData.cFileName, opts);
+        // If strict VBA macro check is enabled (-v), only report Office files that actually contain VBA (OOXML only here)
+        if (opts->check_for_macro) {
+            if (!CheckForVBAMacrosStrict(file_path, FALSE)) {
+                continue;
+            }
+        }
+
         if (nameMatch) {
             // Normalize path before output (remove double backslashes)
             NormalizePath(file_path);
@@ -553,6 +647,9 @@ void go(char* args, int len) {
     datap parser;
     BeaconDataParse(&parser, args, len);
 
+    // New: raw cmdline for flag validation
+    char* raw_cmdline = BeaconDataExtract(&parser, NULL);
+
     SearchOptions opts = {0};
     opts.max_file_size_kb = 1024; // Default 1MB
     opts.system_dirs = FALSE;
@@ -560,6 +657,39 @@ void go(char* args, int len) {
     opts.check_for_macro = FALSE;
     opts.has_date_filter = FALSE;
     opts.result_count = 0;
+
+    // Validate flags from raw_cmdline against whitelist
+    if (raw_cmdline && MSVCRT$strlen(raw_cmdline) > 0) {
+        const char* p = raw_cmdline;
+        while (*p) {
+            if (*p == '-') {
+                const char* start = p;
+                p++;
+                const char* f = p;
+                while (*p && *p != ' ' && *p != '\t') p++;
+                size_t flen = (size_t)(p - start);
+                // Copy flag token
+                if (flen > 0 && flen < 64) {
+                    char flag[64];
+                    for (size_t i = 0; i < flen && i < 63; i++) flag[i] = start[i];
+                    flag[(flen < 63 ? flen : 63)] = '\0';
+                    // Whitelist: -d -f -k -c -m -s -b -a -v
+                    BOOL ok = FALSE;
+                    if (MSVCRT$strncmp(flag, "-d", 2) == 0 || MSVCRT$strncmp(flag, "-f", 2) == 0 || MSVCRT$strncmp(flag, "-k", 2) == 0 ||
+                        MSVCRT$strncmp(flag, "-c", 2) == 0 || MSVCRT$strncmp(flag, "-m", 2) == 0 || MSVCRT$strncmp(flag, "-s", 2) == 0 ||
+                        MSVCRT$strncmp(flag, "-b", 2) == 0 || MSVCRT$strncmp(flag, "-a", 2) == 0 || MSVCRT$strncmp(flag, "-v", 2) == 0) {
+                        ok = TRUE;
+                    }
+                    if (!ok) {
+                        BeaconPrintf(CALLBACK_ERROR, "Invalid flag: %s\n", flag);
+                        return; // Abort execution on unknown flag
+                    }
+                }
+            } else {
+                p++;
+            }
+        }
+    }
 
     // Parse arguments
     char* directories_str = BeaconDataExtract(&parser, NULL);
@@ -593,13 +723,28 @@ void go(char* args, int len) {
     if (filetypes_str && MSVCRT$strlen(filetypes_str) > 0) {
         ParseCSVList(filetypes_str, &opts.filetypes, &opts.filetype_count);
     } else {
-        // Default: .txt and .docx
-        opts.filetype_count = 2;
-        opts.filetypes = (char**)MSVCRT$malloc(sizeof(char*) * 2);
-        opts.filetypes[0] = (char*)MSVCRT$malloc(5);
-        opts.filetypes[1] = (char*)MSVCRT$malloc(6);
-        MSVCRT$memcpy(opts.filetypes[0], ".txt", 5);
-        MSVCRT$memcpy(opts.filetypes[1], ".docx", 6);
+        // If -v (strict macro check) is enabled and no filetypes provided,
+        // default to Office formats. Otherwise keep generic defaults.
+        if (opts.check_for_macro) {
+            opts.filetype_count = 4;
+            opts.filetypes = (char**)MSVCRT$malloc(sizeof(char*) * 4);
+            opts.filetypes[0] = (char*)MSVCRT$malloc(5);
+            opts.filetypes[1] = (char*)MSVCRT$malloc(5);
+            opts.filetypes[2] = (char*)MSVCRT$malloc(6);
+            opts.filetypes[3] = (char*)MSVCRT$malloc(6);
+            MSVCRT$memcpy(opts.filetypes[0], ".doc", 5);
+            MSVCRT$memcpy(opts.filetypes[1], ".xls", 5);
+            MSVCRT$memcpy(opts.filetypes[2], ".docm", 6);
+            MSVCRT$memcpy(opts.filetypes[3], ".xlsm", 6);
+        } else {
+            // Default: .txt and .docx
+            opts.filetype_count = 2;
+            opts.filetypes = (char**)MSVCRT$malloc(sizeof(char*) * 2);
+            opts.filetypes[0] = (char*)MSVCRT$malloc(5);
+            opts.filetypes[1] = (char*)MSVCRT$malloc(6);
+            MSVCRT$memcpy(opts.filetypes[0], ".txt", 5);
+            MSVCRT$memcpy(opts.filetypes[1], ".docx", 6);
+        }
     }
 
     if (keywords_str && MSVCRT$strlen(keywords_str) > 0) {
@@ -613,7 +758,7 @@ void go(char* args, int len) {
     // Parse dates
     if (before_date_str && MSVCRT$strlen(before_date_str) > 0) {
         if (!ParseDate(before_date_str, &opts.before_date)) {
-            BeaconPrintf(CALLBACK_ERROR, "[-] Invalid before date format: %s (expected: dd.MM.yyyy)\n", before_date_str);
+            BeaconPrintf(CALLBACK_ERROR, "[-] Invalid before date format: %s (expected: yyyy-MM-dd)\n", before_date_str);
         } else {
             opts.has_date_filter = TRUE;
         }
@@ -621,7 +766,7 @@ void go(char* args, int len) {
 
     if (after_date_str && MSVCRT$strlen(after_date_str) > 0) {
         if (!ParseDate(after_date_str, &opts.after_date)) {
-            BeaconPrintf(CALLBACK_ERROR, "[-] Invalid after date format: %s (expected: dd.MM.yyyy)\n", after_date_str);
+            BeaconPrintf(CALLBACK_ERROR, "[-] Invalid after date format: %s (expected: yyyy-MM-dd)\n", after_date_str);
         } else {
             opts.has_date_filter = TRUE;
         }
@@ -649,8 +794,5 @@ void go(char* args, int len) {
     }
 
     BeaconPrintf(CALLBACK_OUTPUT, "[*] Search completed. Found %d results.\n", opts.result_count);
-
-    // Cleanup
-    // Note: We don't free the parsed strings as they are managed by Beacon
 }
 
