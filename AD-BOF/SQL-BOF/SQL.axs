@@ -1,4 +1,3 @@
-
 var _cmd_1434udp = ax.create_command("1434udp", "Obtain SQL Server connection information from 1434/UDP", "mssql 1434udp 192.168.10.10");
 _cmd_1434udp.addArgString("serverIP", true, "SQL Server IP");
 _cmd_1434udp.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
@@ -13,13 +12,13 @@ _cmd_1434udp.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_adsi = ax.create_command("adsi", "Obtain ADSI creds from ADSI linked server", "mssql adsi [server] [adsiserver] [-p port] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_adsi.addArgString("server",      true, "SQL server to connect to");
-_cmd_adsi.addArgString("adsiserver",  true, "ADSI linked server name or address");
+var _cmd_adsi = ax.create_command("adsi", "Obtain ADSI creds from ADSI linked server", "mssql adsi [-p port] [-d database] [-l linkedserver] [-i impersonate] [server] [adsiserver]");
 _cmd_adsi.addArgFlagInt("-p",    "port",         "Optional: ADSI port", 0);
 _cmd_adsi.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_adsi.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_adsi.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_adsi.addArgString("server",      true, "SQL server to connect to");
+_cmd_adsi.addArgString("adsiserver",  true, "ADSI linked server name or address");
 _cmd_adsi.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let adsiserver   = parsed_json["adsiserver"];
@@ -37,12 +36,12 @@ _cmd_adsi.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_agentcmd = ax.create_command("agentcmd", "Execute a system command using agent jobs", "mssql agentcmd [server] [command] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_agentcmd.addArgString("server",      true, "SQL server to connect to");
-_cmd_agentcmd.addArgString("command",     true, "System command to execute via agent job");
+var _cmd_agentcmd = ax.create_command("agentcmd", "Execute a system command using agent jobs", "mssql agentcmd [-d database] [-l linkedserver] [-i impersonate] [server] [command]");
 _cmd_agentcmd.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_agentcmd.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_agentcmd.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_agentcmd.addArgString("server",      true, "SQL server to connect to");
+_cmd_agentcmd.addArgString("command",     true, "System command to execute via agent job");
 _cmd_agentcmd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let command      = parsed_json["command"];
@@ -59,11 +58,11 @@ _cmd_agentcmd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_agentstatus = ax.create_command("agentstatus", "Enumerate SQL Agent status and jobs", "mssql agentstatus [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_agentstatus.addArgString("server", true, "SQL server to connect to");
+var _cmd_agentstatus = ax.create_command("agentstatus", "Enumerate SQL Agent status and jobs", "mssql agentstatus [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_agentstatus.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_agentstatus.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_agentstatus.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_agentstatus.addArgString("server", true, "SQL server to connect to");
 _cmd_agentstatus.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -79,11 +78,11 @@ _cmd_agentstatus.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines)
 
 
 
-var _cmd_checkrpc = ax.create_command("checkrpc", "Enumerate RPC status of linked servers", "mssql checkrpc [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_checkrpc.addArgString("server", true, "SQL server to connect to");
+var _cmd_checkrpc = ax.create_command("checkrpc", "Enumerate RPC status of linked servers", "mssql checkrpc [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_checkrpc.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_checkrpc.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_checkrpc.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_checkrpc.addArgString("server", true, "SQL server to connect to");
 _cmd_checkrpc.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -99,13 +98,13 @@ _cmd_checkrpc.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_clr = ax.create_command("clr", "Load and execute a .NET assembly in a stored procedure", "mssql clr [server] [-p dll_path] [-f function] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_clr.addArgString("server",   true, "SQL server to connect to");
-_cmd_clr.addArgString("dll_path", true, "Path to the .NET assembly DLL");
-_cmd_clr.addArgString("function", true, "Entry-point function name");
+var _cmd_clr = ax.create_command("clr", "Load and execute a .NET assembly in a stored procedure", "mssql clr [-d database] [-l linkedserver] [-i impersonate] [server] [dll_path] [function]");
 _cmd_clr.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_clr.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_clr.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_clr.addArgString("server",   true, "SQL server to connect to");
+_cmd_clr.addArgString("dll_path", true, "Path to the .NET assembly DLL");
+_cmd_clr.addArgString("function", true, "Entry-point function name");
 _cmd_clr.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let dllPath      = parsed_json["dll_path"];
@@ -123,12 +122,12 @@ _cmd_clr.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_columns = ax.create_command("columns", "Enumerate columns within a table", "mssql columns [server] [table] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_columns.addArgString("server", true, "SQL server to connect to");
-_cmd_columns.addArgString("table",  true, "Table to enumerate columns from");
+var _cmd_columns = ax.create_command("columns", "Enumerate columns within a table", "mssql columns [-d database] [-l linkedserver] [-i impersonate] [server] [table]");
 _cmd_columns.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_columns.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_columns.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_columns.addArgString("server", true, "SQL server to connect to");
+_cmd_columns.addArgString("table",  true, "Table to enumerate columns from");
 _cmd_columns.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let table        = parsed_json["table"];
@@ -145,11 +144,11 @@ _cmd_columns.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_databases = ax.create_command("databases", "Enumerate SQL databases", "mssql databases [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_databases.addArgString("server", true, "SQL server to connect to");
+var _cmd_databases = ax.create_command("databases", "Enumerate SQL databases", "mssql databases [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_databases.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_databases.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_databases.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_databases.addArgString("server", true, "SQL server to connect to");
 _cmd_databases.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -165,11 +164,11 @@ _cmd_databases.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_disableclr = ax.create_command("disableclr", "Disable CLR integration", "mssql disableclr [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_disableclr.addArgString("server", true, "SQL server to connect to");
+var _cmd_disableclr = ax.create_command("disableclr", "Disable CLR integration", "mssql disableclr [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_disableclr.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_disableclr.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_disableclr.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_disableclr.addArgString("server", true, "SQL server to connect to");
 _cmd_disableclr.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -185,11 +184,11 @@ _cmd_disableclr.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) 
 
 
 
-var _cmd_disableole = ax.create_command("disableole", "Disable OLE Automation Procedures", "mssql disableole [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_disableole.addArgString("server", true, "SQL server to connect to");
+var _cmd_disableole = ax.create_command("disableole", "Disable OLE Automation Procedures", "mssql disableole [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_disableole.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_disableole.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_disableole.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_disableole.addArgString("server", true, "SQL server to connect to");
 _cmd_disableole.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -205,11 +204,11 @@ _cmd_disableole.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) 
 
 
 
-var _cmd_disablerpc = ax.create_command("disablerpc", "Disable RPC and RPC out on a linked server", "mssql disablerpc [server] [linkedserver] [-d database] [-i impersonate]");
-_cmd_disablerpc.addArgString("server", true, "SQL server to connect to");
-_cmd_disablerpc.addArgString("linkedserver", true, "Linked server name");
+var _cmd_disablerpc = ax.create_command("disablerpc", "Disable RPC and RPC out on a linked server", "mssql disablerpc [-d database] [-i impersonate] [server] [linkedserver]");
 _cmd_disablerpc.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_disablerpc.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_disablerpc.addArgString("server", true, "SQL server to connect to");
+_cmd_disablerpc.addArgString("linkedserver", true, "Linked server name");
 _cmd_disablerpc.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let linkedserver = parsed_json["linkedserver"];
@@ -225,11 +224,11 @@ _cmd_disablerpc.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) 
 
 
 
-var _cmd_disablexp = ax.create_command("disablexp", "Disable xp_cmdshell", "mssql disablexp [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_disablexp.addArgString("server", true, "SQL server to connect to");
+var _cmd_disablexp = ax.create_command("disablexp", "Disable xp_cmdshell", "mssql disablexp [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_disablexp.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_disablexp.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_disablexp.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_disablexp.addArgString("server", true, "SQL server to connect to");
 _cmd_disablexp.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -245,11 +244,11 @@ _cmd_disablexp.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_enableclr = ax.create_command("enableclr", "Enable CLR integration", "mssql enableclr [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_enableclr.addArgString("server", true, "SQL server to connect to");
+var _cmd_enableclr = ax.create_command("enableclr", "Enable CLR integration", "mssql enableclr [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_enableclr.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_enableclr.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_enableclr.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_enableclr.addArgString("server", true, "SQL server to connect to");
 _cmd_enableclr.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -265,11 +264,11 @@ _cmd_enableclr.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_enableole = ax.create_command("enableole", "Enable OLE Automation Procedures", "mssql enableole [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_enableole.addArgString("server", true, "SQL server to connect to");
+var _cmd_enableole = ax.create_command("enableole", "Enable OLE Automation Procedures", "mssql enableole [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_enableole.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_enableole.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_enableole.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_enableole.addArgString("server", true, "SQL server to connect to");
 _cmd_enableole.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -285,11 +284,11 @@ _cmd_enableole.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_enablerpc = ax.create_command("enablerpc", "Enable RPC and RPC out on a linked server", "mssql enablerpc [server] [linkedserver] [-d database] [-i impersonate]");
-_cmd_enablerpc.addArgString("server",       true, "SQL server to connect to");
-_cmd_enablerpc.addArgString("linkedserver", true, "Linked server name");
+var _cmd_enablerpc = ax.create_command("enablerpc", "Enable RPC and RPC out on a linked server", "mssql enablerpc [-d database] [-i impersonate] [server] [linkedserver]");
 _cmd_enablerpc.addArgFlagString("-d", "database",    "Optional: Database to use", "");
 _cmd_enablerpc.addArgFlagString("-i", "impersonate", "Optional: User to impersonate during execution", "");
+_cmd_enablerpc.addArgString("server",       true, "SQL server to connect to");
+_cmd_enablerpc.addArgString("linkedserver", true, "Linked server name");
 _cmd_enablerpc.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server      = parsed_json["server"];
     let linkedserver= parsed_json["linkedserver"];
@@ -305,11 +304,11 @@ _cmd_enablerpc.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_enablexp = ax.create_command("enablexp", "Enable xp_cmdshell", "mssql enablexp [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_enablexp.addArgString("server", true, "SQL server to connect to");
+var _cmd_enablexp = ax.create_command("enablexp", "Enable xp_cmdshell", "mssql enablexp [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_enablexp.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_enablexp.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_enablexp.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_enablexp.addArgString("server", true, "SQL server to connect to");
 _cmd_enablexp.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -325,9 +324,9 @@ _cmd_enablexp.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_impersonate = ax.create_command("impersonate", "Enumerate users that can be impersonated", "mssql impersonate [server] [-d database]");
-_cmd_impersonate.addArgString("server", true, "SQL server to connect to");
+var _cmd_impersonate = ax.create_command("impersonate", "Enumerate users that can be impersonated", "mssql impersonate [-d database] [server]");
 _cmd_impersonate.addArgFlagString("-d", "database", "Optional: Database to use", "");
+_cmd_impersonate.addArgString("server", true, "SQL server to connect to");
 _cmd_impersonate.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server   = parsed_json["server"];
     let database = parsed_json["database"];
@@ -341,9 +340,9 @@ _cmd_impersonate.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines)
 
 
 
-var _cmd_info = ax.create_command("info", "Gather information about the SQL Server", "mssql info [server] [-d database]");
-_cmd_info.addArgString("server", true, "SQL server to connect to");
+var _cmd_info = ax.create_command("info", "Gather information about the SQL Server", "mssql info [-d database] [server]");
 _cmd_info.addArgFlagString("-d", "database", "Optional: Database to use", "");
+_cmd_info.addArgString("server", true, "SQL server to connect to");
 _cmd_info.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server   = parsed_json["server"];
     let database = parsed_json["database"];
@@ -357,11 +356,11 @@ _cmd_info.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_links = ax.create_command("links", "Enumerate linked servers", "mssql links [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_links.addArgString("server", true, "SQL server to connect to");
+var _cmd_links = ax.create_command("links", "Enumerate linked servers", "mssql links [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_links.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_links.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_links.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_links.addArgString("server", true, "SQL server to connect to");
 _cmd_links.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -377,12 +376,12 @@ _cmd_links.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_olecmd = ax.create_command("olecmd", "Execute a system command using OLE automation procedures", "mssql olecmd [server] [command] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_olecmd.addArgString("server",  true, "SQL server to connect to");
-_cmd_olecmd.addArgString("command", true, "System command to execute via OLE automation");
+var _cmd_olecmd = ax.create_command("olecmd", "Execute a system command using OLE automation procedures", "mssql olecmd [-d database] [-l linkedserver] [-i impersonate] [server] [command]");
 _cmd_olecmd.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_olecmd.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_olecmd.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_olecmd.addArgString("server",  true, "SQL server to connect to");
+_cmd_olecmd.addArgString("command", true, "System command to execute via OLE automation");
 _cmd_olecmd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let command      = parsed_json["command"];
@@ -399,12 +398,12 @@ _cmd_olecmd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_query = ax.create_command("query", "Execute a custom SQL query", "mssql query [server] [query] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_query.addArgString("server", true, "SQL server to connect to");
-_cmd_query.addArgString("query",  true, "Query to execute");
+var _cmd_query = ax.create_command("query", "Execute a custom SQL query", "mssql query [-d database] [-l linkedserver] [-i impersonate] [server] [query]");
 _cmd_query.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_query.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_query.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_query.addArgString("server", true, "SQL server to connect to");
+_cmd_query.addArgString("query",  true, "Query to execute");
 _cmd_query.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let query        = parsed_json["query"];
@@ -421,12 +420,12 @@ _cmd_query.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_rows = ax.create_command("rows", "Get the count of rows in a table", "mssql rows [server] [table] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_rows.addArgString("server", true, "SQL server to connect to");
-_cmd_rows.addArgString("table",  true, "Table to count rows from");
+var _cmd_rows = ax.create_command("rows", "Get the count of rows in a table", "mssql rows [-d database] [-l linkedserver] [-i impersonate] [server] [table]");
 _cmd_rows.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_rows.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_rows.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_rows.addArgString("server", true, "SQL server to connect to");
+_cmd_rows.addArgString("table",  true, "Table to count rows from");
 _cmd_rows.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let table        = parsed_json["table"];
@@ -443,12 +442,12 @@ _cmd_rows.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_search = ax.create_command("search","Search a table for a column name","mssql search [server] [keyword] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_search.addArgString("server",  true, "SQL server to connect to");
-_cmd_search.addArgString("keyword", true, "Column name keyword to search for");
+var _cmd_search = ax.create_command("search","Search a table for a column name","mssql search [-d database] [-l linkedserver] [-i impersonate] [server] [keyword]");
 _cmd_search.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_search.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_search.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_search.addArgString("server",  true, "SQL server to connect to");
+_cmd_search.addArgString("keyword", true, "Column name keyword to search for");
 _cmd_search.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let keyword      = parsed_json["keyword"];
@@ -465,12 +464,12 @@ _cmd_search.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_smb = ax.create_command("smb", "Coerce NetNTLM auth via xp_dirtree", "mssql smb [server] [\\\\listener] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_smb.addArgString("server",   true, "SQL server to connect to");
-_cmd_smb.addArgString("listener", true, "UNC path listener (e.g., \\\\host\\share)");
+var _cmd_smb = ax.create_command("smb", "Coerce NetNTLM auth via xp_dirtree", "mssql smb [-d database] [-l linkedserver] [-i impersonate] [server] [\\\\listener]");
 _cmd_smb.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_smb.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_smb.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_smb.addArgString("server",   true, "SQL server to connect to");
+_cmd_smb.addArgString("listener", true, "UNC path listener (e.g., \\\\host\\share)");
 _cmd_smb.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let listener = parsed_json["listener"];
@@ -487,11 +486,11 @@ _cmd_smb.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_tables = ax.create_command("tables", "Enumerate tables within a database", "mssql tables [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_tables.addArgString("server", true, "SQL server to connect to");
+var _cmd_tables = ax.create_command("tables", "Enumerate tables within a database", "mssql tables [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_tables.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_tables.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_tables.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_tables.addArgString("server", true, "SQL server to connect to");
 _cmd_tables.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -507,11 +506,11 @@ _cmd_tables.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_users = ax.create_command("users", "Enumerate users with database access","mssql users [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_users.addArgString("server", true, "SQL server to connect to");
+var _cmd_users = ax.create_command("users", "Enumerate users with database access","mssql users [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_users.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_users.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_users.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_users.addArgString("server", true, "SQL server to connect to");
 _cmd_users.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -527,11 +526,11 @@ _cmd_users.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_whoami = ax.create_command("whoami", "Gather logged in user, mapped user and roles from SQL server", "mssql whoami [server] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_whoami.addArgString("server", true, "SQL server to connect to");
+var _cmd_whoami = ax.create_command("whoami", "Gather logged in user, mapped user and roles from SQL server", "mssql whoami [-d database] [-l linkedserver] [-i impersonate] [server]");
 _cmd_whoami.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_whoami.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_whoami.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_whoami.addArgString("server", true, "SQL server to connect to");
 _cmd_whoami.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let database     = parsed_json["database"];
@@ -547,12 +546,12 @@ _cmd_whoami.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var _cmd_xpcmd = ax.create_command("xpcmd", "Execute a system command via xp_cmdshell", "mssql xpcmd [server] [command] [-d database] [-l linkedserver] [-i impersonate]");
-_cmd_xpcmd.addArgString("server",  true, "SQL server to connect to");
-_cmd_xpcmd.addArgString("command", true, "Command to execute via xp_cmdshell");
+var _cmd_xpcmd = ax.create_command("xpcmd", "Execute a system command via xp_cmdshell", "mssql xpcmd [-d database] [-l linkedserver] [-i impersonate] [server] [command]");
 _cmd_xpcmd.addArgFlagString("-d", "database",     "Optional: Database to use", "");
 _cmd_xpcmd.addArgFlagString("-l", "linkedserver", "Optional: Execute through linked server", "");
 _cmd_xpcmd.addArgFlagString("-i", "impersonate",  "Optional: User to impersonate during execution", "");
+_cmd_xpcmd.addArgString("server",  true, "SQL server to connect to");
+_cmd_xpcmd.addArgString("command", true, "Command to execute via xp_cmdshell");
 _cmd_xpcmd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let server       = parsed_json["server"];
     let command      = parsed_json["command"];
