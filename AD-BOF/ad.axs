@@ -54,7 +54,7 @@ cmd_badtakeover.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) 
 
 
 var cmd_readlaps = ax.create_command("readlaps", "Read LAPS password for a computer", "readlaps -dc dc01.domain.local -target WINCLIENT");
-cmd_readlaps.addArgFlagString("-dc", "dc", "Target domain controller (e.g., 'dc01.domain.local', '10.0.2.10')", "");
+cmd_readlaps.addArgFlagString("-dc", "dc", "Target domain controller (e.g., 'dc01.domain.local'). Hostname preferred over IP for LDAP.", "");
 cmd_readlaps.addArgFlagString("-dn", "dn", "Root DN (e.g., 'DC=domain,DC=local'). If not specified, derived from agent domain.", "");
 cmd_readlaps.addArgFlagString("-target", "target", "Target computer sAMAccountName (e.g., 'WINCLIENT$')", "");
 cmd_readlaps.addArgFlagString("-target-dn", "target_dn", "Target computer Distinguished Name (e.g., 'CN=WINCLIENT,OU=Computers,DC=domain,DC=local')", "");
@@ -88,6 +88,9 @@ cmd_readlaps.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     }
 
     // Strip quotes from target values if present
+    if (dc) {
+        dc = dc.replace(/^['"]|['"]$/g, '');
+    }
     if (target) {
         target = target.replace(/^['"]|['"]$/g, '');
     }
