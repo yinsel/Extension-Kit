@@ -43,9 +43,9 @@ cmd_cookie_monster.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     if(parsed_json["--edgeCookiePID"]) { edgeCookiePID = 1; }
     if(parsed_json["--edgeLoginDataPID"]) { edgeLoginDataPID = 1; }
 
-    if(parsed_json.hasOwnProperty("folder")) { copyFile = parsed_json["folder"]; }
+    if("folder" in parsed_json) { copyFile = parsed_json["folder"]; }
 
-    if(parsed_json.hasOwnProperty("local_state_path")) {
+    if("local_state_path" in parsed_json) {
         path = parsed_json["local_state_path"];
         system = 1;
     }
