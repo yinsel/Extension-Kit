@@ -51,6 +51,9 @@ cmd_sauroneye.addArgBool("-s", "Search in system directories (Windows and AppDat
 cmd_sauroneye.addArgFlagString("-b", "beforedate", "Filter files last modified before this date (format: dd.MM.yyyy)", "");
 cmd_sauroneye.addArgFlagString("-a", "afterdate", "Filter files last modified after this date (format: dd.MM.yyyy)", "");
 cmd_sauroneye.addArgBool("-v", "Check if Office files contain VBA macros using OOXML detection (no OLE, stealthier)");
+cmd_sauroneye.addArgFlagInt("-W", "wildcardattempts", "Maximum pattern matching attempts for wildcard search. Default: 1000. Increase for complex patterns", 0);
+cmd_sauroneye.addArgFlagInt("-S", "wildcardsize", "Maximum search area in KB for large files when using wildcards. Default: 200KB. Increase to search more", 0);
+cmd_sauroneye.addArgFlagInt("-B", "wildcardbacktrack", "Maximum backtracking operations for wildcard matching. Default: 1000. Increase for complex patterns", 0);
 cmd_sauroneye.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let directories = (parsed_json["directories"] !== undefined && parsed_json["directories"] !== null) ? String(parsed_json["directories"]) : "";
     let filetypes = (parsed_json["filetypes"] !== undefined && parsed_json["filetypes"] !== null) ? String(parsed_json["filetypes"]) : "";
@@ -61,10 +64,13 @@ cmd_sauroneye.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let before_date = (parsed_json["beforedate"] !== undefined && parsed_json["beforedate"] !== null) ? String(parsed_json["beforedate"]) : "";
     let after_date = (parsed_json["afterdate"] !== undefined && parsed_json["afterdate"] !== null) ? String(parsed_json["afterdate"]) : "";
     let check_macro = (parsed_json["-v"]) ? 1 : 0;
+    let wildcard_attempts = (parsed_json["wildcardattempts"] !== undefined && parsed_json["wildcardattempts"] !== null) ? parseInt(parsed_json["wildcardattempts"]) : 0;
+    let wildcard_size = (parsed_json["wildcardsize"] !== undefined && parsed_json["wildcardsize"] !== null) ? parseInt(parsed_json["wildcardsize"]) : 0;
+    let wildcard_backtrack = (parsed_json["wildcardbacktrack"] !== undefined && parsed_json["wildcardbacktrack"] !== null) ? parseInt(parsed_json["wildcardbacktrack"]) : 0;
 
     // Pack raw cmdline as first param for in-BOF validation of unknown flags
-    let bof_params = ax.bof_pack("cstr,cstr,cstr,cstr,int,int,int,cstr,cstr,int", 
-        [cmdline, directories, filetypes, keywords, search_contents, max_filesize, system_dirs, before_date, after_date, check_macro]);
+    let bof_params = ax.bof_pack("cstr,cstr,cstr,cstr,int,int,int,cstr,cstr,int,int,int,int", 
+        [cmdline, directories, filetypes, keywords, search_contents, max_filesize, system_dirs, before_date, after_date, check_macro, wildcard_attempts, wildcard_size, wildcard_backtrack]);
     let bof_path = ax.script_dir() + "_bin/sauroneye." + ax.arch(id) + ".o";
 
     let cmd = "execute bof";
