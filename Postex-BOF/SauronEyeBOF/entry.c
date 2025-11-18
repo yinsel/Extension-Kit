@@ -2,88 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <shlwapi.h>
+#include "sauroneye.h"
 #include "../_include/beacon.h"
 
-#pragma comment(lib, "Shlwapi.lib")
 
-DECLSPEC_IMPORT DWORD WINAPI KERNEL32$GetFileAttributesW(LPCWSTR lpFileName);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$FindClose(HANDLE hFindFile);
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$FindFirstFileW(LPCWSTR lpFileName, LPWIN32_FIND_DATAW lpFindFileData);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$FindNextFileW(HANDLE hFindFile, LPWIN32_FIND_DATAW lpFindFileData);
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$FindFirstFileA(LPCSTR lpFileName, LPWIN32_FIND_DATAA lpFindFileData);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATAA lpFindFileData);
-DECLSPEC_IMPORT DWORD WINAPI KERNEL32$GetFileAttributesA(LPCSTR lpFileName);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$FileTimeToSystemTime(const FILETIME *lpFileTime, LPSYSTEMTIME lpSystemTime);
-DECLSPEC_IMPORT DWORD WINAPI KERNEL32$GetLastError(VOID);
-DECLSPEC_IMPORT BOOL WINAPI SHLWAPI$PathFileExistsA(LPCSTR pszPath);
-DECLSPEC_IMPORT int WINAPI MSVCRT$sprintf(char *str, const char *format, ...);
-DECLSPEC_IMPORT int __cdecl MSVCRT$_snprintf(char *str, size_t size, const char *format, ...);
-DECLSPEC_IMPORT void* WINAPI MSVCRT$malloc(size_t size);
-DECLSPEC_IMPORT void WINAPI MSVCRT$free(void *ptr);
-DECLSPEC_IMPORT int WINAPI MSVCRT$strcmp(const char *s1, const char *s2);
-DECLSPEC_IMPORT int WINAPI MSVCRT$strncmp(const char *s1, const char *s2, size_t n);
-DECLSPEC_IMPORT char* WINAPI MSVCRT$strstr(const char *haystack, const char *needle);
-DECLSPEC_IMPORT char* WINAPI MSVCRT$strrchr(const char *s, int c);
-DECLSPEC_IMPORT char* WINAPI MSVCRT$strtok(char *str, const char *delim);
-DECLSPEC_IMPORT size_t WINAPI MSVCRT$strlen(const char *s);
-DECLSPEC_IMPORT int WINAPI MSVCRT$tolower(int c);
-DECLSPEC_IMPORT int __cdecl MSVCRT$_stricmp(const char *s1, const char *s2);
-DECLSPEC_IMPORT void* WINAPI MSVCRT$memcpy(void *dest, const void *src, size_t n);
-DECLSPEC_IMPORT HANDLE WINAPI KERNEL32$CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
-DECLSPEC_IMPORT DWORD WINAPI KERNEL32$GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$CloseHandle(HANDLE hObject);
-DECLSPEC_IMPORT int WINAPI KERNEL32$MultiByteToWideChar(UINT CodePage, DWORD dwFlags, LPCSTR lpMultiByteStr, int cbMultiByte, LPWSTR lpWideCharStr, int cchWideChar);
-DECLSPEC_IMPORT HMODULE WINAPI KERNEL32$GetModuleHandleA(LPCSTR lpModuleName);
-DECLSPEC_IMPORT FARPROC WINAPI KERNEL32$GetProcAddress(HMODULE hModule, LPCSTR lpProcName);
-
-// NT native API (stealthier file IO)
-typedef long NTSTATUS;
-typedef struct _IO_STATUS_BLOCK {
-    union {
-        NTSTATUS Status;
-        void*    Pointer;
-    } DUMMYUNIONNAME;
-    unsigned long long Information;
-} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
-
-typedef enum _FILE_INFORMATION_CLASS {
-    FileDirectoryInformation = 1,
-    FileFullDirectoryInformation,
-    FileBothDirectoryInformation,
-    FileBasicInformation,
-    FileStandardInformation = 5,
-} FILE_INFORMATION_CLASS;
-
-typedef struct _FILE_STANDARD_INFORMATION {
-    LARGE_INTEGER AllocationSize;
-    LARGE_INTEGER EndOfFile;
-    unsigned long NumberOfLinks;
-    unsigned char DeletePending;
-    unsigned char Directory;
-} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
-
-DECLSPEC_IMPORT NTSTATUS WINAPI NTDLL$NtQueryInformationFile(HANDLE FileHandle, PIO_STATUS_BLOCK IoStatusBlock, PVOID FileInformation, ULONG Length, FILE_INFORMATION_CLASS FileInformationClass);
-DECLSPEC_IMPORT NTSTATUS WINAPI NTDLL$NtReadFile(HANDLE FileHandle, HANDLE Event, PVOID ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length, PLARGE_INTEGER ByteOffset, PULONG Key);
-
-#ifndef S_OK
-#define S_OK 0x00000000
-#endif
-
-#ifndef STGM_READ
-#define STGM_READ 0x00000000L
-#endif
-#ifndef STGM_SHARE_DENY_WRITE
-#define STGM_SHARE_DENY_WRITE 0x00000020L
-#endif
-
-#define OOXML_SCAN_WINDOW (256 * 1024) // 256KB head/tail scan
-
-// Dynamic OLE32 function pointers
-typedef HRESULT (WINAPI *PFN_StgIsStorageFile)(LPCWSTR);
-typedef HRESULT (WINAPI *PFN_StgOpenStorage)(LPCWSTR, void*, DWORD, void*, DWORD, void**);
-
+// Dynamic OLE32 function pointers (static - internal use only)
 static PFN_StgIsStorageFile pStgIsStorageFile = NULL;
 static PFN_StgOpenStorage   pStgOpenStorage   = NULL;
 
@@ -156,36 +79,6 @@ BOOL CheckForVBAMacrosStrict(const char* filepath, BOOL use_ole) {
     return (isZip && anyHit);
 }
 
-typedef struct {
-    char** directories;
-    int dir_count;
-    char** filetypes;
-    int filetype_count;
-    char** keywords;
-    int keyword_count;
-    BOOL search_contents;
-    BOOL system_dirs;
-    ULONGLONG max_file_size_kb;
-    SYSTEMTIME before_date;
-    SYSTEMTIME after_date;
-    BOOL check_for_macro;  // -v: OOXML macro detection
-    BOOL has_date_filter;
-    int result_count;
-} SearchOptions;
-
-#define MAX_RESULTS 1000
-#define MAX_PATH_LENGTH 260
-#define MAX_CONTENT_BUFFER_SIZE (10 * 1024 * 1024)
-#define CONTEXT_BUFFER_SIZE 50
-
-// Forward declarations for helpers
-BOOL MatchesFiletype(const char* filepath, SearchOptions* opts);
-BOOL MatchesKeyword(const char* filename, SearchOptions* opts);
-BOOL MatchesDateFilter(const FILETIME* filetime, SearchOptions* opts);
-BOOL SearchFileContents(const char* filepath, SearchOptions* opts);
-BOOL IsFolderValid(const char* path, SearchOptions* opts);
-void NormalizePath(char* path);
-
 // Simple wildcard matching function (supports * and ?)
 BOOL MatchWildcard(const char* pattern, const char* str) {
     const char* s = str;
@@ -202,26 +95,40 @@ BOOL MatchWildcard(const char* pattern, const char* str) {
     return !*p;
 }
 
+// Check if keyword contains wildcard characters
+static BOOL HasWildcard(const char* str) {
+    if (!str) return FALSE;
+    for (const char* p = str; *p; p++) {
+        if (*p == '*' || *p == '?') return TRUE;
+    }
+    return FALSE;
+}
+
 BOOL MatchesKeyword(const char* filename, SearchOptions* opts) {
     if (opts->keyword_count == 0) return TRUE;
     for (int i = 0; i < opts->keyword_count; i++) {
         const char* kw = opts->keywords[i];
         if (!kw) continue;
-        if (MatchWildcard(kw, filename)) return TRUE;
-        // fallback: case-insensitive substring
-        size_t flen = MSVCRT$strlen(filename);
-        size_t klen = MSVCRT$strlen(kw);
-        char* lf = (char*)MSVCRT$malloc(flen + 1);
-        char* lk = (char*)MSVCRT$malloc(klen + 1);
-        if (lf && lk) {
-            for (size_t j = 0; j < flen; j++) lf[j] = (char)MSVCRT$tolower((unsigned char)filename[j]);
-            lf[flen] = '\0';
-            for (size_t j = 0; j < klen; j++) lk[j] = (char)MSVCRT$tolower((unsigned char)kw[j]);
-            lk[klen] = '\0';
-            BOOL hit = (MSVCRT$strstr(lf, lk) != NULL);
-            MSVCRT$free(lf); MSVCRT$free(lk);
-            if (hit) return TRUE;
-        } else { if (lf) MSVCRT$free(lf); if (lk) MSVCRT$free(lk); }
+        
+        // If keyword contains wildcards, use wildcard matching
+        if (HasWildcard(kw)) {
+            if (MatchWildcard(kw, filename)) return TRUE;
+        } else {
+            // Exact match (case-insensitive)
+            size_t flen = MSVCRT$strlen(filename);
+            size_t klen = MSVCRT$strlen(kw);
+            if (flen == klen) {
+                // Same length, compare case-insensitively
+                BOOL match = TRUE;
+                for (size_t j = 0; j < klen; j++) {
+                    if (MSVCRT$tolower((unsigned char)filename[j]) != MSVCRT$tolower((unsigned char)kw[j])) {
+                        match = FALSE;
+                        break;
+                    }
+                }
+                if (match) return TRUE;
+            }
+        }
     }
     return FALSE;
 }
@@ -353,40 +260,127 @@ BOOL SearchFileContents(const char* filepath, SearchOptions* opts) {
     // Search for keywords
     BOOL found = FALSE;
     for (int i = 0; i < opts->keyword_count; i++) {
-        // Convert keyword to lowercase
-        size_t keywordLen = MSVCRT$strlen(opts->keywords[i]);
-        char* lowerKeyword = (char*)MSVCRT$malloc(keywordLen + 1);
-        if (!lowerKeyword) continue;
+        const char* kw = opts->keywords[i];
+        if (!kw) continue;
         
-        for (size_t j = 0; j < keywordLen; j++) {
-            lowerKeyword[j] = (char)MSVCRT$tolower((unsigned char)opts->keywords[i][j]);
-        }
-        lowerKeyword[keywordLen] = '\0';
-
-        // Simple substring search (wildcards not supported in content search for now)
-        // Remove wildcards for content search
-        char* searchPattern = lowerKeyword;
-        size_t patternLen = MSVCRT$strlen(searchPattern);
-        if (patternLen > 0 && searchPattern[patternLen - 1] == '*') {
-            searchPattern[patternLen - 1] = '\0';
-            patternLen--;
-        }
-
-        if (patternLen > 0) {
-            const char* match = MSVCRT$strstr(buffer, searchPattern);
-            if (match) {
+        // Check if keyword contains wildcards
+        if (HasWildcard(kw)) {
+            // Wildcard search: optimized algorithm using pattern segments
+            size_t keywordLen = MSVCRT$strlen(kw);
+            size_t bufferLen = bytesRead;
+            
+            // Convert keyword to lowercase for comparison
+            char* lowerKeyword = (char*)MSVCRT$malloc(keywordLen + 1);
+            if (!lowerKeyword) continue;
+            for (size_t j = 0; j < keywordLen; j++) {
+                lowerKeyword[j] = (char)MSVCRT$tolower((unsigned char)kw[j]);
+            }
+            lowerKeyword[keywordLen] = '\0';
+            
+            const char* bufferEnd = buffer + bufferLen;
+            const char* matchStart = NULL;
+            const char* matchEnd = NULL;
+            
+            // Optimized wildcard matching: split pattern by * and search segments
+            // This prevents infinite loops when pattern starts with *
+            
+            // Find first non-wildcard segment after leading wildcards
+            const char* patternStart = lowerKeyword;
+            while (*patternStart == '*' || *patternStart == '?') {
+                patternStart++;
+            }
+            
+            // If pattern is all wildcards, match everything
+            if (!*patternStart) {
+                matchStart = buffer;
+                matchEnd = buffer + (bufferLen > 100 ? 100 : bufferLen); // Limit match length
+            } else {
+                // Find first character of first non-wildcard segment
+                char firstChar = *patternStart;
+                const char* searchStart = buffer;
+                const char* maxSearchPos = bufferEnd;
+                
+                // Limit search area for performance (use custom or default)
+                ULONGLONG maxSearchSize = (opts->wildcard_max_size > 0) ? opts->wildcard_max_size : WILDCARD_MAX_SEARCH_SIZE;
+                if (bufferLen > maxSearchSize) {
+                    maxSearchPos = buffer + (size_t)maxSearchSize;
+                }
+                
+                // Try to find pattern starting from each occurrence of first character
+                int maxAttempts = (opts->wildcard_max_attempts > 0) ? opts->wildcard_max_attempts : WILDCARD_MAX_MATCH_ATTEMPTS;
+                int attempts = 0;
+                
+                while (searchStart < maxSearchPos && attempts < maxAttempts) {
+                    // Find next occurrence of first character
+                    while (searchStart < maxSearchPos && 
+                           MSVCRT$tolower((unsigned char)*searchStart) != firstChar) {
+                        searchStart++;
+                    }
+                    
+                    if (searchStart >= maxSearchPos) break;
+                    
+                    // Try matching pattern from this position
+                    const char* p = lowerKeyword;
+                    const char* t = searchStart;
+                    const char* lastStar = NULL;
+                    const char* lastStarPos = NULL;
+                    BOOL matched = TRUE;
+                    int backtrackCount = 0;
+                    int maxBacktrack = (opts->wildcard_max_backtrack > 0) ? opts->wildcard_max_backtrack : WILDCARD_MAX_BACKTRACK;
+                    
+                    while (*p && t < maxSearchPos && backtrackCount < maxBacktrack) {
+                        if (*p == '*') {
+                            // Skip consecutive stars
+                            while (*p == '*') p++;
+                            if (!*p) {
+                                // Pattern ends with *, match succeeded
+                                matchStart = searchStart;
+                                matchEnd = t;
+                                break;
+                            }
+                            lastStar = p;
+                            lastStarPos = t;
+                        } else if (*p == '?' || MSVCRT$tolower((unsigned char)*t) == *p) {
+                            p++;
+                            t++;
+                        } else if (lastStar) {
+                            // Backtrack to last star
+                            p = lastStar;
+                            t = ++lastStarPos;
+                            backtrackCount++;
+                        } else {
+                            matched = FALSE;
+                            break;
+                        }
+                    }
+                    
+                    // Check if pattern matched completely
+                    while (*p == '*') p++;
+                    if (matched && !*p && t <= maxSearchPos) {
+                        matchStart = searchStart;
+                        matchEnd = t;
+                        break;
+                    }
+                    
+                    // Move to next position
+                    searchStart++;
+                    attempts++;
+                }
+            }
+            
+            if (matchStart && matchEnd) {
+                // Found match
                 found = TRUE;
-                // Normalize path before output (remove double backslashes)
                 char* normalized_filepath = (char*)MSVCRT$malloc(MSVCRT$strlen(filepath) + 1);
                 if (normalized_filepath) {
                     MSVCRT$memcpy(normalized_filepath, filepath, MSVCRT$strlen(filepath) + 1);
                     NormalizePath(normalized_filepath);
                     
                     // Extract context around match
-                    const char* start = match - CONTEXT_BUFFER_SIZE;
+                    const char* start = matchStart - CONTEXT_BUFFER_SIZE;
                     if (start < buffer) start = buffer;
-                    const char* end = match + patternLen + CONTEXT_BUFFER_SIZE;
-                    if (end > buffer + bytesRead) end = buffer + bytesRead;
+                    const char* end = matchEnd + CONTEXT_BUFFER_SIZE;
+                    if (end > bufferEnd) end = bufferEnd;
                     
                     size_t contextLen = end - start;
                     char* context = (char*)MSVCRT$malloc(contextLen + 1);
@@ -402,11 +396,70 @@ BOOL SearchFileContents(const char* filepath, SearchOptions* opts) {
                 } else {
                     BeaconPrintf(CALLBACK_OUTPUT, "[+] %s\n", filepath);
                 }
-                break; // Only report first match
             }
+            
+            MSVCRT$free(lowerKeyword);
+        } else {
+            // Exact match: find whole word (case-insensitive)
+            size_t keywordLen = MSVCRT$strlen(kw);
+            if (keywordLen == 0) continue;
+            
+            // Convert keyword to lowercase for comparison
+            char* lowerKeyword = (char*)MSVCRT$malloc(keywordLen + 1);
+            if (!lowerKeyword) continue;
+            for (size_t j = 0; j < keywordLen; j++) {
+                lowerKeyword[j] = (char)MSVCRT$tolower((unsigned char)kw[j]);
+            }
+            lowerKeyword[keywordLen] = '\0';
+            
+            // Search for exact match (whole word)
+            const char* match = buffer;
+            while ((match = MSVCRT$strstr(match, lowerKeyword)) != NULL) {
+                // Check if it's a whole word (not part of another word)
+                BOOL isWordStart = (match == buffer || 
+                    (match > buffer && (MSVCRT$tolower((unsigned char)match[-1]) < 'a' || 
+                                       MSVCRT$tolower((unsigned char)match[-1]) > 'z')));
+                BOOL isWordEnd = (match + keywordLen >= buffer + bytesRead ||
+                    (MSVCRT$tolower((unsigned char)match[keywordLen]) < 'a' || 
+                     MSVCRT$tolower((unsigned char)match[keywordLen]) > 'z'));
+                
+                if (isWordStart && isWordEnd) {
+                    // Found exact match
+                    found = TRUE;
+                    char* normalized_filepath = (char*)MSVCRT$malloc(MSVCRT$strlen(filepath) + 1);
+                    if (normalized_filepath) {
+                        MSVCRT$memcpy(normalized_filepath, filepath, MSVCRT$strlen(filepath) + 1);
+                        NormalizePath(normalized_filepath);
+                        
+                        // Extract context around match
+                        const char* start = match - CONTEXT_BUFFER_SIZE;
+                        if (start < buffer) start = buffer;
+                        const char* end = match + keywordLen + CONTEXT_BUFFER_SIZE;
+                        if (end > buffer + bytesRead) end = buffer + bytesRead;
+                        
+                        size_t contextLen = end - start;
+                        char* context = (char*)MSVCRT$malloc(contextLen + 1);
+                        if (context) {
+                            MSVCRT$memcpy(context, start, contextLen);
+                            context[contextLen] = '\0';
+                            BeaconPrintf(CALLBACK_OUTPUT, "[+] %s:\n\t ...%s...\n", normalized_filepath, context);
+                            MSVCRT$free(context);
+                        } else {
+                            BeaconPrintf(CALLBACK_OUTPUT, "[+] %s\n", normalized_filepath);
+                        }
+                        MSVCRT$free(normalized_filepath);
+                    } else {
+                        BeaconPrintf(CALLBACK_OUTPUT, "[+] %s\n", filepath);
+                    }
+                    break; // Only report first match
+                }
+                match++; // Continue searching
+            }
+            
+            MSVCRT$free(lowerKeyword);
         }
-
-        MSVCRT$free(lowerKeyword);
+        
+        if (found) break; // Only report first keyword match
     }
 
     MSVCRT$free(buffer);
@@ -657,6 +710,10 @@ void go(char* args, int len) {
     opts.check_for_macro = FALSE;
     opts.has_date_filter = FALSE;
     opts.result_count = 0;
+    // Wildcard performance defaults (0 = use constants from header)
+    opts.wildcard_max_attempts = 0;
+    opts.wildcard_max_size = 0;
+    opts.wildcard_max_backtrack = 0;
 
     // Validate flags from raw_cmdline against whitelist
     if (raw_cmdline && MSVCRT$strlen(raw_cmdline) > 0) {
@@ -673,11 +730,12 @@ void go(char* args, int len) {
                     char flag[64];
                     for (size_t i = 0; i < flen && i < 63; i++) flag[i] = start[i];
                     flag[(flen < 63 ? flen : 63)] = '\0';
-                    // Whitelist: -d -f -k -c -m -s -b -a -v
+                    // Whitelist: -d -f -k -c -m -s -b -a -v -W -S -B
                     BOOL ok = FALSE;
                     if (MSVCRT$strncmp(flag, "-d", 2) == 0 || MSVCRT$strncmp(flag, "-f", 2) == 0 || MSVCRT$strncmp(flag, "-k", 2) == 0 ||
                         MSVCRT$strncmp(flag, "-c", 2) == 0 || MSVCRT$strncmp(flag, "-m", 2) == 0 || MSVCRT$strncmp(flag, "-s", 2) == 0 ||
-                        MSVCRT$strncmp(flag, "-b", 2) == 0 || MSVCRT$strncmp(flag, "-a", 2) == 0 || MSVCRT$strncmp(flag, "-v", 2) == 0) {
+                        MSVCRT$strncmp(flag, "-b", 2) == 0 || MSVCRT$strncmp(flag, "-a", 2) == 0 || MSVCRT$strncmp(flag, "-v", 2) == 0 ||
+                        MSVCRT$strncmp(flag, "-W", 2) == 0 || MSVCRT$strncmp(flag, "-S", 2) == 0 || MSVCRT$strncmp(flag, "-B", 2) == 0) {
                         ok = TRUE;
                     }
                     if (!ok) {
@@ -701,12 +759,26 @@ void go(char* args, int len) {
     char* before_date_str = BeaconDataExtract(&parser, NULL);
     char* after_date_str = BeaconDataExtract(&parser, NULL);
     int check_macro_int = BeaconDataInt(&parser);
+    int wildcard_attempts_int = BeaconDataInt(&parser);
+    int wildcard_size_int = BeaconDataInt(&parser);
+    int wildcard_backtrack_int = BeaconDataInt(&parser);
 
     opts.search_contents = (search_contents_int != 0);
     opts.system_dirs = (system_dirs_int != 0);
     opts.check_for_macro = (check_macro_int != 0);
     if (max_filesize_int > 0) {
         opts.max_file_size_kb = (ULONGLONG)max_filesize_int;
+    }
+    
+    // Parse wildcard performance tuning parameters
+    if (wildcard_attempts_int > 0) {
+        opts.wildcard_max_attempts = wildcard_attempts_int;
+    }
+    if (wildcard_size_int > 0) {
+        opts.wildcard_max_size = (ULONGLONG)wildcard_size_int * 1024; // Convert KB to bytes
+    }
+    if (wildcard_backtrack_int > 0) {
+        opts.wildcard_max_backtrack = wildcard_backtrack_int;
     }
 
     // Parse CSV lists
