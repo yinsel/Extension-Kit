@@ -46,7 +46,7 @@ A file search tool ported from SauronEye to BOF format. Searches directories for
 - Configurable max file size
 
 ```
-sauroneye [-d directories] [-f filetypes] [-k keywords] [-c] [-m maxfilesize] [-s] [-b beforedate] [-a afterdate] [-v]
+sauroneye [-d directories] [-f filetypes] [-k keywords] [-c] [-m maxfilesize] [-s] [-b beforedate] [-a afterdate] [-v] [-W wildcardattempts] [-S wildcardsize] [-B wildcardbacktrack]
 ```
 
 Options:
@@ -58,7 +58,10 @@ Options:
 - `-s`: Search in system directories (default: false)
 - `-b beforedate`: Filter files modified before date (format: dd.MM.yyyy)
 - `-a afterdate`: Filter files modified after date (format: dd.MM.yyyy)
-- `-v`: Check for VBA macros in Office 2003 files (not yet implemented)
+- `-v`: Check for VBA macros in Office files using OOXML detection (no OLE, stealthier)
+- `-W wildcardattempts`: Maximum pattern matching attempts for wildcard search (default: 1000). Increase for complex patterns
+- `-S wildcardsize`: Maximum search area in KB for large files when using wildcards (default: 200KB). Increase to search more of large files
+- `-B wildcardbacktrack`: Maximum backtracking operations for wildcard matching (default: 1000). Increase for complex patterns
 
 Examples:
 ```
@@ -77,3 +80,4 @@ sauroneye -d C:\Users,D:\Documents,E:\Backup -f .txt,.docx,.xlsx -k pass*,secret
 ## Credits
 * ScreenshotBOF - https://github.com/CodeXTF2/ScreenshotBOF
 * OperatorsKit - https://github.com/REDMED-X/OperatorsKit
+* SauronEye-BOF - https://github.com/shashinma/SauronEye-BOF
