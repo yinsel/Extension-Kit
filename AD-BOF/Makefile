@@ -8,6 +8,8 @@ bof: clean
 	@ # x86: -DWOW64 -fno-leading-underscore
 	@(x86_64-w64-mingw32-gcc -I _include -Os -fno-asynchronous-unwind-tables -nostdlib -fno-ident -fpack-struct=8 -falign-functions=1 -s -ffunction-sections -falign-jumps=1 -w -Wall -shared -Wl,--no-seh -Wl,--enable-stdcall-fixup -c badtakeover/BadTakeover.c -o _bin/badtakeover.x64.o -DBOF && x86_64-w64-mingw32-strip --strip-unneeded _bin/badtakeover.x64.o) && echo '[+] badtakeover' || echo '[!] badtakeover'
 
+	@$(MAKE) --no-print-directory -C ADCS-BOF
+	@mv ADCS-BOF/_bin/ADCS _bin/
 
 	@$(MAKE) --no-print-directory -C Kerbeus-BOF
 	@mv Kerbeus-BOF/_bin/Kerbeus-BOF _bin/
