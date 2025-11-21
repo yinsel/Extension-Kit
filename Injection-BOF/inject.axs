@@ -52,6 +52,7 @@ cmd_inject_poolparty.setPreHook(function (id, cmdline, parsed_json, ...parsed_li
 });
 
 
+
 var cmd_inject_32to64 = ax.create_command("inject-32to64", "Inject x64 shellcode from WOW64 (32-bit) process into native 64-bit process [requires 32-bit agent]", "inject-32to64 808 /tmp/shellcode.bin");
 cmd_inject_32to64.addArgInt("pid", true);
 cmd_inject_32to64.addArgFile("shellcode", true);
@@ -72,6 +73,7 @@ cmd_inject_32to64.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
 });
 
 
+
 var group_exec = ax.create_commands_group("Injection-BOF", [cmd_inject_cfg, cmd_inject_sec, cmd_inject_poolparty, cmd_inject_32to64]);
 ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
 
@@ -84,7 +86,7 @@ let inject_action = menu.create_action("Inject shellcode", function(process_list
         "inject-sec": "Injects desired shellcode into target process using section mapping",
         "inject-cfg": "Inject shellcode into a target process and hijack execution via overwriting combase.dll!__guard_check_icall_fptr",
         "inject-poolparty": "Injects desired shellcode into target process using pool party",
-        "inject-32to64": "Inject x64 shellcode from WOW64 (32-bit) process into native 64-bit process [requires 32-bit agent]"
+        "inject-32to64": "Inject x64 shellcode from WOW64 (32-bit) process into native 64-bit process [requires 32-bit agent] using RtlCreateUserThread"
     };
     let label_shellcode  = form.create_label("Shellcode file:");
     let text_shellcode   = form.create_textline();
@@ -94,13 +96,11 @@ let inject_action = menu.create_action("Inject shellcode", function(process_list
     let combo_method = form.create_combo();
     combo_method.addItems(["inject-sec", "inject-cfg", "inject-poolparty", "inject-32to64"]);
 
-    ////////
-
     let label_poolparty_variant = form.create_label("Inject method:");
     let combo_poolparty_variant = form.create_combo();
     combo_poolparty_variant.addItems(["1", "2", "3", "4", "5", "6", "7"]);
-
-    ///////
+    label_poolparty_variant.setVisible(false);
+    combo_poolparty_variant.setVisible(false);
 
     let text_description = form.create_textmulti( methods["inject-sec"] );
     text_description.setReadOnly(true);

@@ -157,4 +157,3 @@ void AddPathToSeen(const char* filepath, SearchOptions* opts);
 void GetCanonicalPath(const char* filepath, char* canonical, size_t canonicalSize);
 
 #endif // SAURONEYE_H
-

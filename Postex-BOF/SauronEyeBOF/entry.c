@@ -176,13 +176,13 @@ static void FormatFileDate(const FILETIME* creationTime, const FILETIME* modific
     SYSTEMTIME st_creation, st_modification;
     KERNEL32$FileTimeToSystemTime(creationTime, &st_creation);
     KERNEL32$FileTimeToSystemTime(modificationTime, &st_modification);
-    MSVCRT$_snprintf(dateStr, dateStrSize, "[C:%02d.%02d.%04d M:%02d.%02d.%04d]", 
+    MSVCRT$_snprintf(dateStr, dateStrSize, "[C:%02d.%02d.%04d M:%02d.%02d.%04d]",
         st_creation.wDay, st_creation.wMonth, st_creation.wYear,
         st_modification.wDay, st_modification.wMonth, st_modification.wYear);
 }
 static BOOL OutputSearchResult(const char* filepath, const FILETIME* filetime, const char* matchStart, const char* matchEnd, const char* lowercaseBuffer, const char* originalBuffer, DWORD bufferLen, SearchOptions* opts, DWORD* seenOffsets, int* seenOffsetsCount, int seenOffsetsCapacity) {
     if (!opts) return FALSE;
-    
+
     size_t len = MSVCRT$strlen(filepath);
     char* normalized = (char*)MSVCRT$malloc(len + 1);
     if (!normalized) {
@@ -191,9 +191,9 @@ static BOOL OutputSearchResult(const char* filepath, const FILETIME* filetime, c
         MSVCRT$memcpy(normalized, filepath, len + 1);
         NormalizePath(normalized);
     }
-    
+
     BOOL alreadySeen = IsPathAlreadySeen(normalized, opts);
-    
+
     // Check if this match position was already output
     if (matchStart && matchEnd && seenOffsets && seenOffsetsCount) {
         size_t matchStartOffset = matchStart - lowercaseBuffer;
@@ -214,17 +214,17 @@ static BOOL OutputSearchResult(const char* filepath, const FILETIME* filetime, c
             (*seenOffsetsCount)++;
         }
     }
-    
-    char dateStr[35] = {0}; 
+
+    char dateStr[35] = {0};
     if (opts->show_date && filetime) {
         WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-        FILETIME creationTime = *filetime; 
+        FILETIME creationTime = *filetime;
         if (KERNEL32$GetFileAttributesExA(filepath, GetFileExInfoStandard, &fileInfo)) {
             creationTime = fileInfo.ftCreationTime;
         }
         FormatFileDate(&creationTime, filetime, dateStr, sizeof(dateStr));
     }
-    
+
     // If file was already seen and we have a match, only output the match context
     if (alreadySeen && matchStart && matchEnd && originalBuffer) {
         size_t matchStartOffset = matchStart - lowercaseBuffer;
@@ -242,13 +242,13 @@ static BOOL OutputSearchResult(const char* filepath, const FILETIME* filetime, c
         if (normalized != filepath) MSVCRT$free(normalized);
         return TRUE;
     }
-    
+
     // If file was already seen and no match, skip
     if (alreadySeen) {
         if (normalized != filepath) MSVCRT$free(normalized);
         return FALSE;
     }
-    
+
     // File not seen yet - output full result
     if (matchStart && matchEnd && originalBuffer) {
         size_t matchStartOffset = matchStart - lowercaseBuffer;
@@ -280,7 +280,7 @@ static BOOL OutputSearchResult(const char* filepath, const FILETIME* filetime, c
             BeaconPrintf(CALLBACK_OUTPUT, "\n[+] %s\n", normalized);
         }
     }
-    
+
     AddPathToSeen(normalized, opts);
     if (normalized != filepath) MSVCRT$free(normalized);
     return TRUE;
@@ -358,8 +358,8 @@ int SearchFileContents(const char* filepath, const FILETIME* filetime, SearchOpt
     if (!seenOffsets) {
         seenOffsetsCapacity = 0;
     }
-    
-    int totalMatches = 0;  
+
+    int totalMatches = 0;
     for (int i = 0; i < opts->keyword_count; i++) {
         const char* kw = opts->keywords[i];
         if (!kw || !lowerKeywords[i]) continue;
@@ -383,7 +383,7 @@ int SearchFileContents(const char* filepath, const FILETIME* filetime, SearchOpt
             }
             if (!*patternStart) {
                 const char* matchStart = buffer;
-                const char* matchEnd = buffer + (bufferLen > 100 ? 100 : bufferLen); 
+                const char* matchEnd = buffer + (bufferLen > 100 ? 100 : bufferLen);
                 if (OutputSearchResult(filepath, filetime, matchStart, matchEnd, buffer, originalBuffer, (DWORD)bufferLen, opts, seenOffsets, &seenOffsetsCount, seenOffsetsCapacity)) {
                     totalMatches++;
                 }
@@ -405,10 +405,10 @@ int SearchFileContents(const char* filepath, const FILETIME* filetime, SearchOpt
                     if (searchStart >= maxSearchPos) break;
                     size_t patternLen = MSVCRT$strlen(lowerKeyword);
                     size_t maxBackward = (patternLen < 100) ? patternLen : 100;
-                    const char* tryStart = startsWithWildcard && (searchStart - buffer) > maxBackward 
-                        ? searchStart - maxBackward 
+                    const char* tryStart = startsWithWildcard && (searchStart - buffer) > maxBackward
+                        ? searchStart - maxBackward
                         : (startsWithWildcard ? buffer : searchStart);
-                    BOOL foundMatch = FALSE; 
+                    BOOL foundMatch = FALSE;
                     for (const char* testStart = tryStart; testStart <= searchStart && matchCount < MAX_MATCHES_PER_FILE; testStart++) {
                         const char* p = lowerKeyword;
                         const char* t = testStart;
@@ -438,7 +438,7 @@ int SearchFileContents(const char* filepath, const FILETIME* filetime, SearchOpt
                                 }
                                 lastStar = p;
                                 lastStarPos = t;
-                            } else if (*p == '?' || *t == *p) { 
+                            } else if (*p == '?' || *t == *p) {
                                 if (!firstLetterFound && *p != '?') {
                                     firstLetterPos = t;
                                     firstLetterFound = TRUE;
@@ -491,7 +491,7 @@ int SearchFileContents(const char* filepath, const FILETIME* filetime, SearchOpt
             int matchCount = 0;
             const char* match = buffer;
             while ((match = MSVCRT$strstr(match, lowerKeyword)) != NULL && matchCount < MAX_MATCHES_PER_FILE) {
-                BOOL isWordStart = (match == buffer || 
+                BOOL isWordStart = (match == buffer ||
                     (match > buffer && (match[-1] < 'a' || match[-1] > 'z')));
                 BOOL isWordEnd = (match + keywordLen >= buffer + bytesRead ||
                     (match[keywordLen] < 'a' || match[keywordLen] > 'z'));
@@ -501,9 +501,9 @@ int SearchFileContents(const char* filepath, const FILETIME* filetime, SearchOpt
                         matchCount++;
                         totalMatches++;
                     }
-                    match += keywordLen; 
+                    match += keywordLen;
                 } else {
-                    match++; 
+                    match++;
                 }
             }
             if (matchCount >= MAX_MATCHES_PER_FILE) {
@@ -554,7 +554,7 @@ void SearchDirectory(const char* dir_path, SearchOptions* opts) {
                 break;
             }
         }
-        if (MSVCRT$strcmp(findData.cFileName, ".") == 0 || 
+        if (MSVCRT$strcmp(findData.cFileName, ".") == 0 ||
             MSVCRT$strcmp(findData.cFileName, "..") == 0) {
             continue;
         }
@@ -592,10 +592,10 @@ void SearchDirectory(const char* dir_path, SearchOptions* opts) {
         }
         if (contentMatches > 0) {
             opts->result_count += contentMatches;
-            opts->file_count++;  
+            opts->file_count++;
         } else if (nameMatch && !opts->search_contents) {
             if (IsPathAlreadySeen(file_path, opts)) {
-                continue; 
+                continue;
             }
             if (opts->file_count >= MAX_RESULTS) {
                 break;
@@ -607,7 +607,7 @@ void SearchDirectory(const char* dir_path, SearchOptions* opts) {
             } else {
                 file_path[MAX_PATH_LENGTH - 1] = '\0';
             }
-            char dateStr[35] = {0}; 
+            char dateStr[35] = {0};
             if (opts->show_date) {
                 FormatFileDate(&findData.ftCreationTime, &findData.ftLastWriteTime, dateStr, sizeof(dateStr));
             }
@@ -617,7 +617,7 @@ void SearchDirectory(const char* dir_path, SearchOptions* opts) {
                 BeaconPrintf(CALLBACK_OUTPUT, "\n[+] %s\n", file_path);
             }
             AddPathToSeen(file_path, opts);
-            opts->file_count++;   
+            opts->file_count++;
         }
     } while (KERNEL32$FindNextFileA(hFind, &findData));
     KERNEL32$FindClose(hFind);
@@ -626,16 +626,16 @@ void TrimQuotes(char* str) {
     if (!str || !*str) return;
     char* start = str;
     while (*start == '\'' || *start == '\"') start++;
-    if (!*start) { *str = '\0'; return; } 
+    if (!*start) { *str = '\0'; return; }
     char* end = start;
-    while (*end) end++; 
+    while (*end) end++;
     while (end > start && (end[-1] == '\'' || end[-1] == '\"')) end--;
     if (start != str) {
         size_t len = end - start;
         MSVCRT$memcpy(str, start, len);
         str[len] = '\0';
     } else {
-        *end = '\0'; 
+        *end = '\0';
     }
 }
 void NormalizePath(char* path) {
@@ -645,7 +645,7 @@ void NormalizePath(char* path) {
     while (*read) {
         if (*read == '\\' && read[1] == '\\') {
             *write++ = '\\';
-            read += 2; 
+            read += 2;
         } else {
             *write++ = *read++;
         }
@@ -670,8 +670,8 @@ void GetCanonicalPath(const char* filepath, char* canonical, size_t canonicalSiz
     if (MSVCRT$_strnicmp(canonical, "C:\\Users\\All Users", 19) == 0) {
         if (canonical[19] == '\\' || canonical[19] == '\0') {
             is_all_users = TRUE;
-            prefix_len = 20; 
-            if (canonical[19] == '\0') prefix_len = 19; 
+            prefix_len = 20;
+            if (canonical[19] == '\0') prefix_len = 19;
         }
     }
     else if (MSVCRT$strncmp(canonical, "C:\\Users\\", 10) == 0) {
@@ -680,14 +680,14 @@ void GetCanonicalPath(const char* filepath, char* canonical, size_t canonicalSiz
         if (MSVCRT$memcmp(check, vse_pattern, sizeof(vse_pattern)) == 0) {
             if (canonical[10 + sizeof(vse_pattern)] == '\\' || canonical[10 + sizeof(vse_pattern)] == '\0') {
                 is_all_users = TRUE;
-                prefix_len = 10 + sizeof(vse_pattern) + 1; 
+                prefix_len = 10 + sizeof(vse_pattern) + 1;
                 if (canonical[10 + sizeof(vse_pattern)] == '\0') prefix_len = 10 + sizeof(vse_pattern);
             }
         }
     }
     if (is_all_users && prefix_len > 0) {
         size_t remaining_len = MSVCRT$strlen(canonical + prefix_len);
-        if (remaining_len + 16 < canonicalSize) { 
+        if (remaining_len + 16 < canonicalSize) {
             char temp[MAX_PATH_LENGTH];
             MSVCRT$memcpy(temp, "C:\\ProgramData\\", 16);
             if (remaining_len > 0) {
@@ -699,7 +699,7 @@ void GetCanonicalPath(const char* filepath, char* canonical, size_t canonicalSiz
         }
     }
     for (char* p = canonical; *p; p++) {
-        if ((unsigned char)*p < 128) { 
+        if ((unsigned char)*p < 128) {
             *p = (char)MSVCRT$tolower((unsigned char)*p);
         }
     }
@@ -709,7 +709,7 @@ BOOL IsPathAlreadySeen(const char* filepath, SearchOptions* opts) {
     if (!opts->seen_paths) {
         opts->seen_paths_capacity = 256;
         opts->seen_paths = (char**)MSVCRT$malloc(sizeof(char*) * opts->seen_paths_capacity);
-        if (!opts->seen_paths) return FALSE; 
+        if (!opts->seen_paths) return FALSE;
         opts->seen_paths_count = 0;
     }
     char canonical[MAX_PATH_LENGTH];
@@ -724,7 +724,7 @@ BOOL IsPathAlreadySeen(const char* filepath, SearchOptions* opts) {
 void AddPathToSeen(const char* filepath, SearchOptions* opts) {
     if (!filepath || !opts) return;
     if (!opts->seen_paths) {
-        opts->seen_paths_capacity = 256; 
+        opts->seen_paths_capacity = 256;
         opts->seen_paths = (char**)MSVCRT$malloc(sizeof(char*) * opts->seen_paths_capacity);
         if (!opts->seen_paths) return;
         opts->seen_paths_count = 0;
@@ -732,7 +732,7 @@ void AddPathToSeen(const char* filepath, SearchOptions* opts) {
     if (opts->seen_paths_count >= opts->seen_paths_capacity) {
         int new_capacity = opts->seen_paths_capacity * 2;
         char** new_array = (char**)MSVCRT$realloc(opts->seen_paths, sizeof(char*) * new_capacity);
-        if (!new_array) return; 
+        if (!new_array) return;
         opts->seen_paths = new_array;
         opts->seen_paths_capacity = new_capacity;
     }
@@ -797,7 +797,7 @@ void go(char* args, int len) {
     BeaconDataParse(&parser, args, len);
     char* raw_cmdline = BeaconDataExtract(&parser, NULL);
     SearchOptions opts = {0};
-    opts.max_file_size_kb = 1024; 
+    opts.max_file_size_kb = 1024;
     opts.system_dirs = FALSE;
     opts.search_contents = FALSE;
     opts.check_for_macro = FALSE;

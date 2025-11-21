@@ -69,14 +69,11 @@ Examples:
 ```
 # Search only on C:\ drive (default)
 sauroneye -f .docx
-
 # Search on multiple drives
 sauroneye -d C:\,D:\ -f .txt,.docx -k secret*,password*
-
 # Search specific directories
 sauroneye -d C:\Users,D:\Documents,E:\Backup -f .txt,.docx,.xlsx -k pass*,secret* -b 2024-01-01
 ```
-
 
 
 ## Credits
