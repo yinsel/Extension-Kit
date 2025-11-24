@@ -12,10 +12,10 @@ _cmd_certi_req.addArgBool("--dns",     "Subject Altname given as a DNS name (els
 _cmd_certi_req.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
     let ca       = "";
-    let template = "";
-    let subject  = "";
-    let altname  = "";
-    let alturl   = "";
+    let template = parsed_json["template"];
+    let subject  = parsed_json["subject"];
+    let altname  = parsed_json["altname"];
+    let alturl   = parsed_json["alturl"];
     let install = 0;
     let machine = 0;
     let policy  = 0;
@@ -27,10 +27,6 @@ _cmd_certi_req.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
         throw new Error("Need to provide the Certificate Authority at a minimum");
     }
 
-    if("template" in parsed_json) { template = parsed_json["template"]; }
-    if("subject" in parsed_json) { subject = parsed_json["subject"]; }
-    if("altname" in parsed_json) { altname = parsed_json["altname"]; }
-    if("alturl" in parsed_json) { alturl = parsed_json["alturl"]; }
     if(parsed_json["--install"]) { install = 1; }
     if(parsed_json["--machine"]) { machine = 1; }
     if(parsed_json["--policy"]) { policy = 1; }
@@ -44,8 +40,9 @@ _cmd_certi_req.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 });
 
 
+
 var cmd_certi = ax.create_command("certi", "ADCS BOF");
-cmd_certi.addSubCommands([ _cmd_certi_req ]);
+cmd_certi.addSubCommands([ _cmd_certi_enum, _cmd_certi_req ]);
 
 var group_adcs = ax.create_commands_group("ADCS-BOF", [cmd_certi]);
 ax.register_commands_group(group_adcs, ["beacon", "gopher"], ["windows"], []);

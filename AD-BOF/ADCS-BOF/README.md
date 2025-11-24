@@ -1,9 +1,22 @@
 # ADCS-BOF
+
 A library of beacon object files to interact with ADCS servers and certificates.
+
+
+
+## certi enum
+
+Enumerate CAs and templates in the AD
+
+```
+certi enum
+```
+
+
 
 ## certi request
 
-Request an enrollment certificate
+Request an enrollment certificate 
 
 ```
 certi req <--ca CA> [--template Template] [--subject CN] [--altname CN] [--alturl tag:microsoft.com,2022-09-14:sid:<SID>] [--install] [--machine] [--policy] [--dns]
@@ -21,3 +34,4 @@ certi req <--ca CA> [--template Template] [--subject CN] [--altname CN] [--altur
 
 ## References
 - [https://github.com/trustedsec/CS-Remote-OPs-BOF](https://github.com/trustedsec/CS-Remote-OPs-BOF)
+- [https://github.com/trustedsec/CS-Situational-Awareness-BOF](https://github.com/trustedsec/CS-Situational-Awareness-BOF)
