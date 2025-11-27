@@ -50,8 +50,19 @@ potato-dcom --run <program with args>
 ```
 
 
+## potato-print
+
+BOF version of [PrintSpoofer](https://github.com/itm4n/PrintSpoofer). Provided that the current user has the SeImpersonate privilege, this tool will leverage the Print Spooler service to get a SYSTEM token and then run a custom command with CreateProcessAsUser().
+
+```
+potato-print --token
+potato-print --run <program with args>
+```
+
+
 ## Credits
 
 * Elevate-System-Trusted-BOF - https://github.com/Mr-Un1k0d3r/Elevate-System-Trusted-BOF
 * UAC-BOF-Bonanza - https://github.com/icyguider/UAC-BOF-Bonanza
 * BOF-DCOMPotato-PrintNotify - https://github.com/Hagrid29/BOF-DCOMPotato-PrintNotify
+* PrintSpoofer-BOF - https://github.com/SlimeOnSecurity/PrintSpoofer-BOF
