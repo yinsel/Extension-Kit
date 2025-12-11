@@ -17,5 +17,8 @@ bof: clean
 	@$(MAKE) --no-print-directory -C SQL-BOF
 	@mv SQL-BOF/_bin/SQL _bin/
 
+	@$(MAKE) --no-print-directory -C LDAP-BOF
+	@mv LDAP-BOF/_bin/LDAP _bin/
+
 clean:
 	@(rm -rf _bin)
