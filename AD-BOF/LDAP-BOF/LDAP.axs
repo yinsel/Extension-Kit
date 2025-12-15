@@ -1380,13 +1380,14 @@ _cmd_removegenericall.setPreHook(function (id, cmdline, parsed_json, ...parsed_l
 
 // Create main command and declare subcommands
 var cmd_ldap = ax.create_command("ldap", "LDAP domain interactions (LDAP-BOF)");
-cmd_ldap.addSubCommands([_cmd_addace, _cmd_addrbcd, _cmd_addspn, _cmd_adddelegation, _cmd_addattribute, _cmd_adduac. _cmd_addsidhistory, _cmd_setowner]);
-cmd_ldap.addSubCommands([_cmd_addgroupmember]);
+cmd_ldap.addSubCommands([_cmd_addace, _cmd_addrbcd, _cmd_addspn, _cmd_addattribute, _cmd_adduac]);
+cmd_ldap.addSubCommands([_cmd_addgroupmember, _cmd_adddelegation]);
 cmd_ldap.addSubCommands([_cmd_addcomputer, _cmd_adduser, _cmd_addgroup, _cmd_addou]);
 cmd_ldap.addSubCommands([_cmd_getdomaininfo, _cmd_getcomputers, _cmd_getwritable, _cmd_getobject, _cmd_getgroups, _cmd_getusers, _cmd_getmaq]);
 cmd_ldap.addSubCommands([_cmd_getusergroups, _cmd_getgroupmembers]);
 cmd_ldap.addSubCommands([_cmd_getacl, _cmd_getspn, _cmd_getdelegation, _cmd_getattribute, _cmd_getuac, _cmd_getrbcd]);
-cmd_ldap.addSubCommands([_cmd_setpassword, _cmd_setspn, _cmd_setuac, _cmd_setdelegation, _cmd_setattribute, _cmd_moveobject]);
+cmd_ldap.addSubCommands([_cmd_setpassword, _cmd_setspn, _cmd_setuac, _cmd_setdelegation, _cmd_setattribute, _cmd_setowner]);
+cmd_ldap.addSubCommands([_cmd_moveobject]);
 cmd_ldap.addSubCommands([_cmd_removegroupmember, _cmd_removeobject, _cmd_removespn, _cmd_removedelegation, _cmd_removeattribute, _cmd_removeuac, _cmd_removeace, _cmd_removerbcd]);
 cmd_ldap.addSubCommands([_cmd_addgenericall, _cmd_addgenericwrite, _cmd_adddcsync, _cmd_addasreproastable, _cmd_addunconstrained, _cmd_addconstrained, ]);
 cmd_ldap.addSubCommands([_cmd_removedcsync, _cmd_removegenericwrite, _cmd_removegenericall]);
