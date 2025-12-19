@@ -519,6 +519,15 @@ static void nbtscan_print_hostinfo_verbose(const char *ip,
         unsigned char service = (unsigned char)info->names[i].ascii_name[15];
         int unique = !(info->names[i].rr_flags & 0x8000);
 
+        // Trim trailing spaces in script mode for cleaner output
+        if (script_mode) {
+            int len = MSVCRT$strlen(name);
+            while (len > 0 && name[len - 1] == ' ') {
+                name[len - 1] = '\0';
+                len--;
+            }
+        }
+
         if (script_mode) {
             BeaconPrintf(CALLBACK_OUTPUT,
                          "%s%s%s%s%02x%s%s",
@@ -567,6 +576,7 @@ static void nbtscan_print_hostinfo_hosts(const char *ip,
     }
 }
 
+#if HAVE_ADAPTIX
 static void nbtscan_emit_ax_target(const char *ip, const nb_host_info_t *info, const char *tag) {
     if (!ip || !info) return;
 
@@ -614,6 +624,14 @@ static void nbtscan_emit_ax_target(const char *ip, const nb_host_info_t *info, c
         1
     );
 }
+#else
+static void nbtscan_emit_ax_target(const char *ip, const nb_host_info_t *info, const char *tag) {
+    // Adaptix not available - do nothing
+    (void)ip;
+    (void)info;
+    (void)tag;
+}
+#endif
 
 void go(char *args, int alen) {
     datap parser;

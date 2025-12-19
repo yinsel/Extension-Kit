@@ -6,7 +6,16 @@
 
 #include "../_include/beacon.h"
 #include "../_include/bofdefs.h"
-#include "../_include/adaptix.h"
+
+#if defined(__has_include) && __has_include("../_include/adaptix.h")
+    #include "../_include/adaptix.h"
+    #define HAVE_ADAPTIX 1
+#elif defined(HAVE_ADAPTIX_H)
+    #include "../_include/adaptix.h"
+    #define HAVE_ADAPTIX 1
+#else
+    #define HAVE_ADAPTIX 0
+#endif
 
 __declspec(dllimport) unsigned long __stdcall WS2_32$inet_addr(const char *cp);
 __declspec(dllimport) unsigned short __stdcall WS2_32$htons(unsigned short hostshort);
