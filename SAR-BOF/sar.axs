@@ -106,22 +106,50 @@ cmd_nbtscan.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
         }
     }
 
-    let bof_params = ax.bof_pack("cstr,int,int,int,int,cstr,int,cstr,int", [
-        target,
-        verbose,
-        quiet,
-        etc_hosts,
-        lmhosts,
-        sep,
-        timeout_ms,
-        "",
-        no_targets
-    ]);
-
+    let bof_params = ax.bof_pack("cstr,int,int,int,int,cstr,int,cstr", [ target, verbose, quiet, etc_hosts, lmhosts, sep, timeout_ms ]);
     let bof_path = ax.script_dir() + "_bin/nbtscan." + ax.arch(id) + ".o";
     let message = "NBTscan: " + target;
 
-    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+    if(no_targets == 0) {
+        ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+    }
+    else {
+        let hook = function (task) {
+            let blocks = task.text.trim().split('\n');
+            var arr = [];
+            const ipRegex = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+([^\s]+)\s+([^\s]+)/;
+            for (const line of blocks) {
+
+                const match = line.trim().match(ipRegex);
+                if (!match)
+                    continue;
+
+                const [, ip, netbiosName, domain] = match;
+
+                const octets = ip.split('.');
+                const isValid = octets.length === 4 &&
+                    octets.every(octet => {
+                        const num = parseInt(octet, 10);
+                        return num >= 0 && num <= 255 && /^\d+$/.test(octet);
+                    });
+                if (!isValid)
+                    continue;
+
+                const obj = {
+                    address: ip,
+                    computer: netbiosName,
+                    domain: domain,
+                    alive: true,
+                    info: "collected from nbtscan"
+                };
+                arr.push(obj);
+            }
+            if (arr.length > 0) ax.targets_add_list(arr);
+            return task;
+        }
+
+        ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message, hook);
+    }
 });
 
 var group_test = ax.create_commands_group("SAR-BOF", [cmd_smartscan, cmd_taskhound, cmd_quser, cmd_nbtscan]);
