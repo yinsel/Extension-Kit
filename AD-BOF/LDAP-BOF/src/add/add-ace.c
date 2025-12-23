@@ -1,7 +1,7 @@
 #include <windows.h>
-#include "../../_include/beacon.h"
-#include "../common/ldap_common.c"
-#include "../common/acl_common.c"
+#include "beacon.h"
+#include "ldap_common.c"
+#include "acl_common.c"
 
 DECLSPEC_IMPORT void* __cdecl MSVCRT$memset(void* dest, int c, size_t count);
 

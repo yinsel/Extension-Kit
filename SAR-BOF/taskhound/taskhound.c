@@ -1,6 +1,11 @@
 #include <windows.h>
 #include "beacon.h"
 
+#ifdef BOF
+void ___chkstk_ms(void){}
+void __chkstk_ms(void){}
+#endif
+
 // Constants
 #define MAX_PATH_LENGTH 1024
 #define MAX_BUFFER_SIZE 8192

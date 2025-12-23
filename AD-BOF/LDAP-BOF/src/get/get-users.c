@@ -1,6 +1,6 @@
 #include <windows.h>
-#include "../../_include/beacon.h"
-#include "../common/ldap_common.c"
+#include "beacon.h"
+#include "ldap_common.c"
 
 void go(char *args, int alen) {
     datap parser;
@@ -52,11 +52,11 @@ void go(char *args, int alen) {
     if (needSDFlags) {
         // Create SD_FLAGS control for ntSecurityDescriptor
         DWORD sdFlags = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
-        
+
         char sdFlagsBuffer[10];
         struct berval sdFlagsValue;
         LDAPControlA* sdFlagsControl = BuildSDFlagsControl(sdFlags, sdFlagsBuffer, &sdFlagsValue);
-        
+
         LDAPControlA* serverControls[] = { sdFlagsControl, NULL };
 
         result = WLDAP32$ldap_search_ext_s(
@@ -99,7 +99,7 @@ void go(char *args, int alen) {
     LDAPMessage* entry = WLDAP32$ldap_first_entry(ld, searchResult);
     while (entry != NULL) {
         BeaconPrintf(CALLBACK_OUTPUT, "===================================");
-        
+
         // Display all requested attributes
         for (int i = 0; i < attrCount; i++) {
             DisplayAttributeValue(ld, entry, attrs[i]);

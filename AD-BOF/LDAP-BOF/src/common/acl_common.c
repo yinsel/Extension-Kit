@@ -2,7 +2,7 @@
 // This file should be #included in each BOF that uses these functions
 
 #include <windows.h>
-#include "../../_include/acl_common.h"
+#include "acl_common.h"
 
 // Import required MSVCRT functions (already imported in ldap_common.c but listed for clarity)
 DECLSPEC_IMPORT int __cdecl MSVCRT$strcmp(const char* str1, const char* str2);
@@ -34,11 +34,11 @@ BERVAL* ReadSecurityDescriptor(LDAP* ld, const char* objectDN) {
 
     // Create SD_FLAGS control to request OWNER, GROUP, and DACL
     DWORD sdFlags = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
-    
+
     char sdFlagsBuffer[10];
     struct berval sdFlagsValue;
     LDAPControlA* sdFlagsControl = BuildSDFlagsControl(sdFlags, sdFlagsBuffer, &sdFlagsValue);
-    
+
     LDAPControlA* serverControls[] = { sdFlagsControl, NULL };
 
     // Search for the object with ntSecurityDescriptor attribute using the SD_FLAGS control
@@ -176,17 +176,17 @@ PSD_INFO ParseSecurityDescriptor(BYTE* sdBuffer, DWORD sdLength) {
     BOOL daclDefaulted = FALSE;
     if (ADVAPI32$GetSecurityDescriptorDacl(pSD, &daclPresent, &pDacl, &daclDefaulted)) {
         sdInfo->HasDacl = daclPresent;
-        
+
         if (daclPresent && pDacl) {
             ACL_SIZE_INFORMATION aclSizeInfo;
             if (ADVAPI32$GetAclInformation(pDacl, &aclSizeInfo, sizeof(aclSizeInfo), AclSizeInformation)) {
                 sdInfo->DaclAceCount = aclSizeInfo.AceCount;
-                
+
                 if (aclSizeInfo.AceCount > 0) {
                     sdInfo->DaclAces = (PARSED_ACE_INFO*)MSVCRT$malloc(sizeof(PARSED_ACE_INFO) * aclSizeInfo.AceCount);
                     if (sdInfo->DaclAces) {
                         MSVCRT$memset(sdInfo->DaclAces, 0, sizeof(PARSED_ACE_INFO) * aclSizeInfo.AceCount);
-                        
+
                         // Parse each ACE
                         for (DWORD i = 0; i < aclSizeInfo.AceCount; i++) {
                             PACE_HEADER pAce = NULL;
@@ -206,17 +206,17 @@ PSD_INFO ParseSecurityDescriptor(BYTE* sdBuffer, DWORD sdLength) {
     BOOL saclDefaulted = FALSE;
     if (ADVAPI32$GetSecurityDescriptorSacl(pSD, &saclPresent, &pSacl, &saclDefaulted)) {
         sdInfo->HasSacl = saclPresent;
-        
+
         if (saclPresent && pSacl) {
             ACL_SIZE_INFORMATION aclSizeInfo;
             if (ADVAPI32$GetAclInformation(pSacl, &aclSizeInfo, sizeof(aclSizeInfo), AclSizeInformation)) {
                 sdInfo->SaclAceCount = aclSizeInfo.AceCount;
-                
+
                 if (aclSizeInfo.AceCount > 0) {
                     sdInfo->SaclAces = (PARSED_ACE_INFO*)MSVCRT$malloc(sizeof(PARSED_ACE_INFO) * aclSizeInfo.AceCount);
                     if (sdInfo->SaclAces) {
                         MSVCRT$memset(sdInfo->SaclAces, 0, sizeof(PARSED_ACE_INFO) * aclSizeInfo.AceCount);
-                        
+
                         for (DWORD i = 0; i < aclSizeInfo.AceCount; i++) {
                             PACE_HEADER pAce = NULL;
                             if (ADVAPI32$GetAce(pSacl, i, (LPVOID*)&pAce)) {
@@ -270,7 +270,7 @@ void FreeSecurityDescriptorInfo(PSD_INFO sdInfo) {
 // Supports named masks (GenericAll, WriteDacl, etc.) and hex values (0x000F01FF)
 ACCESS_MASK ParseAccessMask(const char* maskStr) {
     if (!maskStr || MSVCRT$strlen(maskStr) == 0) return 0;
-    
+
     // Check for hex format (0x prefix)
     if (MSVCRT$strncmp(maskStr, "0x", 2) == 0 || MSVCRT$strncmp(maskStr, "0X", 2) == 0) {
         // Parse hex string
@@ -289,13 +289,13 @@ ACCESS_MASK ParseAccessMask(const char* maskStr) {
         }
         return mask;
     }
-    
+
     // Parse named masks (can be comma-separated)
     ACCESS_MASK mask = 0;
     char buffer[512];
     MSVCRT$strncpy(buffer, maskStr, sizeof(buffer) - 1);
     buffer[sizeof(buffer) - 1] = '\0';
-    
+
     // Convert to lowercase for case-insensitive comparison
     char* p = buffer;
     while (*p) {
@@ -357,7 +357,7 @@ ACCESS_MASK ParseAccessMask(const char* maskStr) {
     if (MSVCRT$strstr(buffer, "listobject")) {
         mask |= ADS_RIGHT_DS_LIST_OBJECT;
     }
-    
+
     return mask;
 }
 
@@ -367,12 +367,12 @@ BYTE ParseAceType(const char* typeStr) {
     if (!typeStr || MSVCRT$strlen(typeStr) == 0) {
         return ACCESS_ALLOWED_ACE_TYPE; // Default to allow
     }
-    
+
     // Convert to lowercase
     char buffer[32];
     MSVCRT$strncpy(buffer, typeStr, sizeof(buffer) - 1);
     buffer[sizeof(buffer) - 1] = '\0';
-    
+
     char* p = buffer;
     while (*p) {
         if (*p >= 'A' && *p <= 'Z') {
@@ -380,7 +380,7 @@ BYTE ParseAceType(const char* typeStr) {
         }
         p++;
     }
-    
+
     // Match type
     if (MSVCRT$strstr(buffer, "deny")) {
         return ACCESS_DENIED_ACE_TYPE;
@@ -397,14 +397,14 @@ BYTE ParseAceFlags(const char* flagsStr) {
     if (!flagsStr || MSVCRT$strlen(flagsStr) == 0) {
         return 0; // No inheritance flags
     }
-    
+
     BYTE flags = 0;
-    
+
     // Convert to uppercase for easier matching
     char buffer[256];
     MSVCRT$strncpy(buffer, flagsStr, sizeof(buffer) - 1);
     buffer[sizeof(buffer) - 1] = '\0';
-    
+
     char* p = buffer;
     while (*p) {
         if (*p >= 'a' && *p <= 'z') {
@@ -412,7 +412,7 @@ BYTE ParseAceFlags(const char* flagsStr) {
         }
         p++;
     }
-    
+
     // Check for flag abbreviations
     if (MSVCRT$strstr(buffer, "OI")) {
         flags |= OBJECT_INHERIT_ACE;
@@ -426,7 +426,7 @@ BYTE ParseAceFlags(const char* flagsStr) {
     if (MSVCRT$strstr(buffer, "IO")) {
         flags |= INHERIT_ONLY_ACE;
     }
-    
+
     // Also check for full names
     if (MSVCRT$strstr(buffer, "OBJECT_INHERIT")) {
         flags |= OBJECT_INHERIT_ACE;
@@ -440,7 +440,7 @@ BYTE ParseAceFlags(const char* flagsStr) {
     if (MSVCRT$strstr(buffer, "INHERIT_ONLY")) {
         flags |= INHERIT_ONLY_ACE;
     }
-    
+
     return flags;
 }
 
@@ -460,18 +460,18 @@ BOOL ParseAce(PACE_HEADER aceHeader, PPARSED_ACE_INFO parsedAce) {
         // Object ACE - has GUIDs
         PACCESS_ALLOWED_OBJECT_ACE pObjectAce = (PACCESS_ALLOWED_OBJECT_ACE)aceHeader;
         parsedAce->Mask = pObjectAce->Mask;
-        
+
         parsedAce->HasObjectType = (pObjectAce->Flags & ACE_OBJECT_TYPE_PRESENT) != 0;
         parsedAce->HasInheritedObjectType = (pObjectAce->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT) != 0;
-        
+
         if (parsedAce->HasObjectType) {
             MSVCRT$memcpy(&parsedAce->ObjectType, &pObjectAce->ObjectType, sizeof(GUID));
         }
-        
+
         if (parsedAce->HasInheritedObjectType) {
             MSVCRT$memcpy(&parsedAce->InheritedObjectType, &pObjectAce->InheritedObjectType, sizeof(GUID));
         }
-        
+
         // Get SID (it's after the GUIDs in the structure)
         PSID pSid = GetSidFromAce(aceHeader);
         if (pSid) {
@@ -489,7 +489,7 @@ BOOL ParseAce(PACE_HEADER aceHeader, PPARSED_ACE_INFO parsedAce) {
         // Standard ACE
         PACCESS_ALLOWED_ACE pAce = (PACCESS_ALLOWED_ACE)aceHeader;
         parsedAce->Mask = pAce->Mask;
-        
+
         // SID starts at SidStart offset
         PSID pSid = (PSID)&pAce->SidStart;
         LPSTR sidStr = NULL;
@@ -515,24 +515,24 @@ PSID GetSidFromAce(PACE_HEADER aceHeader) {
         aceHeader->AceType == SYSTEM_AUDIT_OBJECT_ACE_TYPE) {
         // Object ACE - SID position depends on which GUIDs are present
         // Structure: ACE_HEADER + ACCESS_MASK + Flags + [ObjectType GUID] + [InheritedObjectType GUID] + SID
-        
+
         // Start after ACE_HEADER (8 bytes) + ACCESS_MASK (4 bytes) + Flags (4 bytes) = 16 bytes
         BYTE* pSidLocation = (BYTE*)aceHeader + sizeof(ACE_HEADER) + sizeof(ACCESS_MASK) + sizeof(DWORD);
-        
+
         // Get the flags to determine which GUIDs are present
         DWORD* pFlags = (DWORD*)((BYTE*)aceHeader + sizeof(ACE_HEADER) + sizeof(ACCESS_MASK));
         DWORD flags = *pFlags;
-        
+
         // Account for ObjectType GUID if present
         if (flags & ACE_OBJECT_TYPE_PRESENT) {
             pSidLocation += sizeof(GUID);
         }
-        
+
         // Account for InheritedObjectType GUID if present
         if (flags & ACE_INHERITED_OBJECT_TYPE_PRESENT) {
             pSidLocation += sizeof(GUID);
         }
-        
+
         return (PSID)pSidLocation;
     } else {
         // Standard ACE
@@ -559,13 +559,13 @@ char* GetAceTypeString(BYTE aceType) {
 char* GetAceFlagsString(BYTE aceFlags) {
     static char flagsBuffer[256];
     flagsBuffer[0] = '\0';
-    
+
     if (aceFlags == 0) {
         return "None";
     }
-    
+
     BOOL first = TRUE;
-    
+
     if (aceFlags & OBJECT_INHERIT_ACE) {
         MSVCRT$strcat(flagsBuffer, "OBJECT_INHERIT_ACE");
         first = FALSE;
@@ -590,91 +590,91 @@ char* GetAceFlagsString(BYTE aceFlags) {
         MSVCRT$strcat(flagsBuffer, "INHERITED_ACE");
         first = FALSE;
     }
-    
+
     return flagsBuffer;
 }
 
 // Get inheritance type string based on ACE flags
 char* GetInheritanceTypeString(BYTE aceFlags) {
     // Extract only the inheritance-related flags (not INHERITED_ACE)
-    BYTE inheritFlags = aceFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | 
+    BYTE inheritFlags = aceFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE |
                                      NO_PROPAGATE_INHERIT_ACE | INHERIT_ONLY_ACE);
-    
+
     // Map flag combinations to PowerView inheritance types
     if (inheritFlags == 0) {
         return "None";
     }
-    
+
     // All = OI + CI (inherits to all descendants)
-    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE)) == 
-        (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE) && 
+    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE)) ==
+        (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE) &&
         !(inheritFlags & NO_PROPAGATE_INHERIT_ACE) &&
         !(inheritFlags & INHERIT_ONLY_ACE)) {
         return "All";
     }
-    
+
     // Children = OI + CI + NP (one level only)
-    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE)) == 
+    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE)) ==
         (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE) &&
         !(inheritFlags & INHERIT_ONLY_ACE)) {
         return "Children";
     }
-    
+
     // Descendents = OI + CI + IO (inherits to children but not this object)
-    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE)) == 
+    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE)) ==
         (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE) &&
         !(inheritFlags & NO_PROPAGATE_INHERIT_ACE)) {
         return "Descendents";
     }
-    
+
     // SelfAndChildren = OI + CI + NP + IO (not common, but possible)
-    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE | INHERIT_ONLY_ACE)) == 
+    if ((inheritFlags & (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE | INHERIT_ONLY_ACE)) ==
         (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE | INHERIT_ONLY_ACE)) {
         return "SelfAndChildren";
     }
-    
+
     // Containers = CI only (no IO, no NP)
     if (inheritFlags == CONTAINER_INHERIT_ACE) {
         return "Containers";
     }
-    
+
     // CI + IO = inherit to container descendants only, not this object
-    if ((inheritFlags & (CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE)) == 
+    if ((inheritFlags & (CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE)) ==
         (CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE) &&
         !(inheritFlags & OBJECT_INHERIT_ACE) &&
         !(inheritFlags & NO_PROPAGATE_INHERIT_ACE)) {
         return "Descendents";
     }
-    
+
     // CI + NP = immediate container children only
-    if ((inheritFlags & (CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE)) == 
+    if ((inheritFlags & (CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE)) ==
         (CONTAINER_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE) &&
         !(inheritFlags & OBJECT_INHERIT_ACE) &&
         !(inheritFlags & INHERIT_ONLY_ACE)) {
         return "Children";
     }
-    
+
     // Objects = OI only
     if (inheritFlags == OBJECT_INHERIT_ACE) {
         return "Objects";
     }
-    
-    // OI + IO = inherit to object descendants only, not this object  
-    if ((inheritFlags & (OBJECT_INHERIT_ACE | INHERIT_ONLY_ACE)) == 
+
+    // OI + IO = inherit to object descendants only, not this object
+    if ((inheritFlags & (OBJECT_INHERIT_ACE | INHERIT_ONLY_ACE)) ==
         (OBJECT_INHERIT_ACE | INHERIT_ONLY_ACE) &&
         !(inheritFlags & CONTAINER_INHERIT_ACE) &&
         !(inheritFlags & NO_PROPAGATE_INHERIT_ACE)) {
         return "Descendents";
     }
-    
+
     // OI + NP = immediate object children only
-    if ((inheritFlags & (OBJECT_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE)) == 
+    if ((inheritFlags & (OBJECT_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE)) ==
         (OBJECT_INHERIT_ACE | NO_PROPAGATE_INHERIT_ACE) &&
         !(inheritFlags & CONTAINER_INHERIT_ACE) &&
         !(inheritFlags & INHERIT_ONLY_ACE)) {
         return "Children";
     }
-    
+
     // Default for other combinations
     return "None";
 }
@@ -683,13 +683,13 @@ char* GetInheritanceTypeString(BYTE aceFlags) {
 char* GetAccessMaskString(ACCESS_MASK mask) {
     static char maskBuffer[512];
     maskBuffer[0] = '\0';
-    
+
     if (mask == 0) {
         return "None";
     }
-    
+
     BOOL first = TRUE;
-    
+
     // Check for generic rights first
     if (mask & GENERIC_ALL) {
         MSVCRT$strcat(maskBuffer, "GenericAll");
@@ -710,7 +710,7 @@ char* GetAccessMaskString(ACCESS_MASK mask) {
         MSVCRT$strcat(maskBuffer, "GenericExecute");
         first = FALSE;
     }
-    
+
     // Standard rights
     if (mask & DELETE_ACCESS) {
         if (!first) MSVCRT$strcat(maskBuffer, ",");
@@ -732,7 +732,7 @@ char* GetAccessMaskString(ACCESS_MASK mask) {
         MSVCRT$strcat(maskBuffer, "ReadControl");
         first = FALSE;
     }
-    
+
     // DS-specific rights
     if (mask & ADS_RIGHT_DS_CREATE_CHILD) {
         if (!first) MSVCRT$strcat(maskBuffer, ",");
@@ -759,12 +759,12 @@ char* GetAccessMaskString(ACCESS_MASK mask) {
         MSVCRT$strcat(maskBuffer, "ExtendedRight");
         first = FALSE;
     }
-    
+
     // If buffer is still empty, show raw hex
     if (maskBuffer[0] == '\0') {
         MSVCRT$_snprintf(maskBuffer, sizeof(maskBuffer), "0x%08x", mask);
     }
-    
+
     return maskBuffer;
 }
 
@@ -775,19 +775,19 @@ char* GetAccessMaskString(ACCESS_MASK mask) {
 // Convert SID to string
 char* SidToString(PSID sid) {
     if (!sid) return NULL;
-    
+
     LPSTR sidStr = NULL;
     if (!ADVAPI32$ConvertSidToStringSidA(sid, &sidStr)) {
         return NULL;
     }
-    
+
     // Copy to our own buffer
     size_t len = MSVCRT$strlen(sidStr) + 1;
     char* result = (char*)MSVCRT$malloc(len);
     if (result) {
         MSVCRT$strcpy(result, sidStr);
     }
-    
+
     KERNEL32$LocalFree(sidStr);
     return result;
 }
@@ -795,12 +795,12 @@ char* SidToString(PSID sid) {
 // Convert string to SID
 PSID StringToSid(const char* sidString) {
     if (!sidString) return NULL;
-    
+
     PSID pSid = NULL;
     if (!ADVAPI32$ConvertStringSidToSidA(sidString, &pSid)) {
         return NULL;
     }
-    
+
     return pSid;
 }
 
@@ -823,16 +823,16 @@ char* ResolveSidToName(LDAP* ld, const char* sidString, const char* defaultNC) {
     // Format: (objectSid=\xx\xx\xx...) where xx is hex byte
     char filter[512];
     int filterPos = 0;
-    
+
     // Start filter
     filterPos += MSVCRT$_snprintf(filter + filterPos, sizeof(filter) - filterPos, "(objectSid=");
-    
+
     // Add escaped binary bytes
     BYTE* sidBytes = (BYTE*)pSid;
     for (DWORD i = 0; i < sidLen && filterPos < sizeof(filter) - 4; i++) {
         filterPos += MSVCRT$_snprintf(filter + filterPos, sizeof(filter) - filterPos, "\\%02x", sidBytes[i]);
     }
-    
+
     // Close filter
     filterPos += MSVCRT$_snprintf(filter + filterPos, sizeof(filter) - filterPos, ")");
 
@@ -871,7 +871,7 @@ char* ResolveSidToName(LDAP* ld, const char* sidString, const char* defaultNC) {
                 if (values) WLDAP32$ldap_value_free(values);
                 values = WLDAP32$ldap_get_values(ld, entry, "name");
             }
-            
+
             if (values && values[0]) {
                 size_t len = MSVCRT$strlen(values[0]) + 1;
                 name = (char*)MSVCRT$malloc(len);
@@ -897,7 +897,7 @@ char* ResolveSidToName(LDAP* ld, const char* sidString, const char* defaultNC) {
                 forestRoot = (char*)(firstComma + 1);
             }
         }
-        
+
         // If we found a potential forest root, search there
         if (forestRoot) {
             result = WLDAP32$ldap_search_s(
@@ -925,7 +925,7 @@ char* ResolveSidToName(LDAP* ld, const char* sidString, const char* defaultNC) {
                         if (values) WLDAP32$ldap_value_free(values);
                         values = WLDAP32$ldap_get_values(ld, entry, "name");
                     }
-                    
+
                     if (values && values[0]) {
                         size_t len = MSVCRT$strlen(values[0]) + 1;
                         name = (char*)MSVCRT$malloc(len);

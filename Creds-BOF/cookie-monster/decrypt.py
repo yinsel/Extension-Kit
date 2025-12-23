@@ -146,7 +146,7 @@ def decrypt_data(encrypted_junk, key, password=False):
                 encrypted_password = encrypted_junk[15:-16]
                 cipher = AES.new(key, AES.MODE_GCM, initialisation_vector)
                 decrypted_pass = cipher.decrypt(encrypted_password)
-                decrypted_pass = decrypted_pass.decode()
+                decrypted_pass = decrypted_pass.decode('utf-8', errors='replace')
                 return decrypted_pass
             nonce = encrypted_junk[3:3 + 12]
             if len(nonce) == 0:
@@ -156,7 +156,7 @@ def decrypt_data(encrypted_junk, key, password=False):
             tag = encrypted_junk[-16:]
             plain_text = AES.new(key, AES.MODE_GCM, nonce)
             text = plain_text.decrypt(cipher_text)
-            return text[32:].decode('utf-8')
+            return text[32:].decode('utf-8', errors='replace')
         except Exception as e:
             print("Error: Could not decrypt password")
             print(e)
@@ -172,9 +172,9 @@ def decrypt_data(encrypted_junk, key, password=False):
             plain_text = AES.new(key, AES.MODE_GCM, nonce)
             text = plain_text.decrypt(cipher_text)
             if password:
-                return text.decode('utf-8')
+                return text.decode('utf-8', errors='replace')
             else:
-                return text[32:].decode('utf-8')
+                return text[32:].decode('utf-8', errors='replace')
         except Exception as e:
             print("Error: Could not decrypt password")
             print(e)

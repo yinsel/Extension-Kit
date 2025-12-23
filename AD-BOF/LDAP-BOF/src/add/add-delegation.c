@@ -1,6 +1,6 @@
 #include <windows.h>
-#include "../../_include/beacon.h"
-#include "../common/ldap_common.c"
+#include "beacon.h"
+#include "ldap_common.c"
 
 void go(char *args, int alen) {
     datap parser;

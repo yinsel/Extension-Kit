@@ -1,6 +1,6 @@
 #include <windows.h>
-#include "../../_include/beacon.h"
-#include "../common/ldap_common.c"
+#include "beacon.h"
+#include "ldap_common.c"
 
 void go(char *args, int alen) {
     datap parser;
@@ -88,10 +88,10 @@ void go(char *args, int alen) {
         char* attribute = WLDAP32$ldap_first_attribute(ld, entry, &ber);
         while (attribute != NULL) {
             // Check if this is a known binary attribute (case-insensitive)
-            BOOL isBinary = (MSVCRT$_stricmp(attribute, "objectGUID") == 0 || 
+            BOOL isBinary = (MSVCRT$_stricmp(attribute, "objectGUID") == 0 ||
                             MSVCRT$_stricmp(attribute, "objectSid") == 0 ||
                             MSVCRT$_stricmp(attribute, "objectSID") == 0);
-            
+
             if (isBinary) {
                 // Handle binary attributes
                 struct berval** bvalues = WLDAP32$ldap_get_values_len(ld, entry, attribute);
@@ -100,7 +100,7 @@ void go(char *args, int alen) {
                     if (MSVCRT$_stricmp(attribute, "objectGUID") == 0) {
                         FormatGUID((BYTE*)bvalues[0]->bv_val, formatted);
                         BeaconPrintf(CALLBACK_OUTPUT, "%-30s : %s", attribute, formatted);
-                    } else if (MSVCRT$_stricmp(attribute, "objectSid") == 0 || 
+                    } else if (MSVCRT$_stricmp(attribute, "objectSid") == 0 ||
                                MSVCRT$_stricmp(attribute, "objectSID") == 0) {
                         FormatSID((BYTE*)bvalues[0]->bv_val, bvalues[0]->bv_len, formatted);
                         BeaconPrintf(CALLBACK_OUTPUT, "%-30s : %s", attribute, formatted);
@@ -117,7 +117,7 @@ void go(char *args, int alen) {
                     WLDAP32$ldap_value_free(values);
                 }
             }
-            
+
             WLDAP32$ldap_memfree(attribute);
             attribute = WLDAP32$ldap_next_attribute(ld, entry, ber);
         }

@@ -150,20 +150,25 @@
 // ============================================================================
 
 // ACE Header structure
+#ifdef ACE_HEADER
 typedef struct _ACE_HEADER {
     BYTE AceType;
     BYTE AceFlags;
     WORD AceSize;
 } ACE_HEADER, *PACE_HEADER;
+#endif
 
 // Standard ACCESS_ALLOWED_ACE structure
+#ifdef ACCESS_ALLOWED_ACE
 typedef struct _ACCESS_ALLOWED_ACE {
     ACE_HEADER Header;
     ACCESS_MASK Mask;
     DWORD SidStart;  // First DWORD of SID
 } ACCESS_ALLOWED_ACE, *PACCESS_ALLOWED_ACE;
+#endif
 
 // Object ACE structure (for extended rights)
+#ifdef ACCESS_ALLOWED_OBJECT_ACE
 typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
     ACE_HEADER Header;
     ACCESS_MASK Mask;
@@ -172,6 +177,7 @@ typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
     GUID InheritedObjectType;
     DWORD SidStart;
 } ACCESS_ALLOWED_OBJECT_ACE, *PACCESS_ALLOWED_OBJECT_ACE;
+#endif
 
 // Parsed ACE information structure (for display)
 typedef struct _PARSED_ACE_INFO {

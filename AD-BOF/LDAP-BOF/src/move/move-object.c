@@ -1,6 +1,6 @@
 #include <windows.h>
-#include "../../_include/beacon.h"
-#include "../common/ldap_common.c"
+#include "beacon.h"
+#include "ldap_common.c"
 
 DECLSPEC_IMPORT ULONG WLDAP32$ldap_rename_ext_s(
     LDAP* ld, 

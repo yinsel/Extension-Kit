@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include "bofdefs.h"
+#include "beacon.h"
 
 // Function pointers for WINSPOOL functions (dynamically loaded)
 typedef BOOL (WINAPI *OpenPrinterW_t)(LPWSTR, LPHANDLE, LPPRINTER_DEFAULTSW);

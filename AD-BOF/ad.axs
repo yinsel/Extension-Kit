@@ -150,12 +150,12 @@ cmd_readlaps.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let target_dn = parsed_json["target_dn"];
 
     if (!target && !target_dn) {
-        throw new Error("Error: Either -target (sAMAccountName) or -target-dn (Distinguished Name) must be specified");
+        throw new Error("Either -target (sAMAccountName) or -target-dn (Distinguished Name) must be specified");
         return;
     }
 
     if (target && target_dn) {
-        throw new Error("Error: Cannot specify both -target and -target-dn");
+        throw new Error("Cannot specify both -target and -target-dn");
         return;
     }
 

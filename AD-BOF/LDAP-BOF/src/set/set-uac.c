@@ -1,6 +1,6 @@
 #include <windows.h>
-#include "../../_include/beacon.h"
-#include "../common/ldap_common.c"
+#include "beacon.h"
+#include "ldap_common.c"
 
 DECLSPEC_IMPORT long __cdecl MSVCRT$strtol(const char* str, char** endptr, int base);
 
