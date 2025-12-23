@@ -36,25 +36,25 @@ void go(char *args, int alen) {
     
     // Parse ACE parameters (use defaults if not provided)
     ACCESS_MASK accessMask = GENERIC_ALL; // Default to GenericAll for RBCD
-    if (accessMaskStr && MSVCRT$strlen(accessMaskStr) > 0) {
-        accessMask = ParseAccessMask(accessMaskStr);
-        if (accessMask == 0) {
-            BeaconPrintf(CALLBACK_ERROR, "[-] Failed to parse access mask, using GenericAll");
-            accessMask = GENERIC_ALL;
-        }
-        BeaconPrintf(CALLBACK_OUTPUT, "[*] Access Mask: %s (0x%08x)", accessMaskStr, accessMask);
-    } else {
-        BeaconPrintf(CALLBACK_OUTPUT, "[*] Access Mask: GenericAll (0x%08x) [default]", accessMask);
-    }
-    
+    // if (accessMaskStr && MSVCRT$strlen(accessMaskStr) > 0) {
+    //     accessMask = ParseAccessMask(accessMaskStr);
+    //     if (accessMask == 0) {
+    //         BeaconPrintf(CALLBACK_ERROR, "[-] Failed to parse access mask, using GenericAll");
+    //         accessMask = GENERIC_ALL;
+    //     }
+    //     BeaconPrintf(CALLBACK_OUTPUT, "[*] Access Mask: %s (0x%08x)", accessMaskStr, accessMask);
+    // } else {
+    //     BeaconPrintf(CALLBACK_OUTPUT, "[*] Access Mask: GenericAll (0x%08x) [default]", accessMask);
+    // }
+
     BYTE aceType = ACCESS_ALLOWED_ACE_TYPE; // Default to Allow
-    if (aceTypeStr && MSVCRT$strlen(aceTypeStr) > 0) {
-        aceType = ParseAceType(aceTypeStr);
-        BeaconPrintf(CALLBACK_OUTPUT, "[*] ACE Type: %s (0x%02x)", aceTypeStr, aceType);
-    } else {
-        BeaconPrintf(CALLBACK_OUTPUT, "[*] ACE Type: Allow (0x%02x) [default]", aceType);
-    }
-    
+    // if (aceTypeStr && MSVCRT$strlen(aceTypeStr) > 0) {
+    //     aceType = ParseAceType(aceTypeStr);
+    //     BeaconPrintf(CALLBACK_OUTPUT, "[*] ACE Type: %s (0x%02x)", aceTypeStr, aceType);
+    // } else {
+    //     BeaconPrintf(CALLBACK_OUTPUT, "[*] ACE Type: Allow (0x%02x) [default]", aceType);
+    // }
+
     if (searchOu && MSVCRT$strlen(searchOu) > 0) {
         BeaconPrintf(CALLBACK_OUTPUT, "[*] Search OU: %s", searchOu);
     }

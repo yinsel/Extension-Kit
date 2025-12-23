@@ -18,7 +18,6 @@ function identifyInputType(input) {
 // GET COMMANDS
 // ============================================================================
 
-// Command: get-users
 var _cmd_getusers = ax.create_command(
     "get-users",
     "List all users in the domain",
@@ -28,7 +27,6 @@ _cmd_getusers.addArgFlagString("-ou", "ou_path", false, "OU path to search (opti
 _cmd_getusers.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getusers.addArgFlagString("-a", "attributes", false, "Comma-separated list of attributes to retrieve (always includes sAMAccountName)");
 _cmd_getusers.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getusers.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let ou_path = parsed_json["ou_path"] || "";
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
@@ -40,7 +38,8 @@ _cmd_getusers.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "Enumerating domain users...");
 });
 
-// Command: get-computers
+
+
 var _cmd_getcomputers = ax.create_command(
     "get-computers",
     "List all computers in the domain",
@@ -50,7 +49,6 @@ _cmd_getcomputers.addArgFlagString("-ou", "ou_path", false, "OU path to search (
 _cmd_getcomputers.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getcomputers.addArgFlagString("-a", "attributes", false, "Comma-separated list of attributes to retrieve (always includes sAMAccountName)");
 _cmd_getcomputers.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getcomputers.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let ou_path = parsed_json["ou_path"] || "";
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
@@ -62,7 +60,8 @@ _cmd_getcomputers.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "Enumerating domain computers...");
 });
 
-// Command: get-groups
+
+
 var _cmd_getgroups = ax.create_command(
     "get-groups",
     "List all groups in the domain",
@@ -72,7 +71,6 @@ _cmd_getgroups.addArgFlagString("-ou", "ou_path", false, "OU path to search (opt
 _cmd_getgroups.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getgroups.addArgFlagString("-a", "attributes", false, "Comma-separated list of attributes to retrieve (always includes sAMAccountName)");
 _cmd_getgroups.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getgroups.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let ou_path = parsed_json["ou_path"] || "";
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
@@ -84,7 +82,8 @@ _cmd_getgroups.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "Enumerating domain groups...");
 });
 
-// Command: get-usergroups
+
+
 var _cmd_getusergroups = ax.create_command(
     "get-usergroups",
     "List all groups a user is a member of",
@@ -94,7 +93,6 @@ _cmd_getusergroups.addArgString("user", true, "Username or DN");
 _cmd_getusergroups.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getusergroups.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getusergroups.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getusergroups.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let user = parsed_json["user"];
     let is_dn = identifyInputType(user);
@@ -107,7 +105,8 @@ _cmd_getusergroups.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying groups for ${user}...`);
 });
 
-// Command: get-groupmembers
+
+
 var _cmd_getgroupmembers = ax.create_command(
     "get-groupmembers",
     "List all members of a group",
@@ -116,7 +115,6 @@ var _cmd_getgroupmembers = ax.create_command(
 _cmd_getgroupmembers.addArgString("group", true, "Group name or DN");
 _cmd_getgroupmembers.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getgroupmembers.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
-
 _cmd_getgroupmembers.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let group = parsed_json["group"];
     let is_dn = identifyInputType(group);
@@ -128,7 +126,8 @@ _cmd_getgroupmembers.setPreHook(function (id, cmdline, parsed_json, ...parsed_li
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying members of ${group}...`);
 });
 
-// Command: get-object
+
+
 var _cmd_getobject = ax.create_command(
     "get-object",
     "Get all attributes of an object",
@@ -138,7 +137,6 @@ _cmd_getobject.addArgString("target", true, "Object name or DN");
 _cmd_getobject.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getobject.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getobject.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getobject.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -151,7 +149,8 @@ _cmd_getobject.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying object ${target}...`);
 });
 
-// Command: get-domaininfo
+
+
 var _cmd_getdomaininfo = ax.create_command(
     "get-domaininfo",
     "Get domain information from rootDSE",
@@ -159,7 +158,6 @@ var _cmd_getdomaininfo = ax.create_command(
 );
 _cmd_getdomaininfo.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getdomaininfo.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getdomaininfo.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
     let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
@@ -169,7 +167,8 @@ _cmd_getdomaininfo.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "Querying domain information...");
 });
 
-// Command: get-maq
+
+
 var _cmd_getmaq = ax.create_command(
     "get-maq",
     "Get machine account quota (ms-DS-MachineAccountQuota)",
@@ -177,7 +176,6 @@ var _cmd_getmaq = ax.create_command(
 );
 _cmd_getmaq.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getmaq.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getmaq.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
     let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
@@ -187,7 +185,8 @@ _cmd_getmaq.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "Querying machine account quota...");
 });
 
-// Command: get-writable
+
+
 var _cmd_getwritable = ax.create_command(
     "get-writable",
     "Find objects you have write access to",
@@ -197,7 +196,6 @@ _cmd_getwritable.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getwritable.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getwritable.addArgBool("--ldaps", "Use LDAPS (port 636)");
 _cmd_getwritable.addArgBool("--detailed", "Show detailed output");
-
 _cmd_getwritable.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let ou_path = parsed_json["ou_path"] || "";
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
@@ -209,7 +207,8 @@ _cmd_getwritable.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines)
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "Finding writable objects...");
 });
 
-// Command: get-delegation
+
+
 var _cmd_getdelegation = ax.create_command(
     "get-delegation",
     "Get delegation configuration for an object",
@@ -219,7 +218,6 @@ _cmd_getdelegation.addArgString("target", true, "Object name or DN");
 _cmd_getdelegation.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getdelegation.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getdelegation.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getdelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -232,7 +230,8 @@ _cmd_getdelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying delegation for ${target}...`);
 });
 
-// Command: get-uac
+
+
 var _cmd_getuac = ax.create_command(
     "get-uac",
     "Get UAC flags for an object",
@@ -242,7 +241,6 @@ _cmd_getuac.addArgString("target", true, "Object name or DN");
 _cmd_getuac.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getuac.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getuac.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getuac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -255,7 +253,8 @@ _cmd_getuac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying UAC for ${target}...`);
 });
 
-// Command: get-attribute
+
+
 var _cmd_getattribute = ax.create_command(
     "get-attribute",
     "Get specific attribute values (comma-separated list supported)",
@@ -266,7 +265,6 @@ _cmd_getattribute.addArgString("attributes", true, "Comma-separated list of attr
 _cmd_getattribute.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getattribute.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getattribute.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -280,7 +278,8 @@ _cmd_getattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying ${attributes} for ${target}...`);
 });
 
-// Command: get-spn
+
+
 var _cmd_getspn = ax.create_command(
     "get-spn",
     "Get SPNs for an object",
@@ -290,7 +289,6 @@ _cmd_getspn.addArgString("target", true, "Object name or DN");
 _cmd_getspn.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getspn.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getspn.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getspn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -303,7 +301,8 @@ _cmd_getspn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying SPNs for ${target}...`);
 });
 
-// Command: get-acl
+
+
 var _cmd_getacl = ax.create_command(
     "get-acl",
     "Get ACL/security descriptor for an object",
@@ -314,7 +313,6 @@ _cmd_getacl.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getacl.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getacl.addArgBool("--ldaps", "Use LDAPS (port 636)");
 _cmd_getacl.addArgBool("--resolve", "Resolve SID names");
-
 _cmd_getacl.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -328,7 +326,8 @@ _cmd_getacl.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying ACL for ${target}...`);
 });
 
-// Command: get-rbcd
+
+
 var _cmd_getrbcd = ax.create_command(
     "get-rbcd",
     "Get RBCD configuration for an object",
@@ -338,7 +337,6 @@ _cmd_getrbcd.addArgString("target", true, "Object name or DN");
 _cmd_getrbcd.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_getrbcd.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_getrbcd.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_getrbcd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -351,11 +349,12 @@ _cmd_getrbcd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Querying RBCD for ${target}...`);
 });
 
+
+
 // ============================================================================
 // ADD COMMANDS
 // ============================================================================
 
-// Command: add-user
 var _cmd_adduser = ax.create_command(
     "add-user",
     "Add a user to the domain",
@@ -370,7 +369,6 @@ _cmd_adduser.addArgBool("--disabled", "Create account disabled");
 _cmd_adduser.addArgFlagString("-ou", "ou_path", false, "Target OU path");
 _cmd_adduser.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_adduser.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_adduser.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let username = parsed_json["username"];
     let is_dn = identifyInputType(username);
@@ -389,7 +387,7 @@ _cmd_adduser.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding user ${username}...`);
 });
 
-// Command: add-computer
+
 var _cmd_addcomputer = ax.create_command(
     "add-computer",
     "Add a computer to the domain",
@@ -401,7 +399,6 @@ _cmd_addcomputer.addArgFlagString("-ou", "ou_path", false, "Target OU path");
 _cmd_addcomputer.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addcomputer.addArgBool("--disabled", "Create account disabled");
 _cmd_addcomputer.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addcomputer.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let computer = parsed_json["computer"];
     let is_dn = identifyInputType(computer);
@@ -418,7 +415,8 @@ _cmd_addcomputer.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines)
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding computer ${computer}...`);
 });
 
-// Command: add-group
+
+
 var _cmd_addgroup = ax.create_command(
     "add-group",
     "Add a group to the domain",
@@ -431,7 +429,6 @@ _cmd_addgroup.addArgFlagString("-scope", "scope", false, "Group scope: global, d
 _cmd_addgroup.addArgFlagString("-ou", "ou_path", false, "Target OU path");
 _cmd_addgroup.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addgroup.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addgroup.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let groupname = parsed_json["groupname"];
     let is_dn = identifyInputType(groupname);
@@ -448,7 +445,8 @@ _cmd_addgroup.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding group ${groupname}...`);
 });
 
-// Command: add-groupmember
+
+
 var _cmd_addgroupmember = ax.create_command(
     "add-groupmember",
     "Add a member to a group",
@@ -459,7 +457,6 @@ _cmd_addgroupmember.addArgString("member", true, "Member name or DN");
 _cmd_addgroupmember.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addgroupmember.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addgroupmember.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addgroupmember.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let group = parsed_json["group"];
     let is_group_dn = identifyInputType(group);
@@ -475,7 +472,8 @@ _cmd_addgroupmember.setPreHook(function (id, cmdline, parsed_json, ...parsed_lin
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding ${member} to ${group}...`);
 });
 
-// Command: add-ou
+
+
 var _cmd_addou = ax.create_command(
     "add-ou",
     "Add an organizational unit",
@@ -486,7 +484,6 @@ _cmd_addou.addArgFlagString("-desc", "description", false, "OU description");
 _cmd_addou.addArgFlagString("-parent", "parent_ou", false, "Parent OU DN");
 _cmd_addou.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addou.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addou.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let ou_name = parsed_json["ou_name"];
     let is_dn = identifyInputType(ou_name);
@@ -501,7 +498,8 @@ _cmd_addou.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding OU ${ou_name}...`);
 });
 
-// Command: add-sidhistory
+
+
 var _cmd_addsidhistory = ax.create_command(
     "add-sidhistory",
     "Add a SID to an object's sidHistory attribute",
@@ -526,7 +524,8 @@ _cmd_addsidhistory.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding SID to ${target}'s sidHistory...`);
 });
 
-// Command: add-spn
+
+
 var _cmd_addspn = ax.create_command(
     "add-spn",
     "Add an SPN to a object",
@@ -537,7 +536,6 @@ _cmd_addspn.addArgString("spn", true, "SPN to add");
 _cmd_addspn.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addspn.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addspn.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addspn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -551,7 +549,8 @@ _cmd_addspn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding SPN ${spn} to ${target}...`);
 });
 
-// Command: add-attribute
+
+
 var _cmd_addattribute = ax.create_command(
     "add-attribute",
     "Add a value to an attribute",
@@ -563,7 +562,6 @@ _cmd_addattribute.addArgString("value", true, "Value to add");
 _cmd_addattribute.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addattribute.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addattribute.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -579,7 +577,8 @@ _cmd_addattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding ${attribute} value to ${target}...`);
 });
 
-// Command: add-uac
+
+
 var _cmd_adduac = ax.create_command(
     "add-uac",
     "Add UAC flags to an object",
@@ -590,7 +589,6 @@ _cmd_adduac.addArgString("flags", true, "Comma-separated UAC flags (e.g., DONT_R
 _cmd_adduac.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_adduac.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_adduac.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_adduac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -604,7 +602,8 @@ _cmd_adduac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding UAC flags to ${target}...`);
 });
 
-// Command: add-delegation
+
+
 var _cmd_adddelegation = ax.create_command(
     "add-delegation",
     "Add a delegation SPN to an object",
@@ -615,7 +614,6 @@ _cmd_adddelegation.addArgString("spn", true, "Delegation SPN to add");
 _cmd_adddelegation.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_adddelegation.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_adddelegation.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_adddelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -629,7 +627,8 @@ _cmd_adddelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding delegation SPN to ${target}...`);
 });
 
-// Command: add-ace
+
+
 var _cmd_addace = ax.create_command(
     "add-ace",
     "Add an ACE to an object's DACL",
@@ -645,7 +644,6 @@ _cmd_addace.addArgFlagString("-inherit-guid", "inherit_guid", false, "Inherited 
 _cmd_addace.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addace.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addace.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addace.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_target_dn = identifyInputType(target);
@@ -666,7 +664,8 @@ _cmd_addace.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding ACE to ${target}...`);
 });
 
-// Command: add-rbcd
+
+
 var _cmd_addrbcd = ax.create_command(
     "add-rbcd",
     "Add an RBCD delegation",
@@ -677,7 +676,6 @@ _cmd_addrbcd.addArgString("delegate", true, "Object allowed to delegate");
 _cmd_addrbcd.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addrbcd.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addrbcd.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addrbcd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_target_dn = identifyInputType(target);
@@ -693,11 +691,12 @@ _cmd_addrbcd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding RBCD delegation to ${target}...`);
 });
 
+
+
 // ============================================================================
 // SET COMMANDS
 // ============================================================================
 
-// Command: set-password
 var _cmd_setpassword = ax.create_command(
     "set-password",
     "Set/reset a user's password",
@@ -708,7 +707,6 @@ _cmd_setpassword.addArgString("password", true, "New password");
 _cmd_setpassword.addArgFlagString("-old", "old_password", false, "Old password (required for self-service password change, omit for admin reset)");
 _cmd_setpassword.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_setpassword.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
-
 _cmd_setpassword.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -723,7 +721,8 @@ _cmd_setpassword.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines)
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Setting password for ${target}...`);
 });
 
-// Command: set-spn
+
+
 var _cmd_setspn = ax.create_command(
     "set-spn",
     "Set/replace all SPNs on an object",
@@ -734,7 +733,6 @@ _cmd_setspn.addArgString("spn", true, "SPN to set (replaces all existing)");
 _cmd_setspn.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_setspn.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_setspn.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_setspn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -748,7 +746,8 @@ _cmd_setspn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Setting SPN on ${target}...`);
 });
 
-// Command: set-delegation
+
+
 var _cmd_setdelegation = ax.create_command(
     "set-delegation",
     "Set/replace delegation SPNs",
@@ -759,7 +758,6 @@ _cmd_setdelegation.addArgString("spn", true, "Delegation SPN (replaces all exist
 _cmd_setdelegation.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_setdelegation.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_setdelegation.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_setdelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -773,7 +771,8 @@ _cmd_setdelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Setting delegation on ${target}...`);
 });
 
-// Command: set-attribute
+
+
 var _cmd_setattribute = ax.create_command(
     "set-attribute",
     "Set/replace an attribute value",
@@ -785,7 +784,6 @@ _cmd_setattribute.addArgString("value", true, "Value to set");
 _cmd_setattribute.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_setattribute.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_setattribute.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_setattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -801,18 +799,19 @@ _cmd_setattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Setting ${attribute} on ${target}...`);
 });
 
-// Command: set-uac
+
+
 var _cmd_setuac = ax.create_command(
     "set-uac",
     "Set UAC flags (replaces all)",
     "ldap set-uac jane.doe DONT_EXPIRE_PASSWD -ou \"OU=Users,DC=domain,DC=local\" -dc dc01.domain.local"
 );
 _cmd_setuac.addArgString("target", true, "Object name or DN");
-_cmd_setuac.addArgString("flags", true, "Comma-separated UAC flags (replaces all)");
+_cmd_setuac.addArgString("flags", true, "Comma-separated UAC flags (replaces all): SCRIPT, ACCOUNTDISABLE, HOMEDIR_REQUIRED, LOCKOUT, PASSWD_NOTREQD, PASSWD_CANT_CHANGE, NORMAL_ACCOUNT, INTERDOMAIN_TRUST_ACCOUNT, WORKSTATION_TRUST_ACCOUNT" +
+    "SERVER_TRUST_ACCOUNT, DONT_EXPIRE_PASSWD, SMARTCARD_REQUIRED, TRUSTED_FOR_DELEGATION, NOT_DELEGATED, USE_DES_KEY_ONLY, DONT_REQ_PREAUTH, PASSWORD_EXPIRED, TRUSTED_TO_AUTH_FOR_DELEGATION, NO_AUTH_DATA_REQUIRED");
 _cmd_setuac.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_setuac.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_setuac.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_setuac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -826,7 +825,8 @@ _cmd_setuac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Setting UAC flags on ${target}...`);
 });
 
-// Command: set-owner
+
+
 var _cmd_setowner = ax.create_command(
     "set-owner",
     "Set the owner of an object (requires WriteOwner)",
@@ -837,7 +837,6 @@ _cmd_setowner.addArgString("owner", true, "New owner name or DN");
 _cmd_setowner.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_setowner.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_setowner.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_setowner.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_target_dn = identifyInputType(target);
@@ -853,11 +852,12 @@ _cmd_setowner.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Setting owner of ${target} to ${owner}...`);
 });
 
+
+
 // ============================================================================
 // MOVE COMMANDS
 // ============================================================================
 
-// Command: move-object
 var _cmd_moveobject = ax.create_command(
     "move-object",
     "Move an object to a different OU",
@@ -884,11 +884,12 @@ _cmd_moveobject.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Moving ${object} to ${destination}...`);
 });
 
+
+
 // ============================================================================
 // REMOVE COMMANDS
 // ============================================================================
 
-// Command: remove-groupmember
 var _cmd_removegroupmember = ax.create_command(
     "remove-groupmember",
     "Remove a member from a group",
@@ -899,7 +900,6 @@ _cmd_removegroupmember.addArgString("member", true, "Member name or DN");
 _cmd_removegroupmember.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removegroupmember.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removegroupmember.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removegroupmember.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let group = parsed_json["group"];
     let is_group_dn = identifyInputType(group);
@@ -915,7 +915,8 @@ _cmd_removegroupmember.setPreHook(function (id, cmdline, parsed_json, ...parsed_
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing ${member} from ${group}...`);
 });
 
-// Command: remove-object
+
+
 var _cmd_removeobject = ax.create_command(
     "remove-object",
     "Remove an object from the domain",
@@ -925,7 +926,6 @@ _cmd_removeobject.addArgString("object", true, "Object name or DN");
 _cmd_removeobject.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removeobject.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removeobject.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removeobject.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let object = parsed_json["object"];
     let is_dn = identifyInputType(object);
@@ -938,7 +938,8 @@ _cmd_removeobject.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing ${object}...`);
 });
 
-// Command: remove-spn
+
+
 var _cmd_removespn = ax.create_command(
     "remove-spn",
     "Remove an SPN from an object",
@@ -949,7 +950,6 @@ _cmd_removespn.addArgString("spn", true, "SPN to remove");
 _cmd_removespn.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removespn.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removespn.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removespn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -963,7 +963,8 @@ _cmd_removespn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing SPN ${spn} from ${target}...`);
 });
 
-// Command: remove-delegation
+
+
 var _cmd_removedelegation = ax.create_command(
     "remove-delegation",
     "Remove a delegation SPN",
@@ -974,7 +975,6 @@ _cmd_removedelegation.addArgString("spn", true, "Delegation SPN to remove");
 _cmd_removedelegation.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removedelegation.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removedelegation.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removedelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -988,7 +988,8 @@ _cmd_removedelegation.setPreHook(function (id, cmdline, parsed_json, ...parsed_l
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing delegation SPN from ${target}...`);
 });
 
-// Command: remove-attribute
+
+
 var _cmd_removeattribute = ax.create_command(
     "remove-attribute",
     "Remove an attribute or attribute value",
@@ -1000,7 +1001,6 @@ _cmd_removeattribute.addArgFlagString("-value", "value", false, "Specific value 
 _cmd_removeattribute.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removeattribute.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removeattribute.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removeattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -1016,7 +1016,8 @@ _cmd_removeattribute.setPreHook(function (id, cmdline, parsed_json, ...parsed_li
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing ${attribute} from ${target}...`);
 });
 
-// Command: remove-uac
+
+
 var _cmd_removeuac = ax.create_command(
     "remove-uac",
     "Remove UAC flags from an object",
@@ -1027,7 +1028,6 @@ _cmd_removeuac.addArgString("flags", true, "Comma-separated UAC flags to remove"
 _cmd_removeuac.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removeuac.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removeuac.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removeuac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -1041,7 +1041,8 @@ _cmd_removeuac.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing UAC flags from ${target}...`);
 });
 
-// Command: remove-ace
+
+
 var _cmd_removeace = ax.create_command(
     "remove-ace",
     "Remove an ACE from an object's DACL",
@@ -1055,8 +1056,8 @@ _cmd_removeace.addArgFlagInt("-index","ace_index", false, "ACE index to remove (
 _cmd_removeace.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removeace.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removeace.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removeace.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
+
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
     let trustee = parsed_json["trustee"] || "";
@@ -1068,13 +1069,14 @@ _cmd_removeace.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
     let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
 
-    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int", 
+    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int",
         [target, is_dn, trustee, is_trustee_dn, rights, ace_type, ace_index, ou_path, dc_fqdn, use_ldaps]);
     let bof_path = ax.script_dir() + "_bin/LDAP/remove-ace." + ax.arch(id) + ".o";
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing ACE from ${target}...`);
 });
 
-// Command: remove-rbcd
+
+
 var _cmd_removerbcd = ax.create_command(
     "remove-rbcd",
     "Remove an RBCD delegation",
@@ -1085,7 +1087,6 @@ _cmd_removerbcd.addArgString("delegate", true, "Object to remove from delegation
 _cmd_removerbcd.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removerbcd.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removerbcd.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removerbcd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_target_dn = identifyInputType(target);
@@ -1101,11 +1102,12 @@ _cmd_removerbcd.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing RBCD delegation from ${target}...`);
 });
 
+
+
 // ============================================================================
 // MACRO COMMANDS (using existing BOFs with preset parameters)
 // ============================================================================
 
-// Macro: add-genericall
 var _cmd_addgenericall = ax.create_command(
     "add-genericall",
     "Add a GenericAll ACE to an object's DACL",
@@ -1140,7 +1142,8 @@ _cmd_addgenericall.setPreHook(function (id, cmdline, parsed_json, ...parsed_line
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding ACE to ${target}...`);
 });
 
-// Macro: add-genericwrite
+
+
 var _cmd_addgenericwrite = ax.create_command(
     "add-genericwrite",
     "Add a GenericWrite ACE to an object's DACL",
@@ -1175,7 +1178,8 @@ _cmd_addgenericwrite.setPreHook(function (id, cmdline, parsed_json, ...parsed_li
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding ACE to ${target}...`);
 });
 
-// Macro: add-dcsync
+
+
 var _cmd_adddcsync = ax.create_command(
     "add-dcsync",
     "Add DCSync ACEs to an object's DACL",
@@ -1210,7 +1214,8 @@ _cmd_adddcsync.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Adding ACE to ${target}...`);
 });
 
-// Macro: add-asreproastable
+
+
 var _cmd_addasreproastable = ax.create_command(
     "add-asreproastable",
     "Make a user AS-REP roastable (set DONT_REQ_PREAUTH)",
@@ -1220,7 +1225,6 @@ _cmd_addasreproastable.addArgString("target", true, "Target user name or DN");
 _cmd_addasreproastable.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addasreproastable.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addasreproastable.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addasreproastable.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -1233,7 +1237,8 @@ _cmd_addasreproastable.setPreHook(function (id, cmdline, parsed_json, ...parsed_
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Making ${target} AS-REP roastable...`);
 });
 
-// Macro: add-unconstrained
+
+
 var _cmd_addunconstrained = ax.create_command(
     "add-unconstrained",
     "Enable unconstrained delegation on an object",
@@ -1243,7 +1248,6 @@ _cmd_addunconstrained.addArgString("target", true, "Target object name or DN");
 _cmd_addunconstrained.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addunconstrained.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addunconstrained.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addunconstrained.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -1256,8 +1260,6 @@ _cmd_addunconstrained.setPreHook(function (id, cmdline, parsed_json, ...parsed_l
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Enabling unconstrained delegation on ${target}...`);
 });
 
-// Macro: add-constrained
-// This is just a copy of add-delegation, but named for user convenience
 var _cmd_addconstrained = ax.create_command(
     "add-constrained",
     "Set/replace delegation SPNs",
@@ -1268,7 +1270,6 @@ _cmd_addconstrained.addArgString("spn", true, "Delegation SPN (replaces all exis
 _cmd_addconstrained.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_addconstrained.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_addconstrained.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_addconstrained.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -1282,7 +1283,8 @@ _cmd_addconstrained.setPreHook(function (id, cmdline, parsed_json, ...parsed_lin
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Setting delegation on ${target}...`);
 });
 
-// Macro: remove-dcsync
+
+
 var _cmd_removedcsync = ax.create_command(
     "remove-dcsync",
     "Remove DCSync ACEs from an object's DACL",
@@ -1295,7 +1297,6 @@ _cmd_removedcsync.addArgFlagInt("-index","ace_index", false, "ACE index to remov
 _cmd_removedcsync.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removedcsync.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removedcsync.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removedcsync.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -1308,13 +1309,14 @@ _cmd_removedcsync.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
     let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
 
-    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int", 
+    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int",
         [target, is_dn, trustee, is_trustee_dn, rights, ace_type, ace_index, ou_path, dc_fqdn, use_ldaps]);
     let bof_path = ax.script_dir() + "_bin/LDAP/remove-ace." + ax.arch(id) + ".o";
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing DCSync from ${target}...`);
 });
 
-// Macro: remove-genericwrite
+
+
 var _cmd_removegenericwrite = ax.create_command(
     "remove-genericwrite",
     "Remove a GenericWrite ACE from an object's DACL",
@@ -1327,7 +1329,6 @@ _cmd_removegenericwrite.addArgFlagInt("-index","ace_index", false, "ACE index to
 _cmd_removegenericwrite.addArgFlagString("-ou", "ou_path", false, "OU path to search");
 _cmd_removegenericwrite.addArgFlagString("-dc", "dc_fqdn", false, "Domain Controller FQDN");
 _cmd_removegenericwrite.addArgBool("--ldaps", "Use LDAPS (port 636)");
-
 _cmd_removegenericwrite.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
     let target = parsed_json["target"];
     let is_dn = identifyInputType(target);
@@ -1340,13 +1341,14 @@ _cmd_removegenericwrite.setPreHook(function (id, cmdline, parsed_json, ...parsed
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
     let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
 
-    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int", 
+    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int",
         [target, is_dn, trustee, is_trustee_dn, rights, ace_type, ace_index, ou_path, dc_fqdn, use_ldaps]);
     let bof_path = ax.script_dir() + "_bin/LDAP/remove-ace." + ax.arch(id) + ".o";
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing GenericWrite from ${target}...`);
 });
 
-// Macro: remove-genericwrite
+
+
 var _cmd_removegenericall= ax.create_command(
     "remove-genericall",
     "Remove a GenericAll ACE from an object's DACL",
@@ -1371,27 +1373,25 @@ _cmd_removegenericall.setPreHook(function (id, cmdline, parsed_json, ...parsed_l
     let dc_fqdn = parsed_json["dc_fqdn"] || "";
     let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
 
-    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int", 
+    let bof_params = ax.bof_pack("cstr,int,cstr,int,cstr,cstr,int,cstr,cstr,int",
         [target, is_dn, trustee, is_trustee_dn, rights, ace_type, ace_index, ou_path, dc_fqdn, use_ldaps]);
     let bof_path = ax.script_dir() + "_bin/LDAP/remove-ace." + ax.arch(id) + ".o";
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `Removing GenericAll from ${target}...`);
 });
 
 
-// Create main command and declare subcommands
-var cmd_ldap = ax.create_command("ldap", "LDAP domain interactions (LDAP-BOF)");
-cmd_ldap.addSubCommands([_cmd_addace, _cmd_addrbcd, _cmd_addspn, _cmd_addattribute, _cmd_adduac]);
-cmd_ldap.addSubCommands([_cmd_addgroupmember, _cmd_adddelegation]);
-cmd_ldap.addSubCommands([_cmd_addcomputer, _cmd_adduser, _cmd_addgroup, _cmd_addou]);
-cmd_ldap.addSubCommands([_cmd_getdomaininfo, _cmd_getcomputers, _cmd_getwritable, _cmd_getobject, _cmd_getgroups, _cmd_getusers, _cmd_getmaq]);
-cmd_ldap.addSubCommands([_cmd_getusergroups, _cmd_getgroupmembers]);
-cmd_ldap.addSubCommands([_cmd_getacl, _cmd_getspn, _cmd_getdelegation, _cmd_getattribute, _cmd_getuac, _cmd_getrbcd]);
-cmd_ldap.addSubCommands([_cmd_setpassword, _cmd_setspn, _cmd_setuac, _cmd_setdelegation, _cmd_setattribute, _cmd_setowner]);
-cmd_ldap.addSubCommands([_cmd_moveobject]);
-cmd_ldap.addSubCommands([_cmd_removegroupmember, _cmd_removeobject, _cmd_removespn, _cmd_removedelegation, _cmd_removeattribute, _cmd_removeuac, _cmd_removeace, _cmd_removerbcd]);
-cmd_ldap.addSubCommands([_cmd_addgenericall, _cmd_addgenericwrite, _cmd_adddcsync, _cmd_addasreproastable, _cmd_addunconstrained, _cmd_addconstrained, ]);
-cmd_ldap.addSubCommands([_cmd_removedcsync, _cmd_removegenericwrite, _cmd_removegenericall]);
 
-// Register the commands for beacon and gopher on Windows
+var cmd_ldap = ax.create_command("ldap", "LDAP domain interactions (LDAP-BOF)");
+cmd_ldap.addSubCommands([ _cmd_getacl, _cmd_getattribute, _cmd_getcomputers, _cmd_getgroups, _cmd_getgroupmembers, _cmd_getdelegation, _cmd_getdomaininfo, _cmd_getmaq,
+                          _cmd_getobject, _cmd_getrbcd, _cmd_getspn, _cmd_getuac,  _cmd_getusers, _cmd_getusergroups, _cmd_getwritable ]);
+cmd_ldap.addSubCommands([_cmd_moveobject]);
+cmd_ldap.addSubCommands([_cmd_addace, _cmd_addattribute, _cmd_addcomputer, _cmd_adddelegation, _cmd_addgroup, _cmd_addgroupmember, _cmd_addou, _cmd_addrbcd,
+                         _cmd_addsidhistory, _cmd_addspn, _cmd_adduser, _cmd_adduac ]);
+cmd_ldap.addSubCommands([_cmd_addgenericall, _cmd_addgenericwrite, _cmd_adddcsync, _cmd_addasreproastable, _cmd_addunconstrained, _cmd_addconstrained, ]);
+cmd_ldap.addSubCommands([_cmd_setattribute, _cmd_setdelegation, _cmd_setowner, _cmd_setspn, _cmd_setpassword, _cmd_setuac ]);
+cmd_ldap.addSubCommands([_cmd_removeace, _cmd_removeattribute, _cmd_removedelegation, _cmd_removedcsync, _cmd_removegenericall, _cmd_removegenericwrite,
+                         _cmd_removegroupmember, _cmd_removeobject, _cmd_removerbcd, _cmd_removespn, _cmd_removeuac, ]);
+
+
 var group_ldap = ax.create_commands_group("LDAP-BOF", [cmd_ldap]);
 ax.register_commands_group(group_ldap, ["beacon", "gopher"], ["windows"], []);
