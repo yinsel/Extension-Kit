@@ -214,3 +214,4 @@ ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
 ax.script_import(ax.script_dir() + "ADCS-BOF/ADCS.axs")
 ax.script_import(ax.script_dir() + "Kerbeus-BOF/kerbeus.axs")
 ax.script_import(ax.script_dir() + "SQL-BOF/SQL.axs")
+ax.script_import(ax.script_dir() + "DCSync-BOF/DCSync.axs")
