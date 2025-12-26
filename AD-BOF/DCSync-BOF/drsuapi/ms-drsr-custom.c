@@ -2,7 +2,7 @@
  * Minimal RPC stub for DCSync  
  * Format strings extracted from ms-drsr_c.c (full MIDL-generated stub)
  * 
- * Key offsets (from working stub):
+ * Key offsets:
  *   IDL_DRSBind: 0
  *   IDL_DRSUnbind: 60  
  *   IDL_DRSReplicaSync: 104
@@ -23,7 +23,7 @@ DECLSPEC_IMPORT CLIENT_CALL_RETURN RPC_VAR_ENTRY RPCRT4$NdrClientCall2(
 extern void* __RPC_USER MIDL_user_allocate(size_t);
 extern void __RPC_USER MIDL_user_free(void*);
 
-// Format string structures (exact sizes from working stub)
+// Format string structures
 typedef struct _ms2Ddrsr_MIDL_TYPE_FORMAT_STRING {
     short Pad;
     unsigned char Format[7867];
@@ -58,7 +58,7 @@ static const MIDL_STUB_DESC drsuapi_StubDesc = {
     1, 0x60000, 0, 0x8000253, 0, 0, 0, 0x1, 0, 0, 0
 };
 
-// Minimal wrapper functions (DCSyncer style with PROVEN offsets)
+// Minimal wrapper functions
 ULONG IDL_DRSBind(
     handle_t rpc_handle,
     UUID *puuidClientDsa,
@@ -108,7 +108,7 @@ ULONG IDL_DRSGetNCChanges(
     ).Simple;
 }
 
-// PROC Format String (extracted from WORKING ms-drsr_c.c)
+// PROC Format String (extracted from ms-drsr_c.c)
 const ms2Ddrsr_MIDL_PROC_FORMAT_STRING ms2Ddrsr__MIDL_ProcFormatString =
     {
         0,

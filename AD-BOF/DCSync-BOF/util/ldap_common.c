@@ -1,6 +1,3 @@
-// ldap_common.c - Shared LDAP utilities for BOF operations
-// This file should be #included in each BOF that uses these functions
-
 #include <windows.h>
 #include "../_include/ldap_common.h"
 

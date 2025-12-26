@@ -1,11 +1,5 @@
 
 
-/* this ALWAYS GENERATED file contains the definitions for the interfaces */
-
-
- /* File created by MIDL compiler version 8.01.0628 */
-/* at Mon Jan 18 21:14:07 2038
- */
 /* Compiler settings for ms-drsr.idl:
     Oicf, W1, Zp8, env=Win64 (32b run), target_arch=AMD64 8.01.0628 
     protocol : dce , ms_ext, c_ext, robust
