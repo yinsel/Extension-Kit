@@ -150,12 +150,12 @@ cmd_readlaps.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let target_dn = parsed_json["target_dn"];
 
     if (!target && !target_dn) {
-        throw new Error("Error: Either -target (sAMAccountName) or -target-dn (Distinguished Name) must be specified");
+        throw new Error("Either -target (sAMAccountName) or -target-dn (Distinguished Name) must be specified");
         return;
     }
 
     if (target && target_dn) {
-        throw new Error("Error: Cannot specify both -target and -target-dn");
+        throw new Error("Cannot specify both -target and -target-dn");
         return;
     }
 
@@ -214,4 +214,5 @@ ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
 ax.script_import(ax.script_dir() + "ADCS-BOF/ADCS.axs")
 ax.script_import(ax.script_dir() + "Kerbeus-BOF/kerbeus.axs")
 ax.script_import(ax.script_dir() + "SQL-BOF/SQL.axs")
+ax.script_import(ax.script_dir() + "LDAP-BOF/LDAP.axs")
 ax.script_import(ax.script_dir() + "DCSync-BOF/DCSync.axs")

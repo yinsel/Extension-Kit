@@ -79,10 +79,7 @@ cmd_sauroneye.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let bof_params = ax.bof_pack("cstr,cstr,cstr,cstr,int,int,int,cstr,cstr,int,int,int,int,int", [cmdline, directories, filetypes, keywords, search_contents, max_filesize, system_dirs, before_date, after_date, check_macro, show_date, wildcard_attempts, wildcard_size, wildcard_backtrack]);
     let bof_path = ax.script_dir() + "_bin/sauroneye." + ax.arch(id) + ".o";
 
-    let cmd = "execute bof";
-    if (ax.agent_info(id, "type") == "kharon") { cmd = "exec-bof"; }
-
-    ax.execute_alias(id, cmdline, `${cmd} ${bof_path} ${bof_params}`, "Task: SauronEye file search");
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "Task: SauronEye file search");
 });
 
 

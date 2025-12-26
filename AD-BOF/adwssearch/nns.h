@@ -12,17 +12,6 @@
 
 #ifdef BOF
 #include "bofdefs.h"
-
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$AcquireCredentialsHandleW(LPWSTR, LPWSTR, ULONG, PLUID, PVOID, PVOID,
-                                                                         PVOID, PCredHandle, PTimeStamp);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$InitializeSecurityContextW(PCtxtHandle, PCtxtHandle, LPWSTR, ULONG,
-                                                                          ULONG, ULONG, PSecBufferDesc, ULONG,
-                                                                          PCtxtHandle, PSecBufferDesc, PULONG,
-                                                                          PTimeStamp);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$QueryContextAttributesW(PCtxtHandle, ULONG, PVOID);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$EncryptMessage(PCtxtHandle, ULONG, PSecBufferDesc, ULONG);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$DecryptMessage(PCtxtHandle, PSecBufferDesc, ULONG, PULONG);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$FreeContextBuffer(PVOID);
 #else
 #include <security.h>
 #include <windows.h>

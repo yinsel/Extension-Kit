@@ -1,4 +1,15 @@
 
+var _cmd_certi_enum = ax.create_command("enum", "Enumerate CAs and templates in the AD", "certi enum");
+_cmd_certi_enum.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+
+    let bof_path = ax.script_dir() + "_bin/ADCS/certi_enum." + ax.arch(id) + ".o";
+    let message = "Task: Enumerate CAs and templates";
+
+    ax.execute_alias( id, cmdline, `execute bof ${bof_path}`, message );
+});
+
+
+
 var _cmd_certi_req = ax.create_command("request", "Request an enrollment certificate", "certi req --ca cert.example.org\\example-CERT-CA --template vulnTemplate --subject CN=Administrator,CN=Users,DC=example,DC=org --altname CN=second_adm,CN=Users,DC=example,DC=org --alturl tag:microsoft.com,2022-09-14:sid:S-1-5-21-3006160104-3291460162-27467737-1123");
 _cmd_certi_req.addArgFlagString( "--ca",      "CA",       true, "The certificate authority to use");
 _cmd_certi_req.addArgFlagString("--template", "template",       "The certificate type to request (else default for User/Machine)", "");

