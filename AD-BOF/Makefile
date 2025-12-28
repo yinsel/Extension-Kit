@@ -25,6 +25,9 @@ bof: clean
 
 	@$(MAKE) --no-print-directory -C LDAP-BOF
 	@mv LDAP-BOF/_bin/LDAP _bin/
+  
+	@$(MAKE) --no-print-directory -C DCSync-BOF
+	@mv DCSync-BOF/_bin/DCSync _bin/
 
 clean:
 	@(rm -rf _bin)
