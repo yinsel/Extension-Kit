@@ -226,10 +226,12 @@ typedef union {
 // RPC & Security Type Definitions
 // ============================================================================
 
+#ifndef __RPCNDR_H__
 typedef union _CLIENT_CALL_RETURN {
     void *Pointer;
     LONG_PTR Simple;
 } CLIENT_CALL_RETURN;
+#endif
 
 typedef struct _SecHandle {
     ULONG_PTR dwLower;
@@ -362,7 +364,7 @@ DSNAME* BuildDSName(const char* dn, const GUID* guid);
 void InitDRSRequest(DRS_MSG_GETCHGREQ* request, const GUID* dcGuid, DSNAME* targetDsname);
 
 // Processing Functions
-void ProcessCredentials(REPLENTINFLIST* objects, const char* samAccountName, const char* dcHostname, const BYTE* sessionKey, DWORD sessionKeyLen);
+void ProcessCredentials(REPLENTINFLIST* objects, const char* samAccountName, const char* distinguishedName, const char* dcHostname, const BYTE* sessionKey, DWORD sessionKeyLen, int onlyNT);
 
 // ============================================================================
 // Shared DECLSPEC Imports

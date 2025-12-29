@@ -1,12 +1,3 @@
-# DCSync BOF Makefile
-#
-# Build Targets:
-#   make
-#   make both		 - Build both single-user and all-users BOFs
-#   make single-user - Build single-user BOF
-#   make all-users	 - Build all-users BOF
-#   make clean	     - Clean build artifacts
-#
 CC = x86_64-w64-mingw32-gcc
 LD = x86_64-w64-mingw32-ld
 STRIP = x86_64-w64-mingw32-strip
@@ -35,24 +26,23 @@ all-users: bof-all
 	@echo '[+] dcsync all'
 
 bof-single:
-	@[ -d "_bin/DCSync" ] || { echo "creating _bin/DCSync" && mkdir -p "_bin/DCSync"; }
-	@$(CC) $(CFLAGS) -c util/rpc-adapter.c -o _bin/DCSync/rpc-adapter-single.o
-	@$(CC) $(CFLAGS) -c $(RPC_STUB) -o _bin/DCSync/ms-drsr_c-single.o
-	@$(CC) $(CFLAGS) -c $(SRC_FILE) -o _bin/DCSync/dcsync-single-temp.o
-	@$(LD) $(LDFLAGS) _bin/DCSync/rpc-adapter-single.o _bin/DCSync/ms-drsr_c-single.o _bin/DCSync/dcsync-single-temp.o -o _bin/DCSync/dcsync-single.x64.o
-	@$(STRIP) --strip-unneeded _bin/DCSync/dcsync-single.x64.o
-	@rm -f _bin/DCSync/rpc-adapter-single.o _bin/DCSync/ms-drsr_c-single.o _bin/DCSync/dcsync-single-temp.o
+	@[ -d "_bin" ] || { mkdir -p "_bin"; }
+	@$(CC) $(CFLAGS) -c util/rpc-adapter.c -o _bin/rpc-adapter-single.o
+	@$(CC) $(CFLAGS) -c $(RPC_STUB) -o _bin/ms-drsr_c-single.o
+	@$(CC) $(CFLAGS) -c $(SRC_FILE) -o _bin/dcsync-single-temp.o
+	@$(LD) $(LDFLAGS) _bin/rpc-adapter-single.o _bin/ms-drsr_c-single.o _bin/dcsync-single-temp.o -o _bin/dcsync-single.x64.o
+	@$(STRIP) --strip-unneeded _bin/dcsync-single.x64.o
+	@rm -f _bin/rpc-adapter-single.o _bin/ms-drsr_c-single.o _bin/dcsync-single-temp.o
 
 bof-all:
-	@[ -d "_bin/DCSync" ] || { echo "creating _bin/DCSync" && mkdir -p "_bin/DCSync"; }
-	@$(CC) $(CFLAGS) -c util/rpc-adapter.c -o _bin/DCSync/rpc-adapter-all.o
-	@$(CC) $(CFLAGS) -c $(RPC_STUB) -o _bin/DCSync/ms-drsr_c-all.o
-	@$(CC) $(CFLAGS) -c $(SRC_FILE) -o _bin/DCSync/dcsync-all-temp.o
-	@$(LD) $(LDFLAGS) _bin/DCSync/rpc-adapter-all.o _bin/DCSync/ms-drsr_c-all.o _bin/DCSync/dcsync-all-temp.o -o _bin/DCSync/dcsync-all.x64.o
-	@$(STRIP) --strip-unneeded _bin/DCSync/dcsync-all.x64.o
-	@rm -f _bin/DCSync/rpc-adapter-all.o _bin/DCSync/ms-drsr_c-all.o _bin/DCSync/dcsync-all-temp.o
+	@[ -d "_bin" ] || { mkdir -p "_bin"; }
+	@$(CC) $(CFLAGS) -c util/rpc-adapter.c -o _bin/rpc-adapter-all.o
+	@$(CC) $(CFLAGS) -c $(RPC_STUB) -o _bin/ms-drsr_c-all.o
+	@$(CC) $(CFLAGS) -c $(SRC_FILE) -o _bin/dcsync-all-temp.o
+	@$(LD) $(LDFLAGS) _bin/rpc-adapter-all.o _bin/ms-drsr_c-all.o _bin/dcsync-all-temp.o -o _bin/dcsync-all.x64.o
+	@$(STRIP) --strip-unneeded _bin/dcsync-all.x64.o
+	@rm -f _bin/rpc-adapter-all.o _bin/ms-drsr_c-all.o _bin/dcsync-all-temp.o
 
 clean:
-	@rm -rf _bin/DCSync
+	@rm -rf _bin
 
-.PHONY: all both single-user all-users bof-single bof-all clean

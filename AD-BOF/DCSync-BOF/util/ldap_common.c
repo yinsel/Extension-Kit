@@ -168,12 +168,6 @@ LDAP* InitializeLDAPConnection(const char* dcAddress, BOOL useLdaps, char** outD
     return pLdapConnection;
 }
 
-// Structure to hold domain controller context information
-typedef struct _DC_CONTEXT {
-    char* defaultNamingContext;
-    GUID dcObjectGuid;
-} DC_CONTEXT;
-
 // Get DC context (defaultNamingContext and DC GUID)
 // Returns allocated DC_CONTEXT structure, caller must free defaultNamingContext and struct
 DC_CONTEXT* GetDCContext(LDAP* ld, const char* dcHostname) {
@@ -321,13 +315,6 @@ void FreeDCContext(DC_CONTEXT* context) {
     if (context->defaultNamingContext) MSVCRT$free(context->defaultNamingContext);
     MSVCRT$free(context);
 }
-
-// Structure to hold user information from LDAP query
-typedef struct _USER_LDAP_INFO {
-    char* distinguishedName;
-    char* samAccountName;
-    GUID objectGuid;
-} USER_LDAP_INFO;
 
 // Get all user info (DN, sAMAccountName, GUID) in a single LDAP query
 // Returns allocated USER_LDAP_INFO structure, caller must free strings and struct

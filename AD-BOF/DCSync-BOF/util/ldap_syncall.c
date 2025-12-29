@@ -23,14 +23,15 @@ typedef struct _USER_INFO {
 // Enumerate all user objects in the domain
 // Returns array of USER_INFO structures and sets userCount
 // Caller must free the array and strings within each structure
-USER_INFO* EnumerateAllUsers(LDAP* ld, const char* searchBase, int* userCount) {
+USER_INFO* EnumerateAllUsers(LDAP* ld, const char* searchBase, int* userCount, int onlyUsers) {
     if (!ld || !searchBase || !userCount) return NULL;
     
     *userCount = 0;
     
     LDAPMessage* searchResult = NULL;
     LDAPMessage* entry = NULL;
-    char* filter = "(|(objectClass=user))";
+    // If onlyUsers=1, filter to SAM_USER_OBJECT (0x30000000) and SAM_TRUST_ACCOUNT (0x30000002) only
+    char* filter = onlyUsers ? "(&(objectClass=user)(|(sAMAccountType=805306368)(sAMAccountType=805306370)))" : "(objectClass=user)";
     char* attrs[] = { "distinguishedName", "sAMAccountName", "objectGUID", NULL };
     
     // Search for all user objects
