@@ -4,6 +4,14 @@ Extension Kit for [AdaptixC2](https://github.com/Adaptix-Framework/AdaptixC2)
 
 # Installation
 
+```
+# Ubuntu/Kali
+apt install g++-mingw-w64-x86-64-posix  gcc-mingw-w64-x86-64-posix  mingw-w64-tools
+
+# Arch
+pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-gcc-libs
+```
+
 Building modules via make
 
 ```bash
