@@ -106,11 +106,11 @@ cmd_nbtscan.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
         }
     }
 
-    let bof_params = ax.bof_pack("cstr,int,int,int,int,cstr,int,cstr", [ target, verbose, quiet, etc_hosts, lmhosts, sep, timeout_ms ]);
+    let bof_params = ax.bof_pack("cstr,int,int,int,int,cstr,int", [ target, verbose, quiet, etc_hosts, lmhosts, sep, timeout_ms ]);
     let bof_path = ax.script_dir() + "_bin/nbtscan." + ax.arch(id) + ".o";
     let message = "NBTscan: " + target;
 
-    if(no_targets == 0) {
+    if(no_targets == 1) {
         ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
     }
     else {
