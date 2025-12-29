@@ -29,29 +29,29 @@ BOOL DecryptDES(const BYTE *key, const BYTE *data, BYTE *output)
     BCRYPT_KEY_HANDLE hKey = NULL;
     BOOL result = FALSE;
 
-    NTSTATUS status = bcrypt$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_DES_ALGORITHM, NULL, 0);
+    NTSTATUS status = BCRYPT$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_DES_ALGORITHM, NULL, 0);
     if (!BCRYPT_SUCCESS(status))
         return FALSE;
 
-    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_ECB, sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
+    status = BCRYPT$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_ECB, sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
     if (!BCRYPT_SUCCESS(status)) {
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
-    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, 8, 0);
+    status = BCRYPT$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, 8, 0);
     if (!BCRYPT_SUCCESS(status)) {
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     DWORD cbResult = 0;
-    status = bcrypt$BCryptDecrypt(hKey, (PUCHAR)data, 8, NULL, NULL, 0, output, 8, &cbResult, 0);
+    status = BCRYPT$BCryptDecrypt(hKey, (PUCHAR)data, 8, NULL, NULL, 0, output, 8, &cbResult, 0);
 
     result = BCRYPT_SUCCESS(status);
 
-    bcrypt$BCryptDestroyKey(hKey);
-    bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+    BCRYPT$BCryptDestroyKey(hKey);
+    BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
     return result;
 }
 
@@ -64,25 +64,25 @@ BOOL DecryptAES_CBC( const BYTE *key, DWORD keyLen,const BYTE *iv,DWORD ivLen, c
     BOOL result = FALSE;
 
     // Open AES algorithm provider
-    NTSTATUS status = bcrypt$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0);
+    NTSTATUS status = BCRYPT$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open AES algorithm provider\n");
         return FALSE;
     }
 
     // Set chaining mode to CBC
-    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
+    status = BCRYPT$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to set chaining mode\n");
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     // Generate symmetric key
-    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, keyLen, 0);
+    status = BCRYPT$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, keyLen, 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to generate symmetric key\n");
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
@@ -90,26 +90,26 @@ BOOL DecryptAES_CBC( const BYTE *key, DWORD keyLen,const BYTE *iv,DWORD ivLen, c
     *decryptedOut = (BYTE *)AllocateMemory(encryptedLen);
     if (!*decryptedOut) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to allocate memory for decrypted data\n");
-        bcrypt$BCryptDestroyKey(hKey);
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptDestroyKey(hKey);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     // Decrypt
     DWORD decryptedSize = 0;
-    status = bcrypt$BCryptDecrypt(hKey, (PUCHAR)encrypted, encryptedLen, NULL, (PUCHAR)iv, ivLen, *decryptedOut, encryptedLen, &decryptedSize, 0);
+    status = BCRYPT$BCryptDecrypt(hKey, (PUCHAR)encrypted, encryptedLen, NULL, (PUCHAR)iv, ivLen, *decryptedOut, encryptedLen, &decryptedSize, 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Decryption failed\n");
         FreeMemory(*decryptedOut);
         *decryptedOut = NULL;
-        bcrypt$BCryptDestroyKey(hKey);
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptDestroyKey(hKey);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     *decryptedOutLen = decryptedSize;
-    bcrypt$BCryptDestroyKey(hKey);
-    bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+    BCRYPT$BCryptDestroyKey(hKey);
+    BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
     return TRUE;
 }
 

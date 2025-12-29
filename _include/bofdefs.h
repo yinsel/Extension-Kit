@@ -720,6 +720,11 @@ WINADVAPI LONG    WINAPI ADVAPI32$RegSaveKeyA(HKEY hKey, LPCSTR lpFile, LPSECURI
 WINADVAPI LONG    WINAPI ADVAPI32$RegDeleteTreeA(HKEY base, LPCSTR subkey);
 WINADVAPI WINBOOL WINAPI ADVAPI32$ConvertStringSecurityDescriptorToSecurityDescriptorA(LPCSTR StringSecurityDescriptor,DWORD StringSDRevision,PSECURITY_DESCRIPTOR *SecurityDescriptor,PULONG SecurityDescriptorSize);
 WINADVAPI BOOLEAN WINAPI ADVAPI32$SystemFunction036(PVOID RandomBuffer, ULONG RandomBufferLength);
+WINADVAPI LSTATUS WINAPI ADVAPI32$RegOpenKeyW(HKEY hKey, LPCWSTR lpSubKey, PHKEY phkResult);
+WINADVAPI LONG    WINAPI ADVAPI32$RegQueryInfoKeyW(HKEY hKey, LPWSTR lpClass, LPDWORD lpcchClass, LPDWORD lpReserved, LPDWORD lpcSubKeys, LPDWORD lpcMaxSubKeyLen, LPDWORD lpcMaxClassLen, LPDWORD lpcValues, LPDWORD lpcMaxValueNameLen, LPDWORD lpcMaxValueLen, LPDWORD lpcbSecurityDescriptor, PFILETIME lpftLastWriteTime);
+WINADVAPI LSTATUS WINAPI ADVAPI32$RegLoadKeyA(HKEY, LPCSTR, LPCSTR);
+WINADVAPI LSTATUS WINAPI ADVAPI32$RegUnLoadKeyA(HKEY hKey, LPCSTR lpSubKey);
+
 
 //NTDLL
 WINBASEAPI NTSTATUS NTAPI NTDLL$NtCreateFile(PHANDLE FileHandle,ACCESS_MASK DesiredAccess,POBJECT_ATTRIBUTES ObjectAttributes,PIO_STATUS_BLOCK IoStatusBlock,PLARGE_INTEGER AllocationSize,ULONG FileAttributes,ULONG ShareAccess,ULONG CreateDisposition,ULONG CreateOptions,PVOID EaBuffer,ULONG EaLength);

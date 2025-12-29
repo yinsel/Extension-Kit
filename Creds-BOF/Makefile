@@ -10,6 +10,7 @@ bof: clean
 	@($(CC64) $(CFLAGS) autologon/autologon.c -o _bin/autologon.x64.o && $(STRIP64) _bin/autologon.x64.o)  && echo '[+] autologon' || echo '[!] autologon'
 	@($(CC64) $(CFLAGS) credman/credentialmanager.c -o _bin/credman.x64.o && $(STRIP64) _bin/credman.x64.o)  && echo '[+] credman' || echo '[!] credman'
 	@($(CC64) $(CFLAGS) cookie-monster/cookie-monster-bof.c -o _bin/cookie-monster-bof.x64.o && $(STRIP64) _bin/cookie-monster-bof.x64.o)  && echo '[+] cookie-monster-bof' || echo '[!] cookie-monster-bof'
+	@($(CC64) $(CFLAGS) hashdump/hashdump.c -o _bin/hashdump.x64.o && $(STRIP64) _bin/hashdump.x64.o)  && echo '[+] hashdump' || echo '[!] hashdump'
 	@($(CC64) $(CFLAGS) get-netntlm/get-netntlm.c -o _bin/get-netntlm.x64.o && $(STRIP64) _bin/get-netntlm.x64.o)  && echo '[+] get-netntlm' || echo '[!] get-netntlm'
 	@($(CC64) $(CFLAGS) -masm=intel UnderlayCopy/entry.c -o _bin/underlaycopy.x64.o && $(STRIP64) _bin/underlaycopy.x64.o)  && echo '[+] underlaycopy' || echo '[!] underlaycopy'
 
