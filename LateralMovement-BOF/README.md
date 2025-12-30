@@ -75,6 +75,18 @@ Choose services that:
 
 
 
+## runas
+
+Runas is a BOF to run specific processes with different permissions than the user's current logon provides using explicit credentials.
+
+```Shell
+runas <username> <password> <domain> <command> [-l logon_type] [-t timeout] [-o] [-b]
+```
+
+* `-o` - With output capture
+* `-b` - Bypass UAC (use with admin credentials)
+
+
 
 ## token make
 

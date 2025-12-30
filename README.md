@@ -34,7 +34,13 @@ A BOFs that contains common enumeration and attack methods for Windows Active Di
 
 ![](./AD-BOF/_img/01.png)
 
+![](./AD-BOF/_img/02.png)
 
+![](./AD-BOF/_img/03.png)
+
+![](./AD-BOF/_img/04.png)
+
+![](./AD-BOF/_img/05.png)
 
 ## Creds-BOF
 

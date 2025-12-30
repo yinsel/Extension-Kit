@@ -19,11 +19,12 @@ VOID go(
 	LPCWSTR lpswzSubject = NULL;
 	LPCWSTR lpswzAltName = NULL;
 	LPCWSTR lpswzAltUrl = NULL;
-	LPCWSTR lpPrivKey = NULL;
+	LPCWSTR lpswzPfxPassword = NULL;
 	BOOL bInstall = FALSE;
 	BOOL bMachine = FALSE;
 	BOOL addAppPolicy = FALSE;
 	BOOL dns = FALSE;
+	BOOL bPem = FALSE;
     
 	if (!bofstart())
 	{
@@ -36,10 +37,12 @@ VOID go(
 	lpswzSubject = (LPCWSTR)BeaconDataExtract(&parser, NULL);
 	lpswzAltName = (LPCWSTR)BeaconDataExtract(&parser, NULL);
 	lpswzAltUrl = (LPCWSTR)BeaconDataExtract(&parser, NULL);
+	lpswzPfxPassword = (LPCWSTR)BeaconDataExtract(&parser, NULL);
 	bInstall = (BOOL)BeaconDataShort(&parser);
 	bMachine = (BOOL)BeaconDataShort(&parser);
 	addAppPolicy = (BOOL)BeaconDataShort(&parser);
 	dns = (BOOL)BeaconDataShort(&parser);
+	bPem = (BOOL)BeaconDataShort(&parser);
 	
 	internal_printf("\nRequesting a %S certificate from %S for the current user\n", lpswzTemplate, lpswzCA);
 
@@ -49,18 +52,20 @@ VOID go(
 		lpswzSubject,
 		lpswzAltName,
 		lpswzAltUrl,
+		lpswzPfxPassword,
 		bInstall,
 		bMachine,
 		addAppPolicy,
-		dns
+		dns,
+		bPem
 	);
 	if (S_OK != hr)
 	{
-		BeaconPrintf(CALLBACK_ERROR, "adcs_request failed: 0x%08lx\n", hr);
+		BeaconPrintf(CALLBACK_ERROR, "Failed: 0x%08lx\n", hr);
 		goto fail;
 	}
 
-	internal_printf("\nadcs_request SUCCESS.\n");
+	internal_printf("\n--- SUCCESS ---\n");
 
 fail:
 	printoutput(TRUE);
@@ -74,10 +79,12 @@ fail:
 #define TEST_ALTNAME L""
 #define TEST_ALTURL L""
 //#define TEST_ALTURL L"tag:microsoft.com,2022-09-14:sid:S-1-5-21-712980493-1503034693-3565059331-1105"
+#define TEST_PFX_PASSWORD L""
 #define TEST_INSTALL FALSE
 #define TEST_MACHINE FALSE
 #define TEST_APPPOLICY FALSE
 #define TEST_DNS FALSE
+#define TEST_PEM FALSE
 int main(int argc, char ** argv)
 {
 	HRESULT hr = S_OK;
@@ -86,10 +93,12 @@ int main(int argc, char ** argv)
 	LPCWSTR lpswzSubject = TEST_SUBJECT;
 	LPCWSTR lpswzAltName = TEST_ALTNAME;
 	LPCWSTR lpswzAltUrl = TEST_ALTURL;
+	LPCWSTR lpswzPfxPassword = TEST_PFX_PASSWORD;
 	BOOL bInstall = TEST_INSTALL;
 	BOOL bMachine = TEST_MACHINE;
 	BOOL bAppPolicy = TEST_APPPOLICY;
 	BOOL bDNS = TEST_DNS;
+	BOOL bPem = TEST_PEM;
 
 	internal_printf("\nRequesting a %S certificate from %S for the current user\n", lpswzTemplate, lpswzCA);
 
@@ -99,18 +108,20 @@ int main(int argc, char ** argv)
 		lpswzSubject,
 		lpswzAltName,
 		lpswzAltUrl,
+		lpswzPfxPassword,
 		bInstall,
 		bMachine,
 		bAppPolicy,
-		bDNS
+		bDNS,
+		bPem
 	);
 	if (S_OK != hr)
 	{
-		BeaconPrintf(CALLBACK_ERROR, "adcs_request failed: 0x%08lx\n", hr);
+		BeaconPrintf(CALLBACK_ERROR, "Failed: 0x%08lx\n", hr);
 		goto fail;
 	}
 
-	internal_printf("\nadcs_request SUCCESS.\n");
+	internal_printf("\n--- SUCCESS ---\n");
 
 fail:
 	return hr;

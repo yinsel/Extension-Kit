@@ -13,6 +13,7 @@ bof: clean
 	@($(CC64) $(CFLAGS) scshell/scshell.c -o _bin/scshell.x64.o && $(STRIP64) _bin/scshell.x64.o) && echo '[+] scshell' || echo '[!] scshell'
 	@($(CC64) $(CFLAGS) token_make/token_make.c -o _bin/token_make.x64.o && $(STRIP64) _bin/token_make.x64.o) && echo '[+] token_make' || echo '[!] token_make'
 	@($(CC64) $(CFLAGS) token_steal/token_steal.c -o _bin/token_steal.x64.o && $(STRIP64) _bin/token_steal.x64.o) && echo '[+] token_steal' || echo '[!] token_steal'
+	@($(CC64) $(CFLAGS) runas/runas.c -o _bin/runas.x64.o && $(STRIP64) _bin/token_steal.x64.o) && echo '[+] runas' || echo '[!] runas'
 	@($(CPP64) -I ../_include -w -Os -s -c -masm=intel -nostdlib -Wno-nonnull -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti winrm-client/winrm.cpp -o _bin/winrm.x64.o && $(STRIP64) _bin/winrm.x64.o) && echo '[+] winrm' || echo '[!] winrm'
 
 clean:
