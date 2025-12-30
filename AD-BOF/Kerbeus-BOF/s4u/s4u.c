@@ -1,9 +1,9 @@
-#include "../_include/asn_encode.c"
-#include "../_include/asn_decode.c"
-#include "../_include/crypt_b64.c"
-#include "../_include/crypt_checksum.c"
-#include "../_include/crypt_dec.c"
-#include "../_include/connection.c"
+#include "_include/asn_encode.c"
+#include "_include/asn_decode.c"
+#include "_include/crypt_b64.c"
+#include "_include/crypt_checksum.c"
+#include "_include/crypt_dec.c"
+#include "_include/connection.c"
 
 void DisplayTicket( KRB_CRED cred, int indentLevel ) {
     DateTime starttime = cred.enc_part.ticket_info[0].starttime;
@@ -381,7 +381,7 @@ BOOL New_PA_DATA(char* crealm, char* cname, Ticket providedTicket, EncryptionKey
     ap_req->authenticator.authenticator_vno = 5;
     ap_req->authenticator.ctime = dt;
     ap_req->authenticator.cname.name_count = 1;
-    ap_req->authenticator.cname.name_count = PRINCIPAL_NT_PRINCIPAL;
+    ap_req->authenticator.cname.name_type = PRINCIPAL_NT_PRINCIPAL;
     ap_req->authenticator.cname.name_string = MemAlloc(sizeof(void*) * ap_req->authenticator.cname.name_count);
     if (!ap_req->authenticator.cname.name_string) {
         PRINT_OUT("[x] Failed alloc memory");
@@ -616,11 +616,12 @@ BOOL NewTGS_REQ(char* userName, char* domain, char* sname, Ticket providedTicket
             return TRUE;
         }
         KERNEL32$GetComputerNameA(hostname, &size);
-        int numSpaces = 8 - (size % 8);
+        int netbiosSize = 16;
+        int numSpaces = (size < netbiosSize) ? (netbiosSize - size) : 0;
         int i = 0;
         for (; i < numSpaces; i++)
             hostname[size + i] = ' ';
-        hostname[size + i] = 0;
+        hostname[size + numSpaces] = 0;
 
         char* targetHostName;
         if (partsCount > 1) {

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <tchar.h>
 #include "bofdefs.h"
+#include "beacon.h"
 #define CALLBACK_ERROR       0x0d
 
 #pragma pack(push, 1)
@@ -92,18 +93,16 @@ void freeLfList(struct LfList *list);
 void freeLiList(struct LiList *list);
 void freeLhList(struct LhList *list);
 
-DECLSPEC_IMPORT void   BeaconPrintf(int type, char * fmt, ...);
-
 LPVOID AllocateMemory(SIZE_T size)
 {
-    return Kernel32$VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    return KERNEL32$VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
 
 void FreeMemory(LPVOID ptr)
 {
     if (ptr)
     {
-        Kernel32$VirtualFree(ptr, 0, MEM_RELEASE);
+        KERNEL32$VirtualFree(ptr, 0, MEM_RELEASE);
     }
 }
 
@@ -122,7 +121,7 @@ LPVOID ReallocateMemory(LPVOID ptr, SIZE_T size)
 
     // Get the size of the old allocation
     MEMORY_BASIC_INFORMATION mbi;
-    if (Kernel32$VirtualQuery(ptr, &mbi, sizeof(mbi)))
+    if (KERNEL32$VirtualQuery(ptr, &mbi, sizeof(mbi)))
     {
         SIZE_T oldSize = mbi.RegionSize;
         SIZE_T copySize = (oldSize < size) ? oldSize : size;

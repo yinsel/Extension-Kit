@@ -1,8 +1,8 @@
-#include "../_include/asn_decode.c"
-#include "../_include/asn_encode.c"
-#include "../_include/crypt_b64.c"
-#include "../_include/crypt_dec.c"
-#include "../_include/connection.c"
+#include "_include/asn_decode.c"
+#include "_include/asn_encode.c"
+#include "_include/crypt_b64.c"
+#include "_include/crypt_dec.c"
+#include "_include/connection.c"
 
 void ResetUserPassword(byte* ticket, char* newPassword, char* dc, char* targetUser, char* targetDomain) {
     int bytesSize = 0;
@@ -36,7 +36,7 @@ void ResetUserPassword(byte* ticket, char* newPassword, char* dc, char* targetUs
     if (my_copybuf(&(ap_req.authenticator.crealm), userDomain, my_strlen(userDomain) + 1)) return;
 
     ap_req.authenticator.cname.name_count = 1;
-    ap_req.authenticator.cname.name_count = PRINCIPAL_NT_PRINCIPAL;
+    ap_req.authenticator.cname.name_type = PRINCIPAL_NT_PRINCIPAL;
     ap_req.authenticator.cname.name_string = MemAlloc(sizeof(void*) * ap_req.authenticator.cname.name_count);
     if (!ap_req.authenticator.cname.name_string) {
         PRINT_OUT("[x] Failed alloc memory");

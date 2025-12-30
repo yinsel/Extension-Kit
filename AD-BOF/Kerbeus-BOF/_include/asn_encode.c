@@ -36,6 +36,17 @@ DateTime GetLocalTimeAdd(uint add) {
 DateTime GetGmTimeAdd(UINT add) {
     SYSTEMTIME systemTime;
     KERNEL32$GetSystemTime(&systemTime);
+    if (add > 0) {
+        FILETIME fileTime;
+        KERNEL32$SystemTimeToFileTime(&systemTime, &fileTime);
+        ULARGE_INTEGER uli;
+        uli.LowPart = fileTime.dwLowDateTime;
+        uli.HighPart = fileTime.dwHighDateTime;
+        uli.QuadPart += ((ULONGLONG)add) * 10000000ULL;
+        fileTime.dwLowDateTime = uli.LowPart;
+        fileTime.dwHighDateTime = uli.HighPart;
+        KERNEL32$FileTimeToSystemTime(&fileTime, &systemTime);
+    }
     DateTime dt = { 0 };
     dt.year = systemTime.wYear;
     dt.month = systemTime.wMonth;

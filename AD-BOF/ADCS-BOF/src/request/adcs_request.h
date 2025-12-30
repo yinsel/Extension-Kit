@@ -10,4 +10,4 @@ HRESULT _adcs_request_CreateCertRequest(BOOL bMachine, IX509PrivateKey * pPrivat
 HRESULT _adcs_request_CreateEnrollment(IX509CertificateRequestPkcs10V3 * pCertificateRequestPkcs10V3, IX509Enrollment ** lppEnrollment);
 HRESULT _adcs_request_SubmitEnrollment(IX509Enrollment * pEnrollment, BSTR bstrCA, BSTR * lpbstrCertificate);
 
-HRESULT adcs_request( LPCWSTR lpswzCA, LPCWSTR lpswzTemplate, LPCWSTR lpswzSubject, LPCWSTR lpswzAltName, LPCWSTR lpswzAltUrl, BOOL bInstall, BOOL bMachine, BOOL addAppPolicy, BOOL dns );
+HRESULT adcs_request( LPCWSTR lpswzCA, LPCWSTR lpswzTemplate, LPCWSTR lpswzSubject, LPCWSTR lpswzAltName, LPCWSTR lpswzAltUrl, LPCWSTR lpswzPfxPassword, BOOL bInstall, BOOL bMachine, BOOL addAppPolicy, BOOL dns, BOOL bPem );

@@ -3,6 +3,7 @@
 #include <ocidl.h>
 #include <lm.h>
 #include "bofdefs.h"
+#include "beacon.h"
 
 #define UNLEN 256
 

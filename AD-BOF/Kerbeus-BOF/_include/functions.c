@@ -223,17 +223,23 @@ void PRINT_OUT(char* format, ...) {
         return;
 
     if (bufSize + currentOutSize < globalOutSize) {
-        MSVCRT$vsnprintf(globalOut + currentOutSize, bufSize, format, args);
+        va_start(args, format);
+        MSVCRT$vsnprintf(globalOut + currentOutSize, bufSize + 1, format, args);
+        va_end(args);
         currentOutSize += bufSize;
     }
     else {
         SEND_OUT(FALSE);
         if (bufSize <= globalOutSize) {
-            MSVCRT$vsnprintf(globalOut + currentOutSize, bufSize, format, args);
+            va_start(args, format);
+            MSVCRT$vsnprintf(globalOut + currentOutSize, bufSize + 1, format, args);
+            va_end(args);
             currentOutSize += bufSize;
         } else {
-            char* tmpOut = MemAlloc( bufSize );
-            MSVCRT$vsnprintf(tmpOut, bufSize, format, args);
+            char* tmpOut = MemAlloc( bufSize + 1 );
+            va_start(args, format);
+            MSVCRT$vsnprintf(tmpOut, bufSize + 1, format, args);
+            va_end(args);
             BeaconOutput(CALLBACK_OUTPUT, tmpOut, bufSize);
 //            MemFree(tmpOut);
         }
@@ -257,8 +263,8 @@ BOOL LoadFunc() {
 
     CDLocateCSystem = GetProcAddress(crypt, "CDLocateCSystem");
     if (!CDLocateCSystem) goto failed;
-    
-    
+
+
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
     if (!ntdll) goto failed;
@@ -311,7 +317,7 @@ BOOL LoadFunc() {
     if (!secur32)
         secur32 = LoadLibraryA("SECUR32");
     if (!secur32) {
-        PRINT_OUT("[x] Failed to load WS2_32 module\n");
+        PRINT_OUT("[x] Failed to load SECUR32 module\n");
         goto failed;
     }
 

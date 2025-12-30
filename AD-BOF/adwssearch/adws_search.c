@@ -164,21 +164,6 @@ void OutputFlush(OutputBuffer *out, DWORD objIdx)
 }
 #endif
 
-#ifdef BOF
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$AcquireCredentialsHandleW(LPWSTR, LPWSTR, ULONG, PLUID, PVOID, PVOID, PVOID, PCredHandle, PTimeStamp);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$InitializeSecurityContextW(PCredHandle, PCtxtHandle, LPWSTR, ULONG, ULONG, ULONG, PSecBufferDesc, ULONG, PCtxtHandle, PSecBufferDesc, PULONG, PTimeStamp);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$QueryContextAttributesW(PCtxtHandle, ULONG, PVOID);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$EncryptMessage(PCtxtHandle, ULONG, PSecBufferDesc, ULONG);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$DecryptMessage(PCtxtHandle, PSecBufferDesc, ULONG, PULONG);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$FreeCredentialsHandle(PCredHandle);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$DeleteSecurityContext(PCtxtHandle);
-DECLSPEC_IMPORT SECURITY_STATUS WINAPI SECUR32$FreeContextBuffer(PVOID);
-
-DECLSPEC_IMPORT RPC_STATUS WINAPI RPCRT4$UuidCreate(UUID *);
-
-DECLSPEC_IMPORT BOOL WINAPI KERNEL32$IsBadWritePtr(LPVOID lp, UINT_PTR ucb);
-#endif
-
 void Phase5_FullEnumeration(const char *target, const char *ldapFilter, const char *attrFilter);
 BOOL ConnectToADWS(SOCKET *pSocket, const char *target);
 

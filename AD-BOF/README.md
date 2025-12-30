@@ -4,6 +4,13 @@ A BOFs that contains common enumeration and attack methods for Windows Active Di
 
 ![](_img/01.png)
 
+![](_img/02.png)
+
+![](_img/03.png)
+
+![](_img/04.png)
+
+![](_img/05.png)
 
 
 ## adwssearch
@@ -44,6 +51,18 @@ A library of beacon object files to interact with ADCS servers and certificates.
 
 
 
+## DCSync BOF
+
+A BOF implementation of the DCSync attack for extracting credential material from Active Directory domain controllers. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/DCSync-BOF/README.md)
+
+
+
+## kerbeus
+
+Beacon Object Files for Kerberos abuse. This is an implementation of some important features of the [Rubeus](https://github.com/GhostPack/Rubeus) project, written in C. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/Kerbeus-BOF/README.md)
+
+
+
 ## ldapsearch
 
 Execute LDAP searches (NOTE: specify *,ntsecuritydescriptor as attribute parameter if you want all attributes + base64 encoded ACL of the objects, this can then be resolved using BOFHound. Could possibly break pagination, although everything seemed fine during testing.)
@@ -64,9 +83,13 @@ ldapq computers
 
 
 
-## kerbeus
+## readlaps
 
-Beacon Object Files for Kerberos abuse. This is an implementation of some important features of the [Rubeus](https://github.com/GhostPack/Rubeus) project, written in C. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/Kerbeus-BOF/README.md)
+Read LAPS password for a computer
+
+```Shell
+readlaps [-dc dc] [-dn dn] [-target target] [-target-dn target_dn]
+```
 
 
 
@@ -81,3 +104,4 @@ A library of Beacon Object Files to interact with remote SQL servers and data. T
 * SQL-BOF - https://github.com/Tw1sm/SQL-BOF
 * sekken-enum - https://github.com/Nomad0x7/sekken-enum
 * BadTakeover-BOF - https://github.com/logangoins/BadTakeover-BOF
+* DCSync-BOF - https://github.com/P0142/DCSync-Bof
