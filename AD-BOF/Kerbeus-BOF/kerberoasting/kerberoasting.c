@@ -85,7 +85,7 @@ BOOL New_PA_DATA(char* crealm, char* cname, Ticket providedTicket, EncryptionKey
     ap_req->authenticator.authenticator_vno = 5;
     ap_req->authenticator.ctime = dt;
     ap_req->authenticator.cname.name_count = 1;
-    ap_req->authenticator.cname.name_count = PRINCIPAL_NT_PRINCIPAL;
+    ap_req->authenticator.cname.name_type = PRINCIPAL_NT_PRINCIPAL;
     ap_req->authenticator.cname.name_string = MemAlloc(sizeof(void*) * ap_req->authenticator.cname.name_count);
     if (!ap_req->authenticator.cname.name_string) {
         PRINT_OUT("[x] Failed alloc memory");

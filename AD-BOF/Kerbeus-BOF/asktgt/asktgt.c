@@ -411,11 +411,12 @@ BOOL NewAS_REQ( char* pcUsername, char* pcDomain, EncryptionKey encKey, BOOL ops
             return TRUE;
         }
         KERNEL32$GetComputerNameA(hostname, &size);
-        int numSpaces = 8 - (size % 8);
+        int netbiosSize = 16;
+        int numSpaces = (size < netbiosSize) ? (netbiosSize - size) : 0;
         int i = 0;
         for (; i < numSpaces; i++)
             hostname[size + i] = ' ';
-        hostname[size + i] = 0;
+        hostname[size + numSpaces] = 0;
 
         as_req->req_body.addresses[0].addr_type = ADDRTYPE_NETBIOS;
         as_req->req_body.addresses[0].addr_string = hostname;
