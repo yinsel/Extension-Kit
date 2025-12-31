@@ -1,7 +1,7 @@
-#include "_include/functions.c"
-#include "_include/asn_decode.c"
-#include "_include/asn_encode.c"
-#include "_include/connection.c"
+#include "../_include/functions.c"
+#include "../_include/asn_decode.c"
+#include "../_include/asn_encode.c"
+#include "../_include/connection.c"
 
 BOOL NewAS_REP(AsnElt asn_AS_REP, AS_REP* as_rep) {
     // AS-REP::= [APPLICATION 11] KDC-REQ

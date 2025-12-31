@@ -31,7 +31,7 @@ except Exception as e:
 # Extract relevant hashes
 hashes = set()
 
-with open(CSV_FILE, 'r') as file:
+with open(CSV_FILE, 'r', encoding="utf-8") as file:
     reader = csv.DictReader(file)
     for row in reader:
         # Check if 'Category' matches

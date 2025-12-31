@@ -1,8 +1,8 @@
-#include "_include/asn_encode.c"
-#include "_include/asn_decode.c"
-#include "_include/crypt_b64.c"
-#include "_include/crypt_dec.c"
-#include "_include/connection.c"
+#include "../_include/asn_encode.c"
+#include "../_include/asn_decode.c"
+#include "../_include/crypt_b64.c"
+#include "../_include/crypt_dec.c"
+#include "../_include/connection.c"
 
 void DisplayTGShash(KRB_CRED cred, BOOL kerberoastDisplay, char* kerberoastUser, char* kerberoastDomain) {
     int encType = cred.tickets[0].enc_part.etype;
