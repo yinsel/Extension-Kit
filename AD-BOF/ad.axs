@@ -336,8 +336,35 @@ cmd_readlaps.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var group_exec = ax.create_commands_group("AD-BOF", [cmd_adwssearch, cmd_badtakeover, cmd_dcsync, cmd_ldapsearch, cmd_ldapq, cmd_readlaps]);
-ax.register_commands_group(group_exec, ["beacon", "gopher"], ["windows"], []);
+
+
+var _cmd_webdav_enable = ax.create_command("enable", "Enable the WebDAV client service without elevated permissions", "webdav enable");
+_cmd_webdav_enable.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let bof_path = ax.script_dir() + "_bin/webdav_enable." + ax.arch(id) + ".o";
+    let message = "Enable the WebDAV client service";
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path}`, message);
+});
+
+var _cmd_webdav_status = ax.create_command("status", "Determine if the WebDAV is running on a remote system", "webdav status 192.168.0.1,192.168.0.2");
+_cmd_webdav_status.addArgString("hosts", "", "127.0.0.1");
+_cmd_webdav_status.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let hosts = parsed_json["hosts"];
+
+    let bof_params = ax.bof_pack("cstr", [hosts]);
+    let bof_path = ax.script_dir() + "_bin/webdav_status." + ax.arch(id) + ".o";
+    let message = "Task: Check WebDAV status";
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+});
+
+var cmd_webdav = ax.create_command("webdav", "Manage webdav service", "webdav enable");
+cmd_webdav.addSubCommands([_cmd_webdav_enable]);
+cmd_webdav.addSubCommands([_cmd_webdav_status]);
+
+
+
+var group_exec = ax.create_commands_group("AD-BOF", [cmd_adwssearch, cmd_badtakeover, cmd_dcsync, cmd_ldapsearch, cmd_ldapq, cmd_readlaps, cmd_webdav]);
+ax.register_commands_group(group_exec, ["beacon", "gopher", "kharon"], ["windows"], []);
 
 
 
@@ -345,3 +372,4 @@ ax.script_import(ax.script_dir() + "ADCS-BOF/ADCS.axs")
 ax.script_import(ax.script_dir() + "Kerbeus-BOF/kerbeus.axs")
 ax.script_import(ax.script_dir() + "SQL-BOF/SQL.axs")
 ax.script_import(ax.script_dir() + "LDAP-BOF/LDAP.axs")
+ax.script_import(ax.script_dir() + "RelayInformer/RelayInformer.axs")

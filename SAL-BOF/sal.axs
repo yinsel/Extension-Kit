@@ -22,7 +22,7 @@ cmd_cacls.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 });
 
 var cmd_dir = ax.create_command("dir", "Lists files in a specified directory. Supports wildcards (e.g. \"C:\\Windows\\S*\"). Optionally, it can perform a recursive list with the /s argument", "dir C:\\Users /s");
-cmd_dir.addArgString("directory", ".\\");
+cmd_dir.addArgString("directory", "", ".\\");
 cmd_dir.addArgBool("/s", "Recursive list");
 cmd_dir.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let directory = parsed_json["directory"];
@@ -133,4 +133,4 @@ cmd_whoami.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 });
 
 var group_test = ax.create_commands_group("SAL-BOF", [cmd_arp, cmd_cacls, cmd_dir, cmd_env, cmd_ipconfig, cmd_listdns, cmd_netstat, cmd_nslookup, cmd_findobj, cmd_routeprint, cmd_uptime, cmd_useridletime, cmd_whoami]);
-ax.register_commands_group(group_test, ["beacon", "gopher"], ["windows"], []);
+ax.register_commands_group(group_test, ["beacon", "gopher", "kharon"], ["windows"], []);

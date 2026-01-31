@@ -66,6 +66,40 @@ The **Hashdump** item will be added to the **Access** menu in the Sessions Table
 
 
 
+## lsadump
+
+BOF tools for dumping LSA secrets, SAM hashes, and cached domain credentials from Windows systems.
+
+### lsadump_secrets
+
+Dumps LSA secrets from the SECURITY registry hive. Extracts and decrypts LSA secrets including default password, DPAPI master keys, service account passwords, auto-logon credentials, and more. Requires SYSTEM privileges.
+
+```
+lsadump_secrets
+```
+
+### lsadump_sam
+
+Dumps SAM hashes directly from the registry. Extracts NTLM hashes for all local user accounts from the SAM registry hive. Requires admin privileges.
+
+```
+lsadump_sam
+```
+
+Automatically extracts and adds discovered credentials to Adaptix credentials store.
+
+### lsadump_cache
+
+Dumps cached domain credentials (DCC2/MSCacheV2) from the registry. Extracts cached domain credentials for domain users who have logged on to the system. Requires SYSTEM privileges.
+
+```
+lsadump_cache
+```
+
+Automatically extracts and adds discovered cached credentials to Adaptix credentials store.
+
+
+
 ## nanodump
 
 A flexible tool that creates a minidump of the LSASS process. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/Creds-BOF/nanodumnp/README.md)
@@ -83,4 +117,5 @@ A low-level file copy tool that copies files using direct NTFS volume access, by
 * PrivCheck - https://github.com/ostrichgolf/PrivCheck
 * nanodump - https://github.com/fortra/nanodump
 * Get-NetNTLM - https://github.com/KingOfTheNOPs/Get-NetNTLM
+* LSAdump - https://github.com/shashinma/LSAdump-BOF
 * UnderlayCopy-BOF - https://github.com/shashinma/UnderlayCopy-BOF

@@ -57,6 +57,22 @@ A BOF implementation of the DCSync attack for extracting credential material fro
 
 
 
+## webdav
+
+Enable the WebDAV client service without elevated permissions
+
+```
+webdav_enable
+```
+
+Check WebDAV client status
+
+```
+webdav_status <host1,host2,host3>
+```
+
+
+
 ## kerbeus
 
 Beacon Object Files for Kerberos abuse. This is an implementation of some important features of the [Rubeus](https://github.com/GhostPack/Rubeus) project, written in C. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/Kerbeus-BOF/README.md)
@@ -93,6 +109,12 @@ readlaps [-dc dc] [-dn dn] [-target target] [-target-dn target_dn]
 
 
 
+## relay-informer
+
+Beacon object files that allow an operator to determine EPA enforcement from a beacon's logon session, without supplying explicit credentials. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/RelayInformer/README.md)
+
+
+
 ## mssql
 
 A library of Beacon Object Files to interact with remote SQL servers and data. This collection is templated off the TrustedSec CS-Situational-Awareness-BOF collection and models the functionality of the SQLRecon project. [More details](https://github.com/Adaptix-Framework/Extension-Kit/blob/main/AD-BOF/SQL-BOF/README.md)
@@ -105,3 +127,4 @@ A library of Beacon Object Files to interact with remote SQL servers and data. T
 * sekken-enum - https://github.com/Nomad0x7/sekken-enum
 * BadTakeover-BOF - https://github.com/logangoins/BadTakeover-BOF
 * DCSync-BOF - https://github.com/P0142/DCSync-Bof
+* EnableWebDAVClient-BOF - https://github.com/KingOfTheNOPs/EnableWebDAVClient-BOF

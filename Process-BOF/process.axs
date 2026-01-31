@@ -38,9 +38,16 @@ _cmd_process_conn.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines
 
     ax.execute_alias(id, cmdline, `execute bof ${bof_path}`, message);
 });
+
 var cmd_process = ax.create_command("process", "Shows detailed information from processes");
 cmd_process.addSubCommands([_cmd_process_conn]);
 
+var cmd_process_x = ax.create_command("process-x", "Shows detailed information from processes");
+cmd_process_x.addSubCommands([_cmd_process_conn]);
 
-var group_test = ax.create_commands_group("Process-BOF", [cmd_findobj, cmd_process]);
-ax.register_commands_group(group_test, ["beacon", "gopher"], ["windows"], []);
+
+var group_process = ax.create_commands_group("Process-BOF", [cmd_findobj, cmd_process]);
+ax.register_commands_group(group_process, ["beacon", "gopher"], ["windows"], []);
+
+var group_process_x = ax.create_commands_group("Process-BOF-X", [cmd_findobj, cmd_process_x]);
+ax.register_commands_group(group_process_x, ["kharon"], ["windows"], []);

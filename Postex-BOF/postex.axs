@@ -84,7 +84,7 @@ cmd_sauroneye.setPreHook(function (id, cmdline, parsed_json, ...parsed_lines) {
 
 
 var b_group_test = ax.create_commands_group("PostEx-BOF", [cmd_fw, cmd_screenshot, cmd_sauroneye]);
-ax.register_commands_group(b_group_test, ["beacon", "gopher"], ["windows"], []);
+ax.register_commands_group(b_group_test, ["beacon", "gopher", "kharon"], ["windows"], []);
 
 /// MENU
 
